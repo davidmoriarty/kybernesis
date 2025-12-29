@@ -36,7 +36,7 @@
     "@biomejs/biome": "^2.3.10",
     "bun-types": "latest",
     "drizzle-kit": "^0.31.8",
-    "turbo": "^2.6.3"
+    "turbo": "^2.7.2"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"
