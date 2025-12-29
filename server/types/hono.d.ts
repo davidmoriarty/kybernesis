@@ -1,9 +1,10 @@
+// server/src/types/hono.d.ts
 import "hono";
 
 declare module "hono" {
 	interface Context {
 		user?: {
-			id: string;
+			id: number;
 			email: string;
 		};
 		workspace?: {

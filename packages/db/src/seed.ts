@@ -1,8 +1,9 @@
 // packages/db/src/seed.ts
+import { hashPassword } from "@shared/crypto/password";
 import { eq } from "drizzle-orm";
 import { db, users } from "./index";
 
-function seed() {
+async function seed() {
 	// insert only if user doesn't exist
 	const existing = db
 		.select()
@@ -11,6 +12,8 @@ function seed() {
 		.get();
 
 	if (!existing) {
+		const passwordHash = await hashPassword("password123");
+
 		db.insert(users).values({
 			email: "admin@example.com",
 			passwordHash: "dev-only-hash",

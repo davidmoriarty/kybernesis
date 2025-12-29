@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"composite": true,
+		"composite": false,
 
 		// Environment setup & latest features
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
@@ -15,9 +15,13 @@
 		// Path resolution
 		"baseUrl": "./",
 		"paths": {
+			"@/*": ["./client/src/*"],
 			"@server/*": ["./server/src/*"],
 			"@client/*": ["./client/src/*"],
-			"@shared/*": ["./shared/src/*"]
+			"@shared/*": ["./packages/shared/src/*"],
+			"@packages/db/*": ["./packages/db/src/*"],
+			"@packages/auth/*": ["./packages/auth/src/*"],
+			"@packages/schemas/*": ["./packages/schemas/src/*"]
 		},
 
 		// Module resolution

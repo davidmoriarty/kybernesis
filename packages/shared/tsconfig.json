@@ -7,7 +7,6 @@
 		"allowJs": false,
 		"noEmit": false
 	},
-	"references": [{ "path": "../shared" }],
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]
 }
