@@ -19,6 +19,7 @@
 			"@server/*": ["./server/src/*"],
 			"@client/*": ["./client/src/*"],
 			"@shared/*": ["./packages/shared/src/*"],
+			"@packages/db": ["./packages/db/src/index.ts"],
 			"@packages/db/*": ["./packages/db/src/*"],
 			"@packages/auth/*": ["./packages/auth/src/*"],
 			"@packages/schemas/*": ["./packages/schemas/src/*"]

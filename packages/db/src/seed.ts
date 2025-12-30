@@ -14,10 +14,14 @@ async function seed() {
 	if (!existing) {
 		const passwordHash = await hashPassword("password123");
 
-		db.insert(users).values({
-			email: "admin@example.com",
-			passwordHash: "dev-only-hash",
-		});
+		db.insert(users)
+			.values({
+				email: "admin@example.com",
+				passwordHash,
+			})
+			.run();
+	} else {
+		console.log("Admin user already exists, skipping seed");
 	}
 
 	const allUsers = db.select().from(users).all();
