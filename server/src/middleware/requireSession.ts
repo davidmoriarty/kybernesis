@@ -33,7 +33,7 @@ export async function requireSession(ctx: Context, next: Next) {
 	// Attach user and workspace to context
 	ctx.user = { id: user.id, email: user.email };
 	ctx.workspace = session.workspaceId
-		? { id: String(session.workspaceId), name: "Demo Workspace", role: "admin" }
+		? { id: String(session.workspaceId) }
 		: undefined;
 
 	await next();

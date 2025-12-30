@@ -7,10 +7,15 @@ declare module "hono" {
 			id: number;
 			email: string;
 		};
-		workspace?: {
+		session?: {
+			id: string;
+			userId: number;
+			workspaceId: number | null;
+		};
+		workspace?: Partial<{
 			id: string;
 			name: string;
 			role: "admin" | "member";
-		};
+		}>;
 	}
 }

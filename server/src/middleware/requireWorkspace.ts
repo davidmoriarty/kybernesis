@@ -1,15 +1,50 @@
 // middleware/requireWorkspace.ts
-import type { Context } from "hono";
+import { db, workspaceMembers, workspaces } from "@packages/db";
+import { and, eq } from "drizzle-orm";
+import type { Context, Next } from "hono";
 
-export async function requireWorkspace(
-	ctx: Context,
-	next: () => Promise<void>,
-) {
-	// Stub: just attach a default workspace for now
+export async function requireWorkspace(ctx: Context, next: Next) {
+	if (!ctx.user || !ctx.workspace?.id) {
+		return ctx.json({ error: "Unauthorized" }, { status: 401 });
+	}
+
+	const workspaceId = Number(ctx.workspace.id);
+	if (!workspaceId) {
+		return ctx.json({ error: "Workspace not found" }, { status: 404 });
+	}
+
+	// Verify workspace exists
+	const workspace = db
+		.select()
+		.from(workspaces)
+		.where(eq(workspaces.id, workspaceId))
+		.get();
+
+	if (!workspace) {
+		return ctx.json({ error: "Workspace not found" }, { status: 404 });
+	}
+
+	// Verify membership + role
+	const membership = db
+		.select()
+		.from(workspaceMembers)
+		.where(
+			and(
+				eq(workspaceMembers.userId, ctx.user.id),
+				eq(workspaceMembers.workspaceId, workspaceId),
+			),
+		)
+		.get();
+
+	if (!membership) {
+		return ctx.json({ error: "Forbidden" }, { status: 403 });
+	}
+
+	// Attach workspace context
 	ctx.workspace = {
-		id: "stub-workspace-id",
-		name: "Demo Workspace",
-		role: "admin",
+		id: String(workspace.id),
+		name: workspace.name,
+		role: membership.role,
 	};
 
 	// Continue to next handler
