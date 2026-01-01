@@ -1,7 +1,8 @@
 // packages/auth/src/login.ts
-import { db, sessions } from "@packages/db";
+import { db, sessions, workspaceMembers, workspaces } from "@packages/db";
 import { getUserByEmail } from "@packages/db/users";
 import { verifyPassword } from "@shared/crypto/password";
+import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
 import { v4 as uuid } from "uuid";
@@ -19,7 +20,29 @@ export async function loginHandler(ctx: Context) {
 		return ctx.json({ error: "Invalid email or password" }, { status: 401 });
 	}
 
-	// Create a new session
+	// Resolve a workspace for this user (owner or member)
+	const ownedWorkspace = db
+		.select()
+		.from(workspaces)
+		.where(eq(workspaces.ownerId, user.id))
+		.get();
+
+	const memberWorkspace = !ownedWorkspace
+		? db
+				.select()
+				.from(workspaceMembers)
+				.where(eq(workspaceMembers.userId, user.id))
+				.get()
+		: null;
+
+	const workspaceId =
+		ownedWorkspace?.id ?? memberWorkspace?.workspaceId ?? null;
+
+	if (!workspaceId) {
+		return ctx.json({ error: "User has no workspace" }, { status: 403 });
+	}
+
+	// Create session with workspace_id
 	const sessionId = uuid();
 	const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
 
@@ -27,7 +50,7 @@ export async function loginHandler(ctx: Context) {
 		.values({
 			id: sessionId,
 			userId: user.id,
-			workspaceId: null,
+			workspaceId,
 			expiresAt,
 		})
 		.run();

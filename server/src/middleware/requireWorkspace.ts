@@ -4,14 +4,12 @@ import { and, eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
 
 export async function requireWorkspace(ctx: Context, next: Next) {
+	// Must have a user and workspace context
 	if (!ctx.user || !ctx.workspace?.id) {
-		return ctx.json({ error: "Unauthorized" }, { status: 401 });
+		return ctx.json({ error: "Forbidden" }, { status: 403 });
 	}
 
 	const workspaceId = Number(ctx.workspace.id);
-	if (!workspaceId) {
-		return ctx.json({ error: "Workspace not found" }, { status: 404 });
-	}
 
 	// Verify workspace exists
 	const workspace = db
@@ -47,6 +45,6 @@ export async function requireWorkspace(ctx: Context, next: Next) {
 		role: membership.role,
 	};
 
-	// Continue to next handler
+	// Continue
 	await next();
 }
