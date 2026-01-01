@@ -3,14 +3,9 @@ import Database from "bun:sqlite";
 import { join } from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-
 // DB Path
-const dbPath = join(
-	new URL("../../../", import.meta.url).pathname,
-	"kybernesis.db",
-);
+const dbPath = join(new URL("../../../", import.meta.url).pathname, "kybernesis.db");
 const sqlite = new Database(dbPath);
-
 sqlite.run(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,43 +41,37 @@ sqlite.run(`
     created_at INTEGER NOT NULL
   );
 `);
-
 export const db = drizzle(sqlite);
-
 // Users table
 export const users = sqliteTable("users", {
-	id: integer("id").primaryKey({ autoIncrement: true }),
-	email: text("email").notNull(),
-	passwordHash: text("password_hash").notNull(),
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash").notNull(),
 });
-
 // Workspaces table
 export const workspaces = sqliteTable("workspaces", {
-	id: integer("id").primaryKey({ autoIncrement: true }),
-	name: text("name").notNull(),
-	ownerId: integer("owner_id").notNull(),
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    ownerId: integer("owner_id").notNull(),
 });
-
 // Workspace Members Table
 export const workspaceMembers = sqliteTable("workspace_members", {
-	userId: integer("user_id").notNull(),
-	workspaceId: integer("workspace_id").notNull(),
-	role: text("role").$type<"admin" | "member">().notNull(),
+    userId: integer("user_id").notNull(),
+    workspaceId: integer("workspace_id").notNull(),
+    role: text("role").$type().notNull(),
 });
-
 // Sessions table
 export const sessions = sqliteTable("sessions", {
-	id: text("id").primaryKey(), // session ID
-	userId: integer("user_id").notNull(),
-	workspaceId: integer("workspace_id"),
-	expiresAt: integer("expires_at").notNull(),
+    id: text("id").primaryKey(), // session ID
+    userId: integer("user_id").notNull(),
+    workspaceId: integer("workspace_id"),
+    expiresAt: integer("expires_at").notNull(),
 });
-
 // Projects table
 export const projects = sqliteTable("projects", {
-	id: integer("id").primaryKey({ autoIncrement: true }),
-	workspaceId: integer("workspace_id").notNull(),
-	name: text("name").notNull(),
-	description: text("description"),
-	createdAt: integer("created_at").notNull(),
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    workspaceId: integer("workspace_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    createdAt: integer("created_at").notNull(),
 });

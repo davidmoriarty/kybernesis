@@ -1,6 +1,17 @@
 {
 	"name": "auth",
 	"version": "0.1.0",
-	"main": "src/index.ts",
-	"type": "module"
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc"
+	},
+	"dependencies": {
+		"shared": "workspace:*",
+		"schemas": "workspace:*",
+		"db": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.8.3"
+	}
 }

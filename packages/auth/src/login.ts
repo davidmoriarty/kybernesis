@@ -9,7 +9,7 @@ import { v4 as uuid } from "uuid";
 export async function loginHandler(ctx: Context) {
 	const { email, password } = await ctx.req.json();
 
-	const user = await getUserByEmail(email);
+	const user = getUserByEmail(email);
 	if (!user) {
 		return ctx.json({ error: "Invalid email or password" }, { status: 401 });
 	}

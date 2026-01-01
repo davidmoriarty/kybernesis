@@ -4,10 +4,11 @@
 		"composite": true,
 		"outDir": "dist",
 		"rootDir": "src",
+		"declaration": true,
+		"declarationMap": true,
 		"allowJs": false,
 		"noEmit": false
 	},
-	"references": [{ "path": "../shared" }],
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]
 }

@@ -1,5 +1,5 @@
 // middleware/requireSession.ts
-import { db, sessions } from "@packages/db";
+import { db, sessions, workspaces } from "@packages/db";
 import { getUserById } from "@packages/db/users";
 import { and, eq, gt } from "drizzle-orm";
 import type { Context, Next } from "hono";
@@ -30,11 +30,30 @@ export async function requireSession(ctx: Context, next: Next) {
 		return ctx.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	// Attach user and workspace to context
+	// Attach user and session to context
 	ctx.user = { id: user.id, email: user.email };
-	ctx.workspace = session.workspaceId
-		? { id: String(session.workspaceId) }
-		: undefined;
+	ctx.session = {
+		id: session.id,
+		userId: session.userId,
+		workspaceId: session.workspaceId ?? null,
+	};
+
+	// Optionally, attach workspace if workspaceId exists
+	if (session.workspaceId) {
+		const workspace = db
+			.select()
+			.from(workspaces)
+			.where(eq(workspaces.id, session.workspaceId))
+			.get();
+
+		if (workspace) {
+			ctx.workspace = {
+				id: String(workspace.id),
+				name: workspace.name,
+				role: "admin",
+			};
+		}
+	}
 
 	await next();
 }

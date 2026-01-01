@@ -1,11 +1,13 @@
 // server/src/index.ts
+import type { ApiResponse } from "@shared/types/api";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import type { ApiResponse } from "shared/dist";
 import { requireSession } from "./middleware/requireSession";
 import { requireWorkspace } from "./middleware/requireWorkspace";
 import { authRoutes } from "./routes/auth";
+import { projectRoutes } from "./routes/projects";
+import { workspaceRoutes } from "./routes/workspaces";
 
 export const app = new Hono()
 	.use(cors())
@@ -23,6 +25,8 @@ export const app = new Hono()
 	})
 
 	.route("/auth", authRoutes)
+	.route("/workspaces", workspaceRoutes)
+	.route("/projects", projectRoutes)
 
 	.get("/protected", requireSession, (ctx) => {
 		return ctx.json({

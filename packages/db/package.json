@@ -1,6 +1,17 @@
 {
 	"name": "db",
 	"version": "0.1.0",
-	"main": "src/index.ts",
-	"type": "module"
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc",
+		"seed": "bun run tsx src/seed.ts"
+	},
+	"dependencies": {
+		"shared": "workspace:*",
+		"schemas": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5.8.3"
+	}
 }

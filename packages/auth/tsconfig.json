@@ -4,10 +4,12 @@
 		"composite": true,
 		"outDir": "dist",
 		"rootDir": "src",
+		"declaration": true,
+		"declarationMap": true,
 		"allowJs": false,
 		"noEmit": false
 	},
-	"include": ["src/**/*", "../shared/src/types/**/*.d.ts"],
+	"include": ["src/**/*"],
 	"references": [{ "path": "../shared" }, { "path": "../db" }],
 	"exclude": ["node_modules", "dist"]
 }
