@@ -1,49 +1,58 @@
 {
-	"compilerOptions": {
-		"composite": false,
+  "compilerOptions": {
+    "composite": false,
 
-		// Environment setup & latest features
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		"target": "ESNext",
-		"module": "ESNext",
-		"moduleDetection": "force",
-		"jsx": "react-jsx",
-		"jsxImportSource": "react",
-		"noEmit": true,
-		"allowJs": false,
+    // Environment setup & latest features
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "noEmit": true,
+    "allowJs": false,
 
-		// Path resolution
-		"baseUrl": "./",
-		"paths": {
-			"@/*": ["./client/src/*"],
-			"@server/*": ["./server/src/*"],
-			"@client/*": ["./client/src/*"],
-			"@shared/*": ["./packages/shared/src/*"],
-			"@packages/db": ["./packages/db/src/index.ts"],
-			"@packages/db/*": ["./packages/db/src/*"],
-			"@packages/auth/*": ["./packages/auth/src/*"],
-			"@packages/schemas/*": ["./packages/schemas/src/*"]
-		},
+    // Path resolution
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./client/src/*"],
+      "@client/*": ["./client/src/*"],
 
-		// Module resolution
-		"moduleResolution": "bundler",
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-		"verbatimModuleSyntax": true,
+      "@server": ["./server/src/index.ts"],
+      "@server/*": ["./server/src/*"],
 
-		// Strictness and best practices
-		"strict": true,
-		"forceConsistentCasingInFileNames": true,
-		"noFallthroughCasesInSwitch": true,
-		"noUncheckedIndexedAccess": true,
-		"experimentalDecorators": true,
+      "@shared": ["./packages/shared/src/index.ts"],
+      "@shared/*": ["./packages/shared/src/*"],
 
-		// Output control
-		"skipLibCheck": true,
+      "@db": ["./packages/db/src/index.ts"],
+      "@db/*": ["./packages/db/src/*"],
 
-		// Optional strict flags (disabled by default)
-		"noUnusedLocals": false,
-		"noUnusedParameters": false,
-		"noPropertyAccessFromIndexSignature": false
-	}
+      "@auth": ["./packages/auth/src/index.ts"],
+      "@auth/*": ["./packages/auth/src/*"],
+
+      "@schemas": ["./packages/schemas/src/index.ts"],
+      "@schemas/*": ["./packages/schemas/src/*"]
+    },
+
+    // Module resolution
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+
+    // Strictness and best practices
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "experimentalDecorators": true,
+
+    // Output control
+    "skipLibCheck": true,
+
+    // Optional strict flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false
+  }
 }

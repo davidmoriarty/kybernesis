@@ -1,15 +1,22 @@
 {
-	"extends": "../../tsconfig.json",
-	"compilerOptions": {
-		"composite": true,
-		"outDir": "dist",
-		"rootDir": "src",
-		"declaration": true,
-		"declarationMap": true,
-		"allowJs": false,
-		"noEmit": false
-	},
-	"include": ["src/**/*"],
-	"references": [{ "path": "../shared" }, { "path": "../db" }],
-	"exclude": ["node_modules", "dist"]
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "allowJs": false,
+    "noEmit": false,
+
+    "module": "Node16",
+    "moduleResolution": "node16"
+  },
+  "include": [
+    "src/**/*",
+    "src/types/**/*.d.ts",
+    "../shared/src/types/**/*.d.ts"
+  ],
+  "references": [{ "path": "../shared" }, { "path": "../db" }],
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,21 +1,21 @@
 {
-	"extends": "../tsconfig.json",
-	"compilerOptions": {
-		"composite": true,
-		"types": ["bun-types"],
-		"declaration": true,
-		"outDir": "dist",
-		"rootDir": "src",
-		"allowJs": false,
-		"noEmit": false,
-		"emitDecoratorMetadata": true
-	},
-	"include": ["src/**/*", "types/**/*.d.ts"],
-	"references": [
-		{ "path": "../packages/shared" },
-		{ "path": "../packages/db" },
-		{ "path": "../packages/auth" },
-		{ "path": "../packages/schemas" }
-	],
-	"exclude": ["node_modules", "dist"]
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "allowJs": false,
+    "types": ["bun-types"],
+    "noEmit": false,
+    "emitDecoratorMetadata": true,
+  },
+  "include": ["src/**/*", "types/**/*.d.ts"],
+  "references": [
+    { "path": "../packages/shared" },
+    { "path": "../packages/db" },
+    { "path": "../packages/auth" },
+    { "path": "../packages/schemas" }
+  ],
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,17 +1,20 @@
 {
-	"name": "auth",
-	"version": "0.1.0",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"scripts": {
-		"build": "tsc"
-	},
-	"dependencies": {
-		"shared": "workspace:*",
-		"schemas": "workspace:*",
-		"db": "workspace:*"
-	},
-	"devDependencies": {
-		"typescript": "^5.8.3"
-	}
+  "name": "auth",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "hono": "^4.11.3",
+    "uuid": "^13.0.0",
+    "shared": "workspace:*",
+    "schemas": "workspace:*",
+    "db": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }
