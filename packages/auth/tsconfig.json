@@ -7,16 +7,9 @@
     "declaration": true,
     "declarationMap": true,
     "allowJs": false,
-    "noEmit": false,
-
-    "module": "Node16",
-    "moduleResolution": "node16"
+    "noEmit": false
   },
-  "include": [
-    "src/**/*",
-    "src/types/**/*.d.ts",
-    "../shared/src/types/**/*.d.ts"
-  ],
+  "include": ["src/**/*"],
   "references": [{ "path": "../shared" }, { "path": "../db" }],
   "exclude": ["node_modules", "dist"]
 }
