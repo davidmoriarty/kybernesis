@@ -14,43 +14,48 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    login.mutate(
+      { email, password },
+      {
+        onSuccess: () => {
+          navigate({ to: "/me" });
+        },
+      },
+    );
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <form
-        className="w-full max-w-sm space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          login.mutate(
-            { email, password },
-            { onSuccess: () => navigate({ to: "/me" }) },
-          );
-        }}
-      >
+      <form className="w-full max-w-sm space-y-4" onSubmit={handleSubmit}>
         <h1 className="text-2xl font-bold text-center mb-8">Login</h1>
 
         <label htmlFor="email">Email</label>
         <input
           id="email"
-          className="w-full border p-2 rounded"
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
+          className="w-full border p-2 rounded"
+          required
         />
 
         <label htmlFor="password">Password</label>
         <input
           id="password"
-          className="w-full border p-2 rounded"
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
+          className="w-full border p-2 rounded"
+          required
         />
 
-        {login.error && (
+        {login.error instanceof Error && (
           <p className="text-sm text-destructive">{login.error.message}</p>
         )}
 

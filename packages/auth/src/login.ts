@@ -58,9 +58,11 @@ export async function loginHandler(ctx: Context) {
     httpOnly: true,
     path: "/",
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     maxAge: 60 * 60 * 24,
   });
+
+  console.log("Set session_id cookie:", sessionId);
 
   return ctx.json({ message: `Welcome, ${user.email}` }, { status: 200 });
 }

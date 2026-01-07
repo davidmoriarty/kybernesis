@@ -9,5 +9,6 @@
     },
     "noEmitOnError": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [{ "path": "../packages/shared" }]
 }

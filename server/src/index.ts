@@ -12,8 +12,14 @@ import { requireSession } from "./middleware/requireSession";
 import { requireWorkspace } from "./middleware/requireWorkspace";
 
 export const app = new Hono()
-  .use(cors())
-  .use(logger())
+  .use(
+    "*",
+    cors({
+      origin: "http://localhost:5173",
+      credentials: true,
+    }),
+  )
+  .use("*", logger())
 
   // Top-level routes
   .get("/", (c) => c.text("Hello Hono!"))

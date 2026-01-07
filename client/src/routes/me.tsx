@@ -8,14 +8,14 @@ export const Route = createFileRoute("/me")({
 
 function MePage() {
   const navigate = useNavigate();
-  const me = useMe();
+  const { data, isLoading, error } = useMe();
   const logout = useLogout();
 
-  if (me.isLoading) {
+  if (isLoading) {
     return <div className="p-8">Loading...</div>;
   }
 
-  if (me.error) {
+  if (error || !data?.user) {
     return (
       <div className="p-8">
         <p className="mb-4">You are not logged in.</p>
@@ -24,12 +24,14 @@ function MePage() {
     );
   }
 
+  const { user, workspace } = data;
+
   return (
     <div className="p-8 space-y-4">
       <h1 className="text-2xl font-bold">Me</h1>
 
       <pre className="bg-gray-100 p-4 rounded">
-        {JSON.stringify(me.data, null, 2)}
+        {JSON.stringify({ user, workspace }, null, 2)}
       </pre>
 
       <Button

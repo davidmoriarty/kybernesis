@@ -9,7 +9,7 @@
     "allowJs": false,
     "noEmit": false
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../shared/src/types/**/*.d.ts"],
   "references": [{ "path": "../shared" }, { "path": "../db" }],
   "exclude": ["node_modules", "dist"]
 }
