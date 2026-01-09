@@ -1,0 +1,9 @@
+export function Footer() {
+  return (
+    <footer className="w-full py-10 border-t border-slate-200">
+      <div className="px-6 text-center text-muted-foreground">
+        &copy; 2026 Kybernesis. All rights reserved.
+      </div>
+    </footer>
+  );
+}

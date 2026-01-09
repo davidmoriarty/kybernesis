@@ -1,14 +1,5 @@
 {
   "extends": "../tsconfig.json",
-  "files": [],
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@server/*": ["../server/dist/*"]
-    },
-    "noEmitOnError": true
-  },
   "include": ["src/**/*"],
   "references": [{ "path": "../packages/shared" }]
 }

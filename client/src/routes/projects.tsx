@@ -1,88 +1,99 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { Container } from "@/components/Container";
+import { FormLayout } from "@/components/FormLayout";
+import { Hero } from "@/components/Hero";
+import { Section } from "@/components/Section";
 import { Button } from "@/components/ui/button";
-import { useLogout } from "@/hooks/auth";
+import { meQueryOptions } from "@/hooks/auth";
 import { useCreateProject, useProjects } from "@/hooks/projects";
 
 export const Route = createFileRoute("/projects")({
+  loader: meQueryOptions, // runs useMe before rendering the page
   component: ProjectsPage,
 });
 
 function ProjectsPage() {
-  const navigate = useNavigate();
-  const logout = useLogout();
-  const { data: projects, isLoading, error } = useProjects();
-  const createProject = useCreateProject();
+  const {
+    data: projects,
+    isLoading: projectsLoading,
+    error: projectsError,
+  } = useProjects();
 
+  const createProject = useCreateProject();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  if (isLoading) {
-    return <div className="p-8">Loading...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="p-8">
-        <p className="mb-4">You are not logged in.</p>
-        <Button onClick={() => navigate({ to: "/login" })}>Go to login</Button>
-      </div>
-    );
-  }
-
-  const handleCreate = async () => {
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     await createProject.mutateAsync({ name, description });
     setName("");
     setDescription("");
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <h1 className="text-2xl font-bold">Projects</h1>
+    <>
+      <Hero title="Projects" />
 
-      {/* List of projects */}
-      <div className="space-y-2">
-        {projects?.projects.length ? (
-          projects.projects.map((p) => (
-            <div key={p.id} className="border p-2 rounded">
-              <strong>{p.name}</strong>
-              {p.description && <p>{p.description}</p>}
+      {/* Project list */}
+      <Section>
+        <Container className="flex flex-col gap-4">
+          {projectsLoading ? (
+            <p>Loading projects...</p>
+          ) : projectsError ? (
+            <p>Failed to load projects.</p>
+          ) : projects?.projects.length ? (
+            projects.projects.map((p) => (
+              <div
+                key={p.id}
+                className="border p-6 rounded-md flex flex-col gap-2"
+              >
+                <strong className="text-lg">{p.name}</strong>
+                {p.description && <p>{p.description}</p>}
+              </div>
+            ))
+          ) : (
+            <div className="border p-6 rounded-md text-center">
+              <p>No projects yet</p>
             </div>
-          ))
-        ) : (
-          <p>No projects yet</p>
-        )}
-      </div>
+          )}
+        </Container>
+      </Section>
 
       {/* Create project form */}
-      <div className="space-y-2 max-w-md">
-        <input
-          className="border p-2 rounded w-full"
-          placeholder="Project name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="border p-2 rounded w-full"
-          placeholder="Description (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <Button onClick={handleCreate} disabled={createProject.isPending}>
-          Create Project
-        </Button>
-      </div>
+      <Section>
+        <FormLayout
+          title="Create a new project"
+          description="Start a new project in your workspace"
+          onSubmit={handleCreate}
+        >
+          <label htmlFor="name">Project name</label>
+          <input
+            id="name"
+            className="border p-2 rounded w-full"
+            placeholder="Project name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
 
-      <Button
-        variant="secondary"
-        onClick={() =>
-          logout.mutate(undefined, {
-            onSuccess: () => navigate({ to: "/login" }),
-          })
-        }
-      >
-        Logout
-      </Button>
-    </div>
+          <label htmlFor="description">Description</label>
+          <input
+            id="description"
+            className="border p-2 rounded w-full"
+            placeholder="Description (optional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={createProject.isPending}
+          >
+            Create Project
+          </Button>
+        </FormLayout>
+      </Section>
+    </>
   );
 }

@@ -1,49 +1,48 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { useLogout, useMe } from "@/hooks/auth";
+// client/src/routes/me.tsx
+import { createFileRoute } from "@tanstack/react-router";
+import { Container } from "@/components/Container";
+import { Hero } from "@/components/Hero";
+import { Section } from "@/components/Section";
+import { meQueryOptions, useMe } from "@/hooks/auth";
 
 export const Route = createFileRoute("/me")({
+  loader: meQueryOptions, // runs useMe before rendering the page
   component: MePage,
 });
 
 function MePage() {
-  const navigate = useNavigate();
-  const { data, isLoading, error } = useMe();
-  const logout = useLogout();
-
-  if (isLoading) {
-    return <div className="p-8">Loading...</div>;
-  }
-
-  if (error || !data?.user) {
-    return (
-      <div className="p-8">
-        <p className="mb-4">You are not logged in.</p>
-        <Button onClick={() => navigate({ to: "/login" })}>Go to login</Button>
-      </div>
-    );
-  }
+  const { data } = useMe();
+  if (!data) return null;
 
   const { user, workspace } = data;
 
   return (
-    <div className="p-8 space-y-4">
-      <h1 className="text-2xl font-bold">Me</h1>
+    <>
+      <Hero title={`Welcome, ${user.email}`} />
 
-      <pre className="bg-gray-100 p-4 rounded">
-        {JSON.stringify({ user, workspace }, null, 2)}
-      </pre>
+      <Section>
+        <Container>
+          <div className="flex flex-col items-center gap-4 space-y-2">
+            <p>
+              <strong>User:</strong> {user.email} (ID: {user.id})
+            </p>
+            {workspace && (
+              <p>
+                <strong>Workspace:</strong> {workspace.name} (Role:{" "}
+                {workspace.role})
+              </p>
+            )}
+          </div>
+        </Container>
+      </Section>
 
-      <Button
-        variant="secondary"
-        onClick={() =>
-          logout.mutate(undefined, {
-            onSuccess: () => navigate({ to: "/login" }),
-          })
-        }
-      >
-        Logout
-      </Button>
-    </div>
+      <Section className="bg-slate-50">
+        <Container>
+          <pre className="max-w-md mx-auto">
+            {JSON.stringify({ user, workspace }, null, 2)}
+          </pre>
+        </Container>
+      </Section>
+    </>
   );
 }

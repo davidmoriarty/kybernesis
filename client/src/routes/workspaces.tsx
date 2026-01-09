@@ -1,48 +1,58 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { useLogout } from "@/hooks/auth";
+import { createFileRoute } from "@tanstack/react-router";
+import { Container } from "@/components/Container";
+import { Hero } from "@/components/Hero";
+import { Section } from "@/components/Section";
+import { meQueryOptions } from "@/hooks/auth";
 import { useWorkspaces } from "@/hooks/workspaces";
 
 export const Route = createFileRoute("/workspaces")({
+  loader: meQueryOptions, // runs useMe before rendering the page
   component: WorkspacesPage,
 });
 
 function WorkspacesPage() {
-  const navigate = useNavigate();
-  const logout = useLogout();
-  const workspaces = useWorkspaces();
+  const { data: workspaces, isLoading, error } = useWorkspaces();
 
-  if (workspaces.isLoading) {
-    return <div className="p-8">Loading...</div>;
+  if (isLoading) {
+    return (
+      <Section>
+        <Container>
+          <p>Loading workspaces...</p>
+        </Container>
+      </Section>
+    );
   }
 
-  if (workspaces.error) {
+  if (error) {
     return (
-      <div className="p-8">
-        <p className="mb-4">You are not logged in.</p>
-        <Button onClick={() => navigate({ to: "/login" })}>Go to login</Button>
-      </div>
+      <Section>
+        <Container>
+          <p>Failed to load workspaces.</p>
+        </Container>
+      </Section>
     );
   }
 
   return (
-    <div className="p-8 space-y-4">
-      <h1 className="text-2xl font-bold">Workspaces</h1>
+    <>
+      <Hero title="Workspaces" />
 
-      <pre className="bg-gray-100 p-4 rounded">
-        {JSON.stringify(workspaces.data, null, 2)}
-      </pre>
-
-      <Button
-        variant="secondary"
-        onClick={() =>
-          logout.mutate(undefined, {
-            onSuccess: () => navigate({ to: "/login" }),
-          })
-        }
-      >
-        Logout
-      </Button>
-    </div>
+      <Section>
+        <Container className="flex flex-col gap-4">
+          {workspaces?.workspaces.length ? (
+            workspaces.workspaces.map((ws) => (
+              <div key={ws.id} className="border p-6 rounded-md">
+                <strong className="text-lg">{ws.name}</strong>
+                {ws.description && <p>{ws.description}</p>}
+              </div>
+            ))
+          ) : (
+            <div className="border p-6 rounded-md text-center">
+              <p>No workspaces found.</p>
+            </div>
+          )}
+        </Container>
+      </Section>
+    </>
   );
 }

@@ -1,6 +1,11 @@
 // client/src/hooks/auth.ts
-import type { Users, Workspaces } from "@shared";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { User, Workspace } from "@shared";
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
 import { rpcErrorFromResponse } from "@/lib/rpcError";
 
@@ -13,19 +18,46 @@ async function parseOrThrow<T>(res: Response): Promise<T> {
   return body as T;
 }
 
-export function useMe() {
-  return useQuery<{
-    user: Pick<Users.UserRow, "id" | "email">;
-    workspace?: Pick<Workspaces.WorkspaceRow, "id" | "name"> & {
-      role: "admin" | "member";
-    };
-  }>({
+/* ✅ SHARED QUERY OPTIONS */
+export const meQueryOptions = () =>
+  queryOptions({
     queryKey: ["me"],
     queryFn: async () => {
       const res = await rpc.auth.me.$get({
         credentials: "include",
       });
+
+      return parseOrThrow<{
+        user: Pick<User, "id" | "email">;
+        workspace?: Pick<Workspace, "id" | "name"> & {
+          role: "admin" | "member";
+        };
+      }>(res);
+    },
+  });
+
+/* ✅ HOOK BUILT ON TOP */
+export function useMe() {
+  return useQuery(meQueryOptions());
+}
+
+export function useSignup() {
+  const qc = useQueryClient();
+
+  return useMutation<
+    { message: string },
+    unknown,
+    { email: string; password: string }
+  >({
+    mutationFn: async (body) => {
+      const res = await rpc.auth.signup.$post({
+        json: body,
+        credentials: "include",
+      });
       return parseOrThrow(res);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me"] });
     },
   });
 }

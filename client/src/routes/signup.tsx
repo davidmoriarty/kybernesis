@@ -5,40 +5,33 @@ import { FormLayout } from "@/components/FormLayout";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
 import { Button } from "@/components/ui/button";
-import { useLogin } from "@/hooks/auth";
+import { useSignup } from "@/hooks/auth";
 
-export const Route = createFileRoute("/login")({
-  component: LoginPage,
+export const Route = createFileRoute("/signup")({
+  component: SignupPage,
 });
 
-function LoginPage() {
+function SignupPage() {
   const navigate = useNavigate();
-  const login = useLogin();
-
+  const signup = useSignup();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    login.mutate(
-      { email, password },
-      {
-        onSuccess: () => {
-          navigate({ to: "/me" });
-        },
-      },
-    );
+    await signup.mutateAsync({ email, password });
+    navigate({ to: "/projects" });
   };
 
   return (
     <>
-      <Hero title="Login" />
+      <Hero title="Sign Up" />
 
       <Section>
-        <Container>
+        <Container className="max-w-md">
           <FormLayout
-            title="Sign in to your account"
-            description="Enter your email and password to continue"
+            title="Sign Up"
+            description="Create a new account"
             onSubmit={handleSubmit}
           >
             <label htmlFor="email">Email</label>
@@ -60,17 +53,21 @@ function LoginPage() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
               className="w-full border p-2 rounded"
               required
             />
 
-            {login.error instanceof Error && (
-              <p className="text-sm text-destructive">{login.error.message}</p>
+            {signup.error instanceof Error && (
+              <p className="text-sm text-destructive">{signup.error.message}</p>
             )}
 
-            <Button type="submit" className="w-full" disabled={login.isPending}>
-              {login.isPending ? "Signing in..." : "Login"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={signup.isPending}
+            >
+              {signup.isPending ? "Signing up..." : "Sign up"}
             </Button>
           </FormLayout>
         </Container>

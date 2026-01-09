@@ -2,6 +2,7 @@
 import { loginHandler } from "@auth/login";
 import { logoutHandler } from "@auth/logout";
 import { meHandler } from "@auth/me";
+import { signupHandler } from "@auth/signup";
 import { db, Projects, Sessions, WorkspaceMembers, Workspaces } from "@db";
 import type { ApiResponse } from "@shared/types/api";
 import { and, eq } from "drizzle-orm";
@@ -34,6 +35,7 @@ export const app = new Hono()
   // Auth routes
   .post("/auth/login", loginHandler)
   .post("/auth/logout", logoutHandler)
+  .post("/auth/signup", signupHandler)
   .get("/auth/me", requireSession, requireWorkspace, meHandler)
 
   // Project routes

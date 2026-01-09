@@ -1,5 +1,8 @@
 // client/src/routes/index.tsx
 import { createFileRoute } from "@tanstack/react-router";
+import { Container } from "@/components/Container";
+import { Hero } from "@/components/Hero";
+import { Section } from "@/components/Section";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -7,11 +10,29 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="max-w-xl mx-auto flex flex-col gap-6 items-center justify-center min-h-screen">
-      <h1 className="text-5xl font-black">bhvr</h1>
-      <h2 className="text-2xl font-bold">Bun + Hono + Vite + React</h2>
-      <p>A typesafe fullstack monorepo</p>
-    </div>
+    <>
+      <Hero title="Welcome to Kybernesis" />
+      <Section>
+        <Container>
+          <div className="max-w-3xl mx-auto space-y-4">
+            <h2 className="text-2xl font-bold text-center">
+              Manage Your Projects and Workspaces Seamlessly
+            </h2>
+            <p className="max-w-[60ch] mx-auto text-justify">
+              Kybernesis is a multi-tenant SaaS platform designed for developers
+              and teams to organize projects, collaborate across workspaces, and
+              maintain full control over their data. Everything is type-safe,
+              fast, and built to scale with your workflow.
+            </p>
+            <p className="max-w-[60ch] mx-auto text-justify">
+              From project creation to workspace management, Kybernesis
+              streamlines the entire development lifecycle in a single,
+              intuitive interface powered by Bun, Hono, and React.
+            </p>
+          </div>
+        </Container>
+      </Section>
+    </>
   );
 }
 
