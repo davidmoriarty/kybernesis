@@ -22,3 +22,11 @@ export function createProjectsTable() {
     );
   `);
 }
+
+export type Project = {
+  id: number;
+  name: string;
+  description?: string;
+  workspaceId: number;
+  createdAt?: number;
+};

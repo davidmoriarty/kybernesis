@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Rocket } from "lucide-react";
 import { useState } from "react";
 import { Container } from "@/components/Container";
 import { FormLayout } from "@/components/FormLayout";
@@ -73,6 +74,14 @@ function LoginPage() {
               {login.isPending ? "Signing in..." : "Login"}
             </Button>
           </FormLayout>
+        </Container>
+
+        <Container className="max-w-md flex flex-row items-baseline justify-center gap-4 py-4">
+          <p>Don't have an account?</p>
+          <Button variant="outline" onClick={() => navigate({ to: "/signup" })}>
+            <Rocket />
+            Sign up
+          </Button>
         </Container>
       </Section>
     </>

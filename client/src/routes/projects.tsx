@@ -1,3 +1,4 @@
+// client/src/routes/projects.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Container } from "@/components/Container";
@@ -5,15 +6,18 @@ import { FormLayout } from "@/components/FormLayout";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
 import { Button } from "@/components/ui/button";
-import { meQueryOptions } from "@/hooks/auth";
+import { useMe } from "@/hooks/auth";
 import { useCreateProject, useProjects } from "@/hooks/projects";
+import { requireAuth } from "@/utils/requireAuth";
 
 export const Route = createFileRoute("/projects")({
-  loader: meQueryOptions, // runs useMe before rendering the page
+  beforeLoad: requireAuth,
   component: ProjectsPage,
 });
 
 function ProjectsPage() {
+  const { data: me } = useMe();
+
   const {
     data: projects,
     isLoading: projectsLoading,
@@ -26,7 +30,20 @@ function ProjectsPage() {
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await createProject.mutateAsync({ name, description });
+
+    if (!me?.workspace) {
+      console.error("No active workspace");
+      return;
+    }
+
+    const workspaceId = Number(me.workspace.id);
+
+    await createProject.mutateAsync({
+      name,
+      description,
+      workspaceId,
+    });
+
     setName("");
     setDescription("");
   };
@@ -88,7 +105,7 @@ function ProjectsPage() {
           <Button
             type="submit"
             className="w-full"
-            disabled={createProject.isPending}
+            disabled={createProject.isPending || !me?.workspace}
           >
             Create Project
           </Button>

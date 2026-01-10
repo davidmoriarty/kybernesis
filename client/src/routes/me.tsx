@@ -3,10 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Container } from "@/components/Container";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
-import { meQueryOptions, useMe } from "@/hooks/auth";
+import { useMe } from "@/hooks/auth";
+import { requireAuth } from "@/utils/requireAuth";
 
 export const Route = createFileRoute("/me")({
-  loader: meQueryOptions, // runs useMe before rendering the page
+  beforeLoad: requireAuth,
   component: MePage,
 });
 
@@ -18,11 +19,14 @@ function MePage() {
 
   return (
     <>
-      <Hero title={`Welcome, ${user.email}`} />
+      <Hero title={`Welcome, ${user.name}`} />
 
       <Section>
         <Container>
           <div className="flex flex-col items-center gap-4 space-y-2">
+            <p>
+              <strong>Name:</strong> {user.name}
+            </p>
             <p>
               <strong>User:</strong> {user.email} (ID: {user.id})
             </p>

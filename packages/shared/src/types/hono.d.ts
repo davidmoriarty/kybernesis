@@ -6,6 +6,7 @@ declare module "hono" {
     user?: {
       id: number;
       email: string;
+      name: string;
     };
     session?: {
       id: string;
@@ -13,8 +14,11 @@ declare module "hono" {
       workspaceId: number | null;
     };
     workspace?: {
-      id: string;
+      id: number;
       name: string;
+    };
+    workspaceMember?: {
+      workspaceId: number;
       role: "admin" | "member";
     };
   }

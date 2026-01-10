@@ -20,3 +20,10 @@ export function createSessionsTable() {
     );
   `);
 }
+
+export type Session = {
+  id: string;
+  userId: number;
+  workspaceId: number;
+  expiresAt: number;
+};

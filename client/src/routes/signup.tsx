@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { LogIn } from "lucide-react";
 import { useState } from "react";
 import { Container } from "@/components/Container";
 import { FormLayout } from "@/components/FormLayout";
@@ -14,12 +15,14 @@ export const Route = createFileRoute("/signup")({
 function SignupPage() {
   const navigate = useNavigate();
   const signup = useSignup();
+
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await signup.mutateAsync({ email, password });
+    await signup.mutateAsync({ name, email, password });
     navigate({ to: "/projects" });
   };
 
@@ -28,12 +31,24 @@ function SignupPage() {
       <Hero title="Sign Up" />
 
       <Section>
-        <Container className="max-w-md">
+        <Container>
           <FormLayout
             title="Sign Up"
             description="Create a new account"
             onSubmit={handleSubmit}
           >
+            <label htmlFor="name">Name</label>
+            <input
+              id="name"
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              className="w-full border p-2 rounded"
+              required
+            />
+
             <label htmlFor="email">Email</label>
             <input
               id="email"
@@ -70,6 +85,14 @@ function SignupPage() {
               {signup.isPending ? "Signing up..." : "Sign up"}
             </Button>
           </FormLayout>
+        </Container>
+
+        <Container className="max-w-md flex flex-row items-baseline justify-center gap-4 py-4">
+          <p>Already have an account?</p>
+          <Button variant="outline" onClick={() => navigate({ to: "/login" })}>
+            <LogIn />
+            Login
+          </Button>
         </Container>
       </Section>
     </>

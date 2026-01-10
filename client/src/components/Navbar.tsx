@@ -16,12 +16,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useLogout, useMe } from "@/hooks/auth";
+import { useLogout } from "@/hooks/auth";
+import { useConditionalMe } from "@/hooks/useContidionalMe";
 
 export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data: me } = useMe();
+  const { data: me } = useConditionalMe();
   const logout = useLogout();
 
   interface NavLink {

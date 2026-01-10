@@ -1,7 +1,7 @@
 // client/src/hooks/auth.ts
 import type { User, Workspace } from "@shared";
 import {
-  queryOptions,
+  type UseQueryOptions,
   useMutation,
   useQuery,
   useQueryClient,
@@ -18,27 +18,40 @@ async function parseOrThrow<T>(res: Response): Promise<T> {
   return body as T;
 }
 
-/* ✅ SHARED QUERY OPTIONS */
-export const meQueryOptions = () =>
-  queryOptions({
-    queryKey: ["me"],
-    queryFn: async () => {
-      const res = await rpc.auth.me.$get({
-        credentials: "include",
-      });
-
+/** ✅ SHARED QUERY OPTIONS HELPER */
+export const meQueryOptions = () => ({
+  queryKey: ["me"] as const,
+  queryFn: async () => {
+    try {
+      const res = await rpc.auth.me.$get({ credentials: "include" });
       return parseOrThrow<{
-        user: Pick<User, "id" | "email">;
+        user: Pick<User, "id" | "email" | "name">;
+        workspace?: { id: number; name: string; role: "admin" | "member" };
+      }>(res);
+    } catch {
+      // Instead of throwing undefined, return a "logged out" shape
+      return { user: undefined, workspace: undefined };
+    }
+  },
+  retry: false,
+});
+
+// HOOK BUILT ON TOP OF THE HELPER
+export function useMe(
+  options?: UseQueryOptions<
+    | {
+        user: Pick<User, "id" | "email" | "name">;
         workspace?: Pick<Workspace, "id" | "name"> & {
           role: "admin" | "member";
         };
-      }>(res);
-    },
+      }
+    | undefined
+  >,
+) {
+  return useQuery({
+    ...meQueryOptions(),
+    ...options,
   });
-
-/* ✅ HOOK BUILT ON TOP */
-export function useMe() {
-  return useQuery(meQueryOptions());
 }
 
 export function useSignup() {
@@ -47,7 +60,7 @@ export function useSignup() {
   return useMutation<
     { message: string },
     unknown,
-    { email: string; password: string }
+    { name: string; email: string; password: string }
   >({
     mutationFn: async (body) => {
       const res = await rpc.auth.signup.$post({
@@ -94,7 +107,7 @@ export function useLogout() {
       return parseOrThrow(res);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["me"] });
+      qc.removeQueries({ queryKey: ["me"] });
     },
   });
 }

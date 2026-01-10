@@ -15,6 +15,9 @@ import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Errors500RouteImport } from './routes/_errors/500'
+import { Route as Errors403RouteImport } from './routes/_errors/403'
+import { Route as Errors401RouteImport } from './routes/_errors/401'
 
 const WorkspacesRoute = WorkspacesRouteImport.update({
   id: '/workspaces',
@@ -46,6 +49,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Errors500Route = Errors500RouteImport.update({
+  id: '/_errors/500',
+  path: '/500',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Errors403Route = Errors403RouteImport.update({
+  id: '/_errors/403',
+  path: '/403',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Errors401Route = Errors401RouteImport.update({
+  id: '/_errors/401',
+  path: '/401',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +72,9 @@ export interface FileRoutesByFullPath {
   '/projects': typeof ProjectsRoute
   '/signup': typeof SignupRoute
   '/workspaces': typeof WorkspacesRoute
+  '/401': typeof Errors401Route
+  '/403': typeof Errors403Route
+  '/500': typeof Errors500Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +83,9 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsRoute
   '/signup': typeof SignupRoute
   '/workspaces': typeof WorkspacesRoute
+  '/401': typeof Errors401Route
+  '/403': typeof Errors403Route
+  '/500': typeof Errors500Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,12 +95,33 @@ export interface FileRoutesById {
   '/projects': typeof ProjectsRoute
   '/signup': typeof SignupRoute
   '/workspaces': typeof WorkspacesRoute
+  '/_errors/401': typeof Errors401Route
+  '/_errors/403': typeof Errors403Route
+  '/_errors/500': typeof Errors500Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/me' | '/projects' | '/signup' | '/workspaces'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/me'
+    | '/projects'
+    | '/signup'
+    | '/workspaces'
+    | '/401'
+    | '/403'
+    | '/500'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/me' | '/projects' | '/signup' | '/workspaces'
+  to:
+    | '/'
+    | '/login'
+    | '/me'
+    | '/projects'
+    | '/signup'
+    | '/workspaces'
+    | '/401'
+    | '/403'
+    | '/500'
   id:
     | '__root__'
     | '/'
@@ -85,6 +130,9 @@ export interface FileRouteTypes {
     | '/projects'
     | '/signup'
     | '/workspaces'
+    | '/_errors/401'
+    | '/_errors/403'
+    | '/_errors/500'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +142,9 @@ export interface RootRouteChildren {
   ProjectsRoute: typeof ProjectsRoute
   SignupRoute: typeof SignupRoute
   WorkspacesRoute: typeof WorkspacesRoute
+  Errors401Route: typeof Errors401Route
+  Errors403Route: typeof Errors403Route
+  Errors500Route: typeof Errors500Route
 }
 
 declare module '@tanstack/react-router' {
@@ -140,6 +191,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_errors/500': {
+      id: '/_errors/500'
+      path: '/500'
+      fullPath: '/500'
+      preLoaderRoute: typeof Errors500RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_errors/403': {
+      id: '/_errors/403'
+      path: '/403'
+      fullPath: '/403'
+      preLoaderRoute: typeof Errors403RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_errors/401': {
+      id: '/_errors/401'
+      path: '/401'
+      fullPath: '/401'
+      preLoaderRoute: typeof Errors401RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -150,6 +222,9 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsRoute: ProjectsRoute,
   SignupRoute: SignupRoute,
   WorkspacesRoute: WorkspacesRoute,
+  Errors401Route: Errors401Route,
+  Errors403Route: Errors403Route,
+  Errors500Route: Errors500Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

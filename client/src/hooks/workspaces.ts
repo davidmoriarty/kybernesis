@@ -17,6 +17,7 @@ async function parseOrThrow<T>(res: Response, fallback?: T): Promise<T> {
 }
 
 // --- Workspaces hooks ---
+
 export function useWorkspaces(
   options?: Partial<
     UseQueryOptions<{
@@ -32,6 +33,8 @@ export function useWorkspaces(
       const res = await rpc.workspaces.$get();
       return parseOrThrow(res, { workspaces: [] });
     },
+    staleTime: 0,
+    refetchOnMount: true,
     ...options,
   });
 }

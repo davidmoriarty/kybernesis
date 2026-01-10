@@ -1,5 +1,5 @@
 // middleware/requireSession.ts
-import { db, Sessions, Users, Workspaces } from "@db";
+import { db, Sessions, Users, WorkspaceMembers, Workspaces } from "@db";
 import { and, eq, gt } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
@@ -35,7 +35,12 @@ export async function requireSession(ctx: Context, next: Next) {
   }
 
   // Attach user and session to context
-  ctx.user = { id: user.id, email: user.email };
+  ctx.user = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+  };
+
   ctx.session = {
     id: session.id,
     userId: session.userId,
@@ -50,11 +55,29 @@ export async function requireSession(ctx: Context, next: Next) {
       .where(eq(Workspaces.workspaces.id, session.workspaceId))
       .get();
 
-    if (workspace) {
+    const membership = db
+      .select()
+      .from(WorkspaceMembers.workspaceMembers)
+      .where(
+        and(
+          eq(WorkspaceMembers.workspaceMembers.userId, user.id),
+          eq(
+            WorkspaceMembers.workspaceMembers.workspaceId,
+            session.workspaceId,
+          ),
+        ),
+      )
+      .get();
+
+    if (workspace && membership) {
       ctx.workspace = {
-        id: String(workspace.id),
+        id: workspace.id,
         name: workspace.name,
-        role: "admin",
+      };
+
+      ctx.workspaceMember = {
+        workspaceId: membership.workspaceId,
+        role: membership.role,
       };
     }
   }

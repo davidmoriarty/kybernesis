@@ -14,7 +14,11 @@ async function getOrCreateAdminUser() {
     const passwordHash = await hashPassword("password123");
 
     db.insert(Users.users)
-      .values({ email: "admin@example.com", passwordHash })
+      .values({
+        email: "admin@example.com",
+        passwordHash,
+        name: "Admin",
+      })
       .run();
 
     user = db
@@ -28,22 +32,22 @@ async function getOrCreateAdminUser() {
   return user;
 }
 
-function getOrCreateWorkspace(ownerId: number) {
+function getOrCreateWorkspace(user: { id: number; name: string }) {
   let workspace = db
     .select()
     .from(Workspaces.workspaces)
-    .where(eq(Workspaces.workspaces.name, "Demo Workspace"))
+    .where(eq(Workspaces.workspaces.name, `${user.name}'s Workspace`))
     .get();
 
   if (!workspace) {
     db.insert(Workspaces.workspaces)
-      .values({ name: "Demo Workspace", ownerId })
+      .values({ name: `${user.name}'s Workspace`, ownerId: user.id })
       .run();
 
     workspace = db
       .select()
       .from(Workspaces.workspaces)
-      .where(eq(Workspaces.workspaces.name, "Demo Workspace"))
+      .where(eq(Workspaces.workspaces.name, `${user.name}'s Workspace`))
       .get();
   }
 
@@ -73,7 +77,7 @@ function ensureMembership(userId: number, workspaceId: number) {
 
 async function seed() {
   const user = await getOrCreateAdminUser();
-  const workspace = getOrCreateWorkspace(user.id);
+  const workspace = getOrCreateWorkspace(user);
   const membership = ensureMembership(user.id, workspace.id);
 
   console.log("Seed complete");

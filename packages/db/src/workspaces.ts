@@ -17,3 +17,9 @@ export function createWorkspacesTable() {
     );
   `);
 }
+
+export type Workspace = {
+  id: number;
+  name: string;
+  ownerId: number;
+};

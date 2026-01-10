@@ -41,9 +41,13 @@ export function useCreateProject() {
   const qc = useQueryClient();
 
   return useMutation<
-    { message: string }, // type of data returned by the server
+    { message: string },
     Error,
-    { name: string; description?: string } // variables you pass in
+    {
+      name: string;
+      description?: string;
+      workspaceId: number;
+    }
   >({
     mutationFn: async (body) => {
       const res = await rpc.projects.$post({ body });

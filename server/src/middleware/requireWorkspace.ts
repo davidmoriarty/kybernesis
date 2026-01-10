@@ -9,7 +9,7 @@ export async function requireWorkspace(ctx: Context, next: Next) {
     return ctx.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const workspaceId = Number(ctx.workspace.id);
+  const workspaceId = ctx.workspace.id;
 
   // Verify workspace exists
   const workspace = db
@@ -22,7 +22,7 @@ export async function requireWorkspace(ctx: Context, next: Next) {
     return ctx.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  // Verify membership + role
+  // Verify membership
   const membership = db
     .select()
     .from(WorkspaceMembers.workspaceMembers)
@@ -40,8 +40,12 @@ export async function requireWorkspace(ctx: Context, next: Next) {
 
   // Attach workspace context
   ctx.workspace = {
-    id: String(workspace.id),
+    id: workspace.id,
     name: workspace.name,
+  };
+
+  ctx.workspaceMember = {
+    workspaceId: membership.workspaceId,
     role: membership.role,
   };
 

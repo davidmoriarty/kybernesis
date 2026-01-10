@@ -6,11 +6,11 @@ import { setCookie } from "hono/cookie";
 import { v4 as uuid } from "uuid";
 
 export async function signupHandler(ctx: Context) {
-  const { email, password } = await ctx.req.json();
+  const { name, email, password } = await ctx.req.json();
 
-  if (!email || !password) {
+  if (!name || !email || !password) {
     return ctx.json(
-      { error: "Email and password are required" },
+      { error: "Name, email, and password are required" },
       { status: 400 },
     );
   }
@@ -26,6 +26,7 @@ export async function signupHandler(ctx: Context) {
     const user = db
       .insert(Users.users)
       .values({
+        name,
         email,
         passwordHash,
       })
@@ -35,7 +36,7 @@ export async function signupHandler(ctx: Context) {
     const workspace = db
       .insert(Workspaces.workspaces)
       .values({
-        name: "My Workspace",
+        name: `${name}'s Workspace`,
         ownerId: user.id,
       })
       .returning()

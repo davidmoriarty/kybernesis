@@ -90,7 +90,13 @@ export const app = new Hono()
       .where(eq(WorkspaceMembers.workspaceMembers.userId, userId))
       .all();
 
-    return ctx.json({ workspaces: rows }, { status: 200 });
+    console.log("Workspaces rows for user", userId, rows);
+
+    // Always return refresh data, prevent 304
+    return ctx.json(
+      { workspaces: rows ?? [] },
+      { status: 200, headers: { "Cache-Control": "no-store" } },
+    );
   })
 
   .post("/workspaces/select", requireSession, async (ctx) => {

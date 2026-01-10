@@ -19,3 +19,10 @@ export function createWorkspaceMembersTable() {
     );
   `);
 }
+
+export type WorkspaceMember = {
+  id: number;
+  userId: number;
+  workspaceId: number;
+  role: string;
+};

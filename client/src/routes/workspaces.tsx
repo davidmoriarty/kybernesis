@@ -1,17 +1,27 @@
+// client/src/routes/workspaces.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { Container } from "@/components/Container";
 import { Hero } from "@/components/Hero";
 import { Section } from "@/components/Section";
-import { meQueryOptions } from "@/hooks/auth";
+import { useConditionalMe } from "@/hooks/useContidionalMe";
 import { useWorkspaces } from "@/hooks/workspaces";
+import { requireAuth } from "@/utils/requireAuth";
 
 export const Route = createFileRoute("/workspaces")({
-  loader: meQueryOptions, // runs useMe before rendering the page
+  beforeLoad: requireAuth,
   component: WorkspacesPage,
 });
 
 function WorkspacesPage() {
-  const { data: workspaces, isLoading, error } = useWorkspaces();
+  const { data: me } = useConditionalMe();
+
+  const {
+    data: workspaces,
+    isLoading,
+    error,
+  } = useWorkspaces({
+    enabled: !!me?.user,
+  });
 
   if (isLoading) {
     return (
