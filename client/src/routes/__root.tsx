@@ -6,14 +6,16 @@ import { Navbar } from "@/components/Navbar";
 
 export const Route = createRootRoute({
   notFoundComponent: () => <ErrorPage status={404} />,
-  component: () => (
-    <>
-      <Navbar />
-      <main className="flex flex-col flex-1">
-        <Outlet />
-      </main>
-      <Footer />
-      {import.meta.env.DEV && <TanStackRouterDevtools />}
-    </>
-  ),
+  component: () => {
+    return (
+      <>
+        <Navbar />
+        <main className="flex flex-col flex-1">
+          <Outlet />
+        </main>
+        <Footer />
+        {import.meta.env.DEV && <TanStackRouterDevtools />}
+      </>
+    );
+  },
 });

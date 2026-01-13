@@ -45,7 +45,7 @@ function WorkspacesPage() {
 
   return (
     <>
-      <Hero title="Workspaces" />
+      <Hero title="Workspaces" subtitle="Workspaces assigned to you" />
 
       <Section>
         <Container className="flex flex-col gap-4">

@@ -50,7 +50,7 @@ function ProjectsPage() {
 
   return (
     <>
-      <Hero title="Projects" />
+      <Hero title="Projects" subtitle="All your active projects in one place" />
 
       {/* Project list */}
       <Section>
@@ -104,7 +104,7 @@ function ProjectsPage() {
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full cursor-pointer"
             disabled={createProject.isPending || !me?.workspace}
           >
             Create Project

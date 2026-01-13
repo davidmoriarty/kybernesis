@@ -19,19 +19,19 @@ function MePage() {
 
   return (
     <>
-      <Hero title={`Welcome, ${user.name}`} />
+      <Hero title="Account" />
 
       <Section>
         <Container>
-          <div className="flex flex-col items-center gap-4 space-y-2">
-            <p>
+          <div className="flex flex-col items-center gap-4 space-y-4 py-8">
+            <p className="font-medium text-xl">
               <strong>Name:</strong> {user.name}
             </p>
-            <p>
+            <p className="font-medium text-xl">
               <strong>User:</strong> {user.email} (ID: {user.id})
             </p>
             {workspace && (
-              <p>
+              <p className="font-medium text-xl">
                 <strong>Workspace:</strong> {workspace.name} (Role:{" "}
                 {workspace.role})
               </p>

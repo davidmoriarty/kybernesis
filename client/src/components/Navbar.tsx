@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
+  Brain,
   Building,
   CircleUser,
   Cog,
@@ -40,6 +41,7 @@ export function Navbar() {
     {
       to: "/",
       label: "Kybernesis",
+      icon: Brain,
       ariaLabel: "Home",
     },
     {
@@ -117,7 +119,7 @@ export function Navbar() {
     "flex items-center gap-2 px-4 py-2 font-medium rounded-md hover:bg-slate-300/80 cursor-pointer";
 
   return (
-    <header className="w-full h-16 sm:h-20 border-b border-slate-200">
+    <header className="sticky top-0 z-40 bg-background text-foreground w-full h-16 sm:h-20 border-b border-slate-200">
       <nav className="h-full px-6 flex items-center justify-between">
         {/* AppBrand */}
         <Button
@@ -126,6 +128,7 @@ export function Navbar() {
           onClick={() => navigate({ to: desktopNavLinks[0]?.to })}
           aria-label={desktopNavLinks[0]?.ariaLabel}
         >
+          <Brain size={24} />
           {desktopNavLinks[0]?.label}
         </Button>
 
@@ -136,7 +139,7 @@ export function Navbar() {
             .map(({ to, label, icon: Icon, ariaLabel, active }) => (
               <Button
                 key={to}
-                variant={active ? "link" : "ghost"}
+                variant={active ? "link" : "outline"}
                 className={`${navItemClass} ${
                   active ? "bg-slate-300/80 font-bold" : ""
                 }`}
