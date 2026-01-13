@@ -23,6 +23,7 @@
 
       "@shared": ["./packages/shared/src/index.ts"],
       "@shared/*": ["./packages/shared/src/*"],
+      "@shared/hono": ["./packages/shared/src/hono.d.ts"],
 
       "@db": ["./packages/db/src/index.ts"],
       "@db/*": ["./packages/db/src/*"],

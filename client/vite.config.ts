@@ -6,7 +6,6 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
-    // Please make sure that '@tanstack/router-plugin' is passed before '@vitejs/plugin-react'
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
@@ -17,7 +16,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@server": path.resolve(__dirname, "../server/dist"),
+      "@shared": path.resolve(__dirname, "../packages/shared/src"),
     },
   },
   server: {

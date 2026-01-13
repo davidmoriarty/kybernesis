@@ -1,4 +1,4 @@
-// packages/shared/src/types/hono.d.ts
+// packages/shared/src/hono.d.ts
 import "hono";
 
 declare module "hono" {
