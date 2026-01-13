@@ -21,8 +21,8 @@
       "@server": ["./server/src/index.ts"],
       "@server/*": ["./server/src/*"],
 
-      "@shared": ["./packages/shared/dist/index.d.ts"],
-      "@shared/*": ["./packages/shared/dist/*"],
+      "@shared": ["./packages/shared/src/index.ts"],
+      "@shared/*": ["./packages/shared/src/*"],
 
       "@db": ["./packages/db/src/index.ts"],
       "@db/*": ["./packages/db/src/*"],

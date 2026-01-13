@@ -18,19 +18,23 @@ async function parseOrThrow<T>(res: Response): Promise<T> {
   return body as T;
 }
 
+export type MeResult = {
+  user?: Pick<User, "id" | "email" | "name">;
+  workspace?: Pick<Workspace, "id" | "name"> & {
+    role: "admin" | "member";
+  };
+};
+
 /** ✅ SHARED QUERY OPTIONS HELPER */
 export const meQueryOptions = () => ({
   queryKey: ["me"] as const,
-  queryFn: async () => {
+  queryFn: async (): Promise<MeResult> => {
     try {
       const res = await rpc.auth.me.$get({ credentials: "include" });
-      return parseOrThrow<{
-        user: Pick<User, "id" | "email" | "name">;
-        workspace?: { id: number; name: string; role: "admin" | "member" };
-      }>(res);
+      return parseOrThrow<MeResult>(res);
     } catch {
-      // Instead of throwing undefined, return a "logged out" shape
-      return { user: undefined, workspace: undefined };
+      // Logged-out state is valid data
+      return {};
     }
   },
   retry: false,
@@ -38,14 +42,9 @@ export const meQueryOptions = () => ({
 
 // HOOK BUILT ON TOP OF THE HELPER
 export function useMe(
-  options?: UseQueryOptions<
-    | {
-        user: Pick<User, "id" | "email" | "name">;
-        workspace?: Pick<Workspace, "id" | "name"> & {
-          role: "admin" | "member";
-        };
-      }
-    | undefined
+  options?: Omit<
+    UseQueryOptions<MeResult, Error, MeResult>,
+    "queryKey" | "queryFn"
   >,
 ) {
   return useQuery({

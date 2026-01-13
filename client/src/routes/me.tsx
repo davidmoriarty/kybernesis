@@ -13,7 +13,9 @@ export const Route = createFileRoute("/me")({
 
 function MePage() {
   const { data } = useMe();
-  if (!data) return null;
+  if (!data?.user) {
+    return <div>Not authenticated</div>;
+  }
 
   const { user, workspace } = data;
 
