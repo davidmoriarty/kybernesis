@@ -2,19 +2,7 @@
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
-import { rpcErrorFromResponse } from "@/lib/rpcError";
-
-async function parseOrThrow<T>(res: Response, fallback?: T): Promise<T> {
-  let body: unknown;
-  try {
-    body = await res.clone().json();
-  } catch {
-    body = undefined;
-  }
-
-  if (!res.ok) throw rpcErrorFromResponse(res, body);
-  return (body ?? fallback) as T;
-}
+import { parseOrThrow } from "@/lib/parseOrThrow";
 
 // --- Projects hooks ---
 
@@ -30,7 +18,7 @@ export function useProjects(
   }>({
     queryKey: ["projects"],
     queryFn: async () => {
-      const res = await rpc.projects.$get();
+      const res = await rpc.$get("/projects");
       return parseOrThrow(res, { projects: [] });
     },
     ...options,
@@ -50,7 +38,7 @@ export function useCreateProject() {
     }
   >({
     mutationFn: async (body) => {
-      const res = await rpc.projects.$post({ body });
+      const res = await rpc.$post("/projects", { body });
       return parseOrThrow<{ message: string }>(res, { message: "" });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),

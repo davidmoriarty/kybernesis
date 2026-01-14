@@ -91,6 +91,7 @@ function ProjectsPage() {
             placeholder="Project name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            autoComplete="off"
           />
 
           <label htmlFor="description">Description</label>
@@ -100,6 +101,7 @@ function ProjectsPage() {
             placeholder="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            autoComplete="off"
           />
 
           <Button

@@ -33,13 +33,13 @@ export const app = new Hono()
   })
 
   // Auth routes
-  .post("/auth/login", loginHandler)
-  .post("/auth/logout", logoutHandler)
-  .post("/auth/signup", signupHandler)
-  .get("/auth/me", requireSession, requireWorkspace, meHandler)
+  .post("/api/auth/login", loginHandler)
+  .post("/api/auth/logout", logoutHandler)
+  .post("/api/auth/signup", signupHandler)
+  .get("/api/auth/me", requireSession, requireWorkspace, meHandler)
 
   // Project routes
-  .get("/projects", requireSession, requireWorkspace, (ctx) => {
+  .get("/api/projects", requireSession, requireWorkspace, (ctx) => {
     const workspaceId = Number(ctx.workspace?.id);
     const allProjects = db
       .select()
@@ -50,7 +50,7 @@ export const app = new Hono()
   })
 
   // POST create a new project
-  .post("/projects", requireSession, requireWorkspace, async (ctx) => {
+  .post("/api/projects", requireSession, requireWorkspace, async (ctx) => {
     const workspaceId = Number(ctx.workspace?.id);
     const { name, description } = await ctx.req.json<{
       name: string;
@@ -67,7 +67,7 @@ export const app = new Hono()
   })
 
   // Workspace routes
-  .get("/workspaces", requireSession, (ctx) => {
+  .get("/api/workspaces", requireSession, (ctx) => {
     const userId = ctx.user?.id;
     if (!userId) {
       return ctx.json({ error: "Unauthorized" }, { status: 401 });
@@ -99,7 +99,7 @@ export const app = new Hono()
     );
   })
 
-  .post("/workspaces/select", requireSession, async (ctx) => {
+  .post("/api/workspaces/select", requireSession, async (ctx) => {
     const userId = ctx.user?.id;
     const sessionId = ctx.session?.id;
     if (!userId || !sessionId) {

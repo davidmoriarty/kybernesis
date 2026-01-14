@@ -1,10 +1,9 @@
 // client/src/utils/requireAuth.ts
-// client/src/utils/requireAuth.ts
 import { redirect } from "@tanstack/react-router";
 import { rpc } from "@/lib/rpc";
 
 export async function requireAuth() {
-  const res = await rpc.auth.me.$get({ credentials: "include" });
+  const res = await rpc.$get("/auth/me", { credentials: "include" });
 
   if (res.status === 401) {
     throw redirect({ to: "/login" });

@@ -7,16 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
-import { rpcErrorFromResponse } from "@/lib/rpcError";
-
-async function parseOrThrow<T>(res: Response): Promise<T> {
-  const body = await res
-    .clone()
-    .json()
-    .catch(() => undefined);
-  if (!res.ok) throw rpcErrorFromResponse(res, body);
-  return body as T;
-}
+import { parseOrThrow } from "@/lib/parseOrThrow";
 
 export type MeResult = {
   user?: Pick<User, "id" | "email" | "name">;
@@ -30,7 +21,10 @@ export const meQueryOptions = () => ({
   queryKey: ["me"] as const,
   queryFn: async (): Promise<MeResult> => {
     try {
-      const res = await rpc.auth.me.$get({ credentials: "include" });
+      const res = await rpc.$get(
+        "/auth/me",
+        { credentials: "include" }
+      );
       return parseOrThrow<MeResult>(res);
     } catch {
       // Logged-out state is valid data
@@ -62,8 +56,8 @@ export function useSignup() {
     { name: string; email: string; password: string }
   >({
     mutationFn: async (body) => {
-      const res = await rpc.auth.signup.$post({
-        json: body,
+      const res = await rpc.$post("/auth/signup", {
+        body,
         credentials: "include",
       });
       return parseOrThrow(res);
@@ -83,8 +77,8 @@ export function useLogin() {
     { email: string; password: string }
   >({
     mutationFn: async (body) => {
-      const res = await rpc.auth.login.$post({
-        json: body,
+      const res = await rpc.$post("/auth/login", {
+        body,
         credentials: "include",
       });
       return parseOrThrow(res);
@@ -100,10 +94,10 @@ export function useLogout() {
 
   return useMutation<{ message: string }, unknown, void>({
     mutationFn: async () => {
-      const res = await rpc.auth.logout.$post({
+      const res = await rpc.$post("/auth/logout",{
         credentials: "include",
       });
-      return parseOrThrow(res);
+      return parseOrThrow(res, { message: "" });
     },
     onSuccess: () => {
       qc.removeQueries({ queryKey: ["me"] });

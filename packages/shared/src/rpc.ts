@@ -1,13 +1,52 @@
 // packages/shared/src/rpc.ts
-import { hc } from "hono/client";
-import type { Hono } from "hono";
+import type { Hono, Schema } from "hono";
 
-type AnyHono = Hono<any, any, any>;
+// Type for any Hono app
+export type AnyHono<
+  Env extends Record<string, unknown> = Record<string, never>,
+  Ctx extends Schema = Schema,
+  S extends string = string
+> = Hono<Env, Ctx, S>;
 
-export type RpcClient<App extends AnyHono> = ReturnType<typeof hc<App>>;
+// Typed RPC client with helper methods
+export type RpcClient = {
+  $get: (path: string, options?: RequestInit) => Promise<Response>;
+  $post: (
+    path: string,
+    options?: Omit<RequestInit, "body"> & { body?: unknown }
+  ) => Promise<Response>;
+};
 
-export function createRpcClient<App extends AnyHono>(
-  ...args: Parameters<typeof hc>
-): RpcClient<App> {
-  return hc<App>(...args);
+/**
+ * Create a simple RPC client that wraps fetch
+ * and supports $get/$post helpers.
+ * Allows passing RequestInit (credentials, headers, ...)
+ * per request
+ * @param baseUrl
+ * @returns
+ */
+export function createRpcClient(baseUrl: string): RpcClient {
+  return {
+    $get: (path, options) =>
+      fetch(`${baseUrl}${path}`, {
+        method: "GET",
+        ...options,
+      }),
+
+    $post: (path, options) => {
+      const { body, ...init } = options ?? {};
+
+      return fetch(`${baseUrl}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(init.headers ?? {}),
+        },
+        body: body !== undefined
+          ? JSON.stringify(body)
+          : undefined,
+        ...init,
+      });
+    },
+  };
 }

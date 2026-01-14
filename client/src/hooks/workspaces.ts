@@ -2,19 +2,7 @@
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
-import { rpcErrorFromResponse } from "@/lib/rpcError";
-
-async function parseOrThrow<T>(res: Response, fallback?: T): Promise<T> {
-  let body: unknown;
-  try {
-    body = await res.clone().json();
-  } catch {
-    body = undefined;
-  }
-
-  if (!res.ok) throw rpcErrorFromResponse(res, body);
-  return (body ?? fallback) as T;
-}
+import { parseOrThrow } from "@/lib/parseOrThrow";
 
 // --- Workspaces hooks ---
 
@@ -30,7 +18,7 @@ export function useWorkspaces(
   }>({
     queryKey: ["workspaces"],
     queryFn: async () => {
-      const res = await rpc.workspaces.$get();
+      const res = await rpc.$get("/workspaces");
       return parseOrThrow(res, { workspaces: [] });
     },
     staleTime: 0,
@@ -48,7 +36,7 @@ export function useSelectWorkspace() {
     { workspaceId: number }
   >({
     mutationFn: async (body: { workspaceId: number }) => {
-      const res = await rpc.workspaces.select.$post({ body });
+      const res = await rpc.$post("/workspaces", { body });
       return parseOrThrow(res, { workspaces: [] });
     },
     onSuccess: () => {
