@@ -39,6 +39,8 @@ export const app = new Hono()
   .get("/api/auth/me", requireSession, requireWorkspace, meHandler)
 
   // Project routes
+
+  // GET all projects
   .get("/api/projects", requireSession, requireWorkspace, (ctx) => {
     const workspaceId = Number(ctx.workspace?.id);
     const allProjects = db
@@ -47,6 +49,29 @@ export const app = new Hono()
       .where(eq(Projects.projects.workspaceId, workspaceId))
       .all();
     return ctx.json({ projects: allProjects });
+  })
+
+  // GET single project
+  .get("/api/projects/:projectId", requireSession, requireWorkspace, (ctx) => {
+    const projectId = Number(ctx.req.param("projectId"));
+    const workspaceId = Number(ctx.workspace?.id);
+
+    const project = db
+      .select()
+      .from(Projects.projects)
+      .where(
+        and(
+          eq(Projects.projects.id, projectId),
+          eq(Projects.projects.workspaceId, workspaceId)
+        )
+      )
+      .get();
+
+    if (!project) {
+      return ctx.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    return ctx.json(project);
   })
 
   // POST create a new project
@@ -64,6 +89,46 @@ export const app = new Hono()
       .run();
 
     return ctx.json({ message: "Project created" }, { status: 201 });
+  })
+
+  // PUT update project
+  .put("/api/projects/:projectId", requireSession, requireWorkspace, async (ctx) => {
+    const projectId = Number(ctx.req.param("projectId"));
+    const workspaceId = Number(ctx.workspace?.id);
+    const { name, description } = await ctx.req.json<{ name?: string; description?: string }>();
+
+    const updateData: Partial<{ name: string; description?: string }> = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+
+    db.update(Projects.projects)
+      .set({ name, description })
+      .where(
+        and(
+          eq(Projects.projects.id, projectId),
+          eq(Projects.projects.workspaceId, workspaceId)
+        )
+      )
+      .run();
+
+    return ctx.json({ message: "Project updated" });
+  })
+
+  // DELETE project
+  .delete("/api/projects/:projectId", requireSession, requireWorkspace, (ctx) => {
+    const projectId = Number(ctx.req.param("projectId"));
+    const workspaceId = Number(ctx.workspace?.id);
+
+    db.delete(Projects.projects)
+      .where(
+        and(
+          eq(Projects.projects.id, projectId),
+          eq(Projects.projects.workspaceId, workspaceId)
+        )
+      )
+      .run();
+
+    return ctx.json({ message: "Project deleted" });
   })
 
   // Workspace routes

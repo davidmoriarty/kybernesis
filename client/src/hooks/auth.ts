@@ -6,8 +6,9 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";
+import { rpc } from "@/lib/rpc";
+import { appToast } from "@/lib/toast";
 
 export type MeResult = {
   user?: Pick<User, "id" | "email" | "name">;
@@ -21,10 +22,7 @@ export const meQueryOptions = () => ({
   queryKey: ["me"] as const,
   queryFn: async (): Promise<MeResult> => {
     try {
-      const res = await rpc.$get(
-        "/auth/me",
-        { credentials: "include" }
-      );
+      const res = await rpc.$get("/auth/me", { credentials: "include" });
       return parseOrThrow<MeResult>(res);
     } catch {
       // Logged-out state is valid data
@@ -52,9 +50,10 @@ export function useSignup() {
 
   return useMutation<
     { message: string },
-    unknown,
+    Error,
     { name: string; email: string; password: string }
   >({
+    retry: false,
     mutationFn: async (body) => {
       const res = await rpc.$post("/auth/signup", {
         body,
@@ -64,6 +63,10 @@ export function useSignup() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
+      appToast.auth.signupSuccess();
+    },
+    onError: () => {
+      appToast.auth.signupError();
     },
   });
 }
@@ -73,9 +76,10 @@ export function useLogin() {
 
   return useMutation<
     { message: string },
-    unknown,
+    Error,
     { email: string; password: string }
   >({
+    retry: false,
     mutationFn: async (body) => {
       const res = await rpc.$post("/auth/login", {
         body,
@@ -85,6 +89,10 @@ export function useLogin() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
+      appToast.auth.loginSuccess();
+    },
+    onError: () => {
+      appToast.auth.loginError();
     },
   });
 }
@@ -92,15 +100,20 @@ export function useLogin() {
 export function useLogout() {
   const qc = useQueryClient();
 
-  return useMutation<{ message: string }, unknown, void>({
+  return useMutation<{ message: string }, Error, void>({
+    retry: false,
     mutationFn: async () => {
-      const res = await rpc.$post("/auth/logout",{
+      const res = await rpc.$post("/auth/logout", {
         credentials: "include",
       });
       return parseOrThrow(res, { message: "" });
     },
     onSuccess: () => {
       qc.removeQueries({ queryKey: ["me"] });
+      appToast.auth.logoutSuccess();
+    },
+    onError: () => {
+      appToast.auth.logoutError();
     },
   });
 }

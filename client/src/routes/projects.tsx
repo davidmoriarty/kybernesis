@@ -1,9 +1,11 @@
 // client/src/routes/projects.tsx
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Container } from "@/components/Container";
 import { FormLayout } from "@/components/FormLayout";
 import { Hero } from "@/components/Hero";
+import { ProjectCard } from "@/components/ProjectCard";
 import { Section } from "@/components/Section";
 import { Button } from "@/components/ui/button";
 import { useMe } from "@/hooks/auth";
@@ -33,19 +35,26 @@ function ProjectsPage() {
 
     if (!me?.workspace) {
       console.error("No active workspace");
+      toast.error("No active workspace selected.");
       return;
     }
 
     const workspaceId = Number(me.workspace.id);
 
-    await createProject.mutateAsync({
-      name,
-      description,
-      workspaceId,
-    });
+    try {
+      await createProject.mutateAsync({
+        name,
+        description,
+        workspaceId,
+      });
 
-    setName("");
-    setDescription("");
+      setName("");
+      setDescription("");
+      toast.success("Project created!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create project.");
+    }
   };
 
   return (
@@ -61,13 +70,12 @@ function ProjectsPage() {
             <p>Failed to load projects.</p>
           ) : projects?.projects.length ? (
             projects.projects.map((p) => (
-              <div
+              <ProjectCard
                 key={p.id}
-                className="border p-6 rounded-md flex flex-col gap-2"
-              >
-                <strong className="text-lg">{p.name}</strong>
-                {p.description && <p>{p.description}</p>}
-              </div>
+                id={p.id}
+                name={p.name}
+                description={p.description}
+              />
             ))
           ) : (
             <div className="border p-6 rounded-md text-center">
@@ -113,6 +121,9 @@ function ProjectsPage() {
           </Button>
         </FormLayout>
       </Section>
+
+      {/* Outlet for child routes like /projects/$projectId */}
+      <Outlet />
     </>
   );
 }

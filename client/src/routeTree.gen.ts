@@ -15,6 +15,7 @@ import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectsProjectIdRouteImport } from './routes/projects/$projectId'
 import { Route as Errors500RouteImport } from './routes/_errors/500'
 import { Route as Errors403RouteImport } from './routes/_errors/403'
 import { Route as Errors401RouteImport } from './routes/_errors/401'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => ProjectsRoute,
+} as any)
 const Errors500Route = Errors500RouteImport.update({
   id: '/_errors/500',
   path: '/500',
@@ -69,35 +75,38 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/projects': typeof ProjectsRoute
+  '/projects': typeof ProjectsRouteWithChildren
   '/signup': typeof SignupRoute
   '/workspaces': typeof WorkspacesRoute
   '/401': typeof Errors401Route
   '/403': typeof Errors403Route
   '/500': typeof Errors500Route
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/projects': typeof ProjectsRoute
+  '/projects': typeof ProjectsRouteWithChildren
   '/signup': typeof SignupRoute
   '/workspaces': typeof WorkspacesRoute
   '/401': typeof Errors401Route
   '/403': typeof Errors403Route
   '/500': typeof Errors500Route
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/projects': typeof ProjectsRoute
+  '/projects': typeof ProjectsRouteWithChildren
   '/signup': typeof SignupRoute
   '/workspaces': typeof WorkspacesRoute
   '/_errors/401': typeof Errors401Route
   '/_errors/403': typeof Errors403Route
   '/_errors/500': typeof Errors500Route
+  '/projects/$projectId': typeof ProjectsProjectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/401'
     | '/403'
     | '/500'
+    | '/projects/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/401'
     | '/403'
     | '/500'
+    | '/projects/$projectId'
   id:
     | '__root__'
     | '/'
@@ -133,13 +144,14 @@ export interface FileRouteTypes {
     | '/_errors/401'
     | '/_errors/403'
     | '/_errors/500'
+    | '/projects/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
-  ProjectsRoute: typeof ProjectsRoute
+  ProjectsRoute: typeof ProjectsRouteWithChildren
   SignupRoute: typeof SignupRoute
   WorkspacesRoute: typeof WorkspacesRoute
   Errors401Route: typeof Errors401Route
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$projectId': {
+      id: '/projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof ProjectsProjectIdRouteImport
+      parentRoute: typeof ProjectsRoute
+    }
     '/_errors/500': {
       id: '/_errors/500'
       path: '/500'
@@ -215,11 +234,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ProjectsRouteChildren {
+  ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
+}
+
+const ProjectsRouteChildren: ProjectsRouteChildren = {
+  ProjectsProjectIdRoute: ProjectsProjectIdRoute,
+}
+
+const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
+  ProjectsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
-  ProjectsRoute: ProjectsRoute,
+  ProjectsRoute: ProjectsRouteWithChildren,
   SignupRoute: SignupRoute,
   WorkspacesRoute: WorkspacesRoute,
   Errors401Route: Errors401Route,

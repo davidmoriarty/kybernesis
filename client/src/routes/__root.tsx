@@ -3,6 +3,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ErrorPage } from "@/components/error/ErrorPage";
 import { Footer } from "@/components/Footer";
 import { Navbar } from "@/components/Navbar";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createRootRoute({
   notFoundComponent: () => <ErrorPage status={404} />,
@@ -14,6 +15,7 @@ export const Route = createRootRoute({
           <Outlet />
         </main>
         <Footer />
+        <Toaster />
         {import.meta.env.DEV && <TanStackRouterDevtools />}
       </>
     );
