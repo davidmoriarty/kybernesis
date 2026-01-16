@@ -21,23 +21,75 @@ export default function MePage() {
   const logout = useLogout();
 
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [timezone, setTimezone] = useState("");
-  const [location, setLocation] = useState("");
-  const [avatar, setAvatar] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    nickname: "",
+    timezone: "",
+    location: "",
+    avatar: "",
+  });
 
   useEffect(() => {
     if (me?.user) {
-      setName(me.user.name);
-      setEmail(me.user.email);
-      setNickname(me.user.nickname ?? "");
-      setTimezone(me.user.timezone ?? "");
-      setLocation(me.user.location ?? "");
-      setAvatar(me.user.avatar ?? "");
+      setForm({
+        name: me.user.name,
+        email: me.user.email,
+        nickname: me.user.nickname ?? "",
+        timezone: me.user.timezone ?? "",
+        location: me.user.location ?? "",
+        avatar: me.user.avatar ?? "",
+      });
     }
   }, [me?.user]);
+
+  const handleChange = (field: keyof typeof form, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateProfile.mutateAsync(form);
+      setEditing(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancel = () => {
+    if (me?.user) {
+      setForm({
+        name: me.user.name,
+        email: me.user.email,
+        nickname: me.user.nickname ?? "",
+        timezone: me.user.timezone ?? "",
+        location: me.user.location ?? "",
+        avatar: me.user.avatar ?? "",
+      });
+    }
+    setEditing(false);
+  };
+
+  const handleAvatarError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
+    e.currentTarget.src = "https://via.placeholder.com/96";
+  };
+
+  const handleAvatarErrorSmall = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
+  ) => {
+    e.currentTarget.src = "https://via.placeholder.com/48";
+  };
+
+  const isUnchanged = () =>
+    me?.user &&
+    form.name === me.user.name &&
+    form.email === me.user.email &&
+    form.nickname === (me.user.nickname ?? "") &&
+    form.timezone === (me.user.timezone ?? "") &&
+    form.location === (me.user.location ?? "") &&
+    form.avatar === (me.user.avatar ?? "");
 
   // Loading state
   if (isLoading)
@@ -68,101 +120,71 @@ export default function MePage() {
       </Section>
     );
 
-  const handleSave = async () => {
-    try {
-      await updateProfile.mutateAsync({
-        name,
-        email,
-        nickname,
-        timezone,
-        location,
-        avatar,
-      });
-      setEditing(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   return (
     <>
       <Section>
         <Container>
-          {/* User Info Card */}
           <Card>
             <CardHeader>
               <CardTitle>Your Profile</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <Label>Name</Label>
-                {editing ? (
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                ) : (
-                  <p className="text-lg font-medium">{me?.user?.name || "-"}</p>
-                )}
-              </div>
+              {(
+                ["name", "email", "nickname", "timezone", "location"] as const
+              ).map((field) => (
+                <div key={field} className="flex flex-col gap-1">
+                  <Label>
+                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                  </Label>
+                  {editing ? (
+                    <Input
+                      value={form[field]}
+                      onChange={(e) => handleChange(field, e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-lg">{form[field] || "-"}</p>
+                  )}
+                </div>
+              ))}
 
-              <div className="flex flex-col gap-1">
-                <Label>Email</Label>
-                {editing ? (
-                  <Input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                ) : (
-                  <p className="text-lg">{me?.user?.email || "-"}</p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Nickname</Label>
-                {editing ? (
-                  <Input
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                  />
-                ) : (
-                  <p className="text-lg">{me?.user?.nickname || "-"}</p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Timezone</Label>
-                {editing ? (
-                  <Input
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                  />
-                ) : (
-                  <p className="text-lg">{me?.user?.timezone || "-"}</p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label>Location</Label>
-                {editing ? (
-                  <Input
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  />
-                ) : (
-                  <p className="text-lg">{me?.user?.location || "-"}</p>
-                )}
-              </div>
-
+              {/* Avatar input with live preview */}
               <div className="flex flex-col gap-1">
                 <Label>Avatar</Label>
                 {editing ? (
-                  <Input
-                    value={avatar}
-                    onChange={(e) => setAvatar(e.target.value)}
-                  />
+                  <>
+                    <Input
+                      value={form.avatar}
+                      onChange={(e) => handleChange("avatar", e.target.value)}
+                    />
+                    <div className="mt-2 w-24 h-24 border rounded overflow-hidden">
+                      {form.avatar ? (
+                        <img
+                          src={form.avatar}
+                          alt="Avatar Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => handleAvatarError(e)}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                          Preview
+                        </div>
+                      )}
+                    </div>
+                  </>
                 ) : (
-                  <p className="text-lg">{me?.user?.avatar || "-"}</p>
+                  <div className="flex items-center gap-2">
+                    {form.avatar ? (
+                      <img
+                        src={form.avatar}
+                        alt="Avatar"
+                        className="w-12 h-12 rounded-full object-cover"
+                        onError={handleAvatarErrorSmall}
+                      />
+                    ) : (
+                      <span className="text-lg">-</span>
+                    )}
+                    <p className="text-lg">{form.avatar ? form.avatar : ""}</p>
+                  </div>
                 )}
               </div>
 
@@ -183,31 +205,11 @@ export default function MePage() {
                     <Button
                       size="sm"
                       onClick={handleSave}
-                      disabled={
-                        updateProfile.isPending ||
-                        (name === me?.user?.name &&
-                          email === me?.user?.email &&
-                          nickname === me?.user?.nickname &&
-                          timezone === me?.user?.timezone &&
-                          location === me?.user?.location &&
-                          avatar === me?.user?.avatar)
-                      }
+                      disabled={updateProfile.isPending || isUnchanged()}
                     >
                       Save
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setName(me?.user?.name ?? "");
-                        setEmail(me?.user?.email ?? "");
-                        setNickname(me?.user?.nickname ?? "");
-                        setTimezone(me?.user?.timezone ?? "");
-                        setLocation(me?.user?.location ?? "");
-                        setAvatar(me?.user?.avatar ?? "");
-                        setEditing(false);
-                      }}
-                    >
+                    <Button size="sm" variant="outline" onClick={handleCancel}>
                       Cancel
                     </Button>
                   </>
@@ -229,9 +231,9 @@ export default function MePage() {
         </Container>
       </Section>
 
-      <Section>
-        <Container>
-          {me?.workspace && (
+      {me?.workspace && (
+        <Section>
+          <Container>
             <Card>
               <CardHeader>
                 <CardTitle>Workspace</CardTitle>
@@ -241,13 +243,13 @@ export default function MePage() {
                   <strong>Name:</strong> {me.workspace.name}
                 </p>
                 <p>
-                  <strong>Role:</strong> {me?.workspace?.role || "-"}
+                  <strong>Role:</strong> {me.workspace.role}
                 </p>
               </CardContent>
             </Card>
-          )}
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
     </>
   );
 }

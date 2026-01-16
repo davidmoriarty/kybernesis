@@ -29,17 +29,32 @@ export async function updateProfileHandler(ctx: Context) {
     return ctx.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { name, email } = await ctx.req.json();
+  const { name, email, nickname, timezone, location, avatar } =
+    await ctx.req.json();
   const now = Math.floor(Date.now() / 1000);
 
-  // Update user in DB and get returned row
+  // Build update object only with defined fields
+  const updateData: Partial<{
+    name: string;
+    email: string;
+    nickname?: string | null;
+    timezone?: string | null;
+    location?: string | null;
+    avatar?: string | null;
+    updatedAt: number;
+  }> = { updatedAt: now };
+
+  if (name !== undefined) updateData.name = name;
+  if (email !== undefined) updateData.email = email;
+  if (nickname !== undefined) updateData.nickname = nickname;
+  if (timezone !== undefined) updateData.timezone = timezone;
+  if (location !== undefined) updateData.location = location;
+  if (avatar !== undefined) updateData.avatar = avatar;
+
+  // Update user in DB
   const updatedRow = db
     .update(Users.users)
-    .set({
-      name,
-      email,
-      updatedAt: now,
-    })
+    .set(updateData)
     .where(eq(Users.users.id, ctx.user.id))
     .returning()
     .get();
