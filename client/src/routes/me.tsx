@@ -15,12 +15,36 @@ export const Route = createFileRoute("/me")({
   component: MePage,
 });
 
+function AvatarFallback({ size = 96 }: { size?: number }) {
+  return (
+    <div
+      className="flex items-center justify-center rounded-full bg-muted text-muted-foreground"
+      style={{ width: size, height: size }}
+    >
+      <svg
+        width={size * 0.5}
+        height={size * 0.5}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M20 21c0-4-4-7-8-7s-8 3-8 7" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    </div>
+  );
+}
+
 export default function MePage() {
   const { data: me, isLoading, isError } = useMe();
   const updateProfile = useUpdateProfile();
   const logout = useLogout();
 
   const [editing, setEditing] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -42,6 +66,10 @@ export default function MePage() {
       });
     }
   }, [me?.user]);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [form.avatar]);
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -70,20 +98,8 @@ export default function MePage() {
     setEditing(false);
   };
 
-  const handleAvatarError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>,
-  ) => {
-    e.currentTarget.src = "https://via.placeholder.com/96";
-  };
-
-  const handleAvatarErrorSmall = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>,
-  ) => {
-    e.currentTarget.src = "https://via.placeholder.com/48";
-  };
-
   const isUnchanged = () =>
-    me?.user &&
+    !!me?.user &&
     form.name === me.user.name &&
     form.email === me.user.email &&
     form.nickname === (me.user.nickname ?? "") &&
@@ -98,8 +114,8 @@ export default function MePage() {
         <Container>
           <Card>
             <CardContent className="text-center text-lg">
-              <span className="animate-spin inline-block mr-2">⏳</span> Loading
-              profile...
+              <span className="animate-spin inline-block mr-2">⏳</span>
+              Loading profile...
             </CardContent>
           </Card>
         </Container>
@@ -126,105 +142,95 @@ export default function MePage() {
         <Container>
           <Card>
             <CardHeader>
-              <CardTitle>Your Profile</CardTitle>
+              <CardTitle className="font-black text-2xl text-center">
+                Your Profile
+              </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {(
-                ["name", "email", "nickname", "timezone", "location"] as const
-              ).map((field) => (
-                <div key={field} className="flex flex-col gap-1">
-                  <Label>
-                    {field.charAt(0).toUpperCase() + field.slice(1)}
-                  </Label>
-                  {editing ? (
-                    <Input
-                      value={form[field]}
-                      onChange={(e) => handleChange(field, e.target.value)}
-                    />
-                  ) : (
-                    <p className="text-lg">{form[field] || "-"}</p>
-                  )}
-                </div>
-              ))}
 
-              {/* Avatar input with live preview */}
-              <div className="flex flex-col gap-1">
-                <Label>Avatar</Label>
-                {editing ? (
-                  <>
-                    <Input
-                      value={form.avatar}
-                      onChange={(e) => handleChange("avatar", e.target.value)}
-                    />
-                    <div className="mt-2 w-24 h-24 border rounded overflow-hidden">
-                      {form.avatar ? (
-                        <img
-                          src={form.avatar}
-                          alt="Avatar Preview"
-                          className="w-full h-full object-cover"
-                          onError={(e) => handleAvatarError(e)}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-                          Preview
-                        </div>
-                      )}
-                    </div>
-                  </>
+            <CardContent className="grid gap-6 md:grid-cols-[220px_1fr]">
+              {/* Left column: avatar */}
+              <div className="flex flex-col items-center gap-3">
+                {form.avatar && !avatarError ? (
+                  <img
+                    src={form.avatar}
+                    alt="Avatar"
+                    className="h-24 w-24 rounded-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
                 ) : (
-                  <div className="flex items-center gap-2">
-                    {form.avatar ? (
-                      <img
-                        src={form.avatar}
-                        alt="Avatar"
-                        className="w-12 h-12 rounded-full object-cover"
-                        onError={handleAvatarErrorSmall}
-                      />
-                    ) : (
-                      <span className="text-lg">-</span>
-                    )}
-                    <p className="text-lg">{form.avatar ? form.avatar : ""}</p>
-                  </div>
+                  <AvatarFallback size={96} />
+                )}
+
+                {editing && (
+                  <Input
+                    placeholder="Avatar URL"
+                    value={form.avatar}
+                    onChange={(e) => handleChange("avatar", e.target.value)}
+                  />
+                )}
+
+                {me?.user?.createdAt && !editing && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Member since{" "}
+                    {new Intl.DateTimeFormat("en-CA", {
+                      year: "numeric",
+                      month: "long",
+                    }).format(new Date(me.user.createdAt * 1000))}
+                  </p>
                 )}
               </div>
 
-              {me?.user?.createdAt && !editing && (
-                <p className="text-sm text-muted">
-                  Member since:{" "}
-                  {new Intl.DateTimeFormat("en-CA", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  }).format(new Date(me.user.createdAt * 1000))}
-                </p>
-              )}
+              {/* Right column: fields */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {(
+                  ["name", "email", "nickname", "location", "timezone"] as const
+                ).map((field) => (
+                  <div key={field} className="flex flex-col gap-1">
+                    <Label>
+                      {field.charAt(0).toUpperCase() + field.slice(1)}
+                    </Label>
+                    {editing ? (
+                      <Input
+                        value={form[field]}
+                        onChange={(e) => handleChange(field, e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-sm">{form[field] || "-"}</p>
+                    )}
+                  </div>
+                ))}
 
-              <div className="flex gap-2 mt-2">
-                {editing ? (
-                  <>
-                    <Button
-                      size="sm"
-                      onClick={handleSave}
-                      disabled={updateProfile.isPending || isUnchanged()}
-                    >
-                      Save
+                <div className="col-span-full flex gap-2 pt-4">
+                  {editing ? (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={updateProfile.isPending || isUnchanged()}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancel}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" onClick={() => setEditing(true)}>
+                      Edit Profile
                     </Button>
-                    <Button size="sm" variant="outline" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <Button size="sm" onClick={() => setEditing(true)}>
-                    Edit Profile
+                  )}
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => logout.mutate()}
+                  >
+                    Log Out
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => logout.mutate()}
-                >
-                  Log Out
-                </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -236,9 +242,12 @@ export default function MePage() {
           <Container>
             <Card>
               <CardHeader>
-                <CardTitle>Workspace</CardTitle>
+                <CardTitle className="font-black text-2xl text-center">
+                  Workspace
+                </CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-2">
+
+              <CardContent className="flex flex-col gap-2 text-center">
                 <p>
                   <strong>Name:</strong> {me.workspace.name}
                 </p>
