@@ -3,6 +3,9 @@ import { toast } from "sonner";
 
 export const appToast = {
   auth: {
+    profileUpdateSuccess: () => toast.success("Profile updated!"),
+    profileUpdateError: () => toast.error("Failed to update profile"),
+
     signupSuccess: () => toast.success("Account created successfully"),
     signupError: () => toast.error("Sign up failed"),
 

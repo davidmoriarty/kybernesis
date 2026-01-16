@@ -1,6 +1,6 @@
 // packages/db/src/seed.ts
 import { hashPassword } from "@shared";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, Users, WorkspaceMembers, Workspaces } from "./index";
 
 async function getOrCreateAdminUser() {
@@ -13,6 +13,7 @@ async function getOrCreateAdminUser() {
   if (!user) {
     const passwordHash = await hashPassword("password123");
 
+    // Insert user
     db.insert(Users.users)
       .values({
         email: "admin@example.com",
@@ -21,6 +22,7 @@ async function getOrCreateAdminUser() {
       })
       .run();
 
+    // Query back the inserted user
     user = db
       .select()
       .from(Users.users)
@@ -29,7 +31,15 @@ async function getOrCreateAdminUser() {
   }
 
   if (!user) throw new Error("Failed to seed admin user");
-  return user;
+
+  return user as {
+    id: number;
+    name: string;
+    email: string;
+    passwordHash: string;
+    createdAt: number;
+    updatedAt: number;
+  };
 }
 
 function getOrCreateWorkspace(user: { id: number; name: string }) {
@@ -52,14 +62,19 @@ function getOrCreateWorkspace(user: { id: number; name: string }) {
   }
 
   if (!workspace) throw new Error("Failed to seed workspace");
-  return workspace;
+  return workspace as { id: number; name: string; ownerId: number };
 }
 
 function ensureMembership(userId: number, workspaceId: number) {
   const membership = db
     .select()
     .from(WorkspaceMembers.workspaceMembers)
-    .where(eq(WorkspaceMembers.workspaceMembers.userId, userId))
+    .where(
+      and(
+        eq(WorkspaceMembers.workspaceMembers.userId, userId),
+        eq(WorkspaceMembers.workspaceMembers.workspaceId, workspaceId),
+      ),
+    )
     .get();
 
   if (!membership) {

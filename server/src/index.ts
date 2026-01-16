@@ -1,7 +1,7 @@
 // server/src/index.ts
 import { loginHandler } from "@auth/login";
 import { logoutHandler } from "@auth/logout";
-import { meHandler } from "@auth/me";
+import { meHandler, updateProfileHandler } from "@auth/me";
 import { signupHandler } from "@auth/signup";
 import { db, Projects, Sessions, WorkspaceMembers, Workspaces } from "@db";
 import type { ApiResponse } from "@shared/types/api";
@@ -37,6 +37,7 @@ export const app = new Hono()
   .post("/api/auth/logout", logoutHandler)
   .post("/api/auth/signup", signupHandler)
   .get("/api/auth/me", requireSession, requireWorkspace, meHandler)
+  .put("/api/auth/me", requireSession, requireWorkspace, updateProfileHandler)
 
   // Project routes
 
@@ -47,7 +48,12 @@ export const app = new Hono()
       .select()
       .from(Projects.projects)
       .where(eq(Projects.projects.workspaceId, workspaceId))
-      .all();
+      .all()
+      .map((p) => ({
+        ...p,
+        createdAt: Number(p.createdAt),
+        updatedAt: Number(p.updatedAt),
+      }));
     return ctx.json({ projects: allProjects });
   })
 
@@ -62,8 +68,8 @@ export const app = new Hono()
       .where(
         and(
           eq(Projects.projects.id, projectId),
-          eq(Projects.projects.workspaceId, workspaceId)
-        )
+          eq(Projects.projects.workspaceId, workspaceId),
+        ),
       )
       .get();
 
@@ -71,7 +77,11 @@ export const app = new Hono()
       return ctx.json({ error: "Project not found" }, { status: 404 });
     }
 
-    return ctx.json(project);
+    return ctx.json({
+      ...project,
+      createdAt: Number(project.createdAt),
+      updatedAt: Number(project.updatedAt),
+    });
   })
 
   // POST create a new project
@@ -82,54 +92,76 @@ export const app = new Hono()
       description?: string;
     }>();
 
-    const createdAt = Math.floor(Date.now() / 1000);
+    const now = Math.floor(Date.now() / 1000);
 
     db.insert(Projects.projects)
-      .values({ workspaceId, name, description, createdAt })
+      .values({
+        workspaceId,
+        name,
+        description,
+        createdAt: now,
+        updatedAt: now,
+      })
       .run();
 
     return ctx.json({ message: "Project created" }, { status: 201 });
   })
 
   // PUT update project
-  .put("/api/projects/:projectId", requireSession, requireWorkspace, async (ctx) => {
-    const projectId = Number(ctx.req.param("projectId"));
-    const workspaceId = Number(ctx.workspace?.id);
-    const { name, description } = await ctx.req.json<{ name?: string; description?: string }>();
+  .put(
+    "/api/projects/:projectId",
+    requireSession,
+    requireWorkspace,
+    async (ctx) => {
+      const projectId = Number(ctx.req.param("projectId"));
+      const workspaceId = Number(ctx.workspace?.id);
+      const { name, description } = await ctx.req.json<{
+        name?: string;
+        description?: string;
+      }>();
 
-    const updateData: Partial<{ name: string; description?: string }> = {};
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
+      const updateData: Partial<{ name: string; description?: string }> = {};
+      if (name !== undefined) updateData.name = name;
+      if (description !== undefined) updateData.description = description;
 
-    db.update(Projects.projects)
-      .set({ name, description })
-      .where(
-        and(
-          eq(Projects.projects.id, projectId),
-          eq(Projects.projects.workspaceId, workspaceId)
+      db.update(Projects.projects)
+        .set({
+          ...updateData,
+          updatedAt: Math.floor(Date.now() / 1000),
+        })
+        .where(
+          and(
+            eq(Projects.projects.id, projectId),
+            eq(Projects.projects.workspaceId, workspaceId),
+          ),
         )
-      )
-      .run();
+        .run();
 
-    return ctx.json({ message: "Project updated" });
-  })
+      return ctx.json({ message: "Project updated" });
+    },
+  )
 
   // DELETE project
-  .delete("/api/projects/:projectId", requireSession, requireWorkspace, (ctx) => {
-    const projectId = Number(ctx.req.param("projectId"));
-    const workspaceId = Number(ctx.workspace?.id);
+  .delete(
+    "/api/projects/:projectId",
+    requireSession,
+    requireWorkspace,
+    (ctx) => {
+      const projectId = Number(ctx.req.param("projectId"));
+      const workspaceId = Number(ctx.workspace?.id);
 
-    db.delete(Projects.projects)
-      .where(
-        and(
-          eq(Projects.projects.id, projectId),
-          eq(Projects.projects.workspaceId, workspaceId)
+      db.delete(Projects.projects)
+        .where(
+          and(
+            eq(Projects.projects.id, projectId),
+            eq(Projects.projects.workspaceId, workspaceId),
+          ),
         )
-      )
-      .run();
+        .run();
 
-    return ctx.json({ message: "Project deleted" });
-  })
+      return ctx.json({ message: "Project deleted" });
+    },
+  )
 
   // Workspace routes
   .get("/api/workspaces", requireSession, (ctx) => {
@@ -154,8 +186,6 @@ export const app = new Hono()
       )
       .where(eq(WorkspaceMembers.workspaceMembers.userId, userId))
       .all();
-
-    console.log("Workspaces rows for user", userId, rows);
 
     // Always return refresh data, prevent 304
     return ctx.json(

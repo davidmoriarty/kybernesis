@@ -21,6 +21,7 @@ export async function signupHandler(ctx: Context) {
   }
 
   const passwordHash = await hashPassword(password);
+  const now = Math.floor(Date.now() / 1000);
 
   const { userId, workspaceId } = db.transaction(() => {
     const user = db
@@ -29,6 +30,12 @@ export async function signupHandler(ctx: Context) {
         name,
         email,
         passwordHash,
+        createdAt: now,
+        updatedAt: now,
+        nickname: undefined,
+        timezone: undefined,
+        location: undefined,
+        avatar: undefined,
       })
       .returning()
       .get();

@@ -4,16 +4,18 @@ import { and, eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
 
 export async function requireWorkspace(ctx: Context, next: Next) {
-  // Must have a user and workspace context
   if (!ctx.user || !ctx.workspace?.id) {
     return ctx.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const workspaceId = ctx.workspace.id;
 
-  // Verify workspace exists
+  // Verify workspace exists (only select needed fields)
   const workspace = db
-    .select()
+    .select({
+      id: Workspaces.workspaces.id,
+      name: Workspaces.workspaces.name,
+    })
     .from(Workspaces.workspaces)
     .where(eq(Workspaces.workspaces.id, workspaceId))
     .get();
@@ -38,10 +40,11 @@ export async function requireWorkspace(ctx: Context, next: Next) {
     return ctx.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  // Attach workspace context
+  // Attach workspace and role
   ctx.workspace = {
     id: workspace.id,
     name: workspace.name,
+    role: membership.role,
   };
 
   ctx.workspaceMember = {

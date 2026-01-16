@@ -1,7 +1,8 @@
 // packages/db/src/users.ts
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { db } from "./dbInstance";
+import type { UserRow } from "./types";
 
 // Table definition (source of truth)
 export const users = sqliteTable("users", {
@@ -9,6 +10,16 @@ export const users = sqliteTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  createdAt: integer("created_at")
+    .notNull()
+    .default(sql`(strftime('%s', 'now'))`),
+  updatedAt: integer("updated_at")
+    .notNull()
+    .default(sql`    (strftime('%s', 'now'))`),
+  nickname: text("nickname"),
+  timezone: text("timezone"),
+  location: text("location"),
+  avatar: text("avatar"),
 });
 
 export function createUsersTable() {
@@ -17,38 +28,36 @@ export function createUsersTable() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL
+      password_hash TEXT NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      nickname TEXT,
+      timezone TEXT,
+      location TEXT,
+      avatar TEXT
     );
   `);
 }
-
-// User domain type (derived from DB reality)
-export type User = {
-  id: number;
-  name: string;
-  email: string;
-  passwordHash: string;
-};
 
 // Queries (sync on Bun SQLite)
 
 // GET User by Id
 export function getUserById(id: number) {
   return db.select().from(users).where(eq(users.id, id)).get() as
-    | User
+    | UserRow
     | undefined;
 }
 
 // GET User by Email
 export function getUserByEmail(email: string) {
   return db.select().from(users).where(eq(users.email, email)).get() as
-    | User
+    | UserRow
     | undefined;
 }
 
 // GET User by Name
 export function getUserByName(name: string) {
   return db.select().from(users).where(eq(users.name, name)).get() as
-    | User
+    | UserRow
     | undefined;
 }

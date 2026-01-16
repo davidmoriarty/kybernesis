@@ -24,21 +24,22 @@ export async function requireSession(ctx: Context, next: Next) {
     )
     .get();
 
-  if (!session) {
-    return ctx.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!session) return ctx.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Synchronous user lookup
   const user = Users.getUserById(session.userId);
-  if (!user) {
-    return ctx.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return ctx.json({ error: "Unauthorized" }, { status: 401 });
 
   // Attach user and session to context
   ctx.user = {
     id: user.id,
     email: user.email,
     name: user.name,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    nickname: user.nickname,
+    timezone: user.timezone,
+    location: user.location,
+    avatar: user.avatar,
   };
 
   ctx.session = {
@@ -47,17 +48,21 @@ export async function requireSession(ctx: Context, next: Next) {
     workspaceId: session.workspaceId ?? null,
   };
 
-  // Optionally, attach workspace if workspaceId exists
   if (session.workspaceId) {
-    const workspace = db
-      .select()
-      .from(Workspaces.workspaces)
-      .where(eq(Workspaces.workspaces.id, session.workspaceId))
-      .get();
-
-    const membership = db
-      .select()
+    const workspaceWithRole = db
+      .select({
+        id: Workspaces.workspaces.id,
+        name: Workspaces.workspaces.name,
+        role: WorkspaceMembers.workspaceMembers.role,
+      })
       .from(WorkspaceMembers.workspaceMembers)
+      .innerJoin(
+        Workspaces.workspaces,
+        eq(
+          WorkspaceMembers.workspaceMembers.workspaceId,
+          Workspaces.workspaces.id,
+        ),
+      )
       .where(
         and(
           eq(WorkspaceMembers.workspaceMembers.userId, user.id),
@@ -69,15 +74,15 @@ export async function requireSession(ctx: Context, next: Next) {
       )
       .get();
 
-    if (workspace && membership) {
+    if (workspaceWithRole) {
       ctx.workspace = {
-        id: workspace.id,
-        name: workspace.name,
+        id: workspaceWithRole.id,
+        name: workspaceWithRole.name,
+        role: workspaceWithRole.role,
       };
-
       ctx.workspaceMember = {
-        workspaceId: membership.workspaceId,
-        role: membership.role,
+        workspaceId: session.workspaceId,
+        role: workspaceWithRole.role,
       };
     }
   }

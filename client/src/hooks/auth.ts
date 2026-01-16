@@ -11,7 +11,18 @@ import { rpc } from "@/lib/rpc";
 import { appToast } from "@/lib/toast";
 
 export type MeResult = {
-  user?: Pick<User, "id" | "email" | "name">;
+  user?: Pick<
+    User,
+    | "id"
+    | "email"
+    | "name"
+    | "createdAt"
+    | "updatedAt"
+    | "nickname"
+    | "timezone"
+    | "location"
+    | "avatar"
+  >;
   workspace?: Pick<Workspace, "id" | "name"> & {
     role: "admin" | "member";
   };
@@ -42,6 +53,36 @@ export function useMe(
   return useQuery({
     ...meQueryOptions(),
     ...options,
+  });
+}
+
+export function useUpdateProfile() {
+  const qc = useQueryClient();
+
+  return useMutation<
+    { message: string },
+    Error,
+    {
+      name: string;
+      email: string;
+      nickname?: string;
+      timezone?: string;
+      location?: string;
+      avatar?: string;
+    }
+  >({
+    retry: false,
+    mutationFn: async (body) => {
+      const res = await rpc.$put("/auth/me", { body, credentials: "include" });
+      return parseOrThrow(res);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me"] });
+      appToast.auth.profileUpdateSuccess();
+    },
+    onError: () => {
+      appToast.auth.profileUpdateError();
+    },
   });
 }
 
