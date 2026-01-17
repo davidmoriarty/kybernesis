@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useLayoutEffect, useRef, useState } from "react";
 import { DeleteProjectDialog } from "@/components/DeleteProjectDialog";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   useDeleteProject,
   useProject,
@@ -28,6 +29,12 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
   const { data: fullProject } = useProject(id);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+
+  const title = !expanded
+    ? name
+    : editing
+      ? "Project Edit View"
+      : "Project Detail View";
 
   useLayoutEffect(() => {
     if (!contentRef.current) return;
@@ -57,52 +64,57 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
   };
 
   return (
-    <button
-      type="button"
-      onClick={() => {
-        if (expanded || editing) return;
-        navigate({
-          to: "/projects/$projectId",
-          params: { projectId: String(id) },
-        });
-      }}
-      className={`border rounded-md px-8 py-6 transition-all duration-300 shadow hover:shadow-lg
+    <div
+      className={`
+        border rounded-md px-8 py-6
+        transition-colors duration-200
+        ${expanded ? "shadow-md" : "shadow-sm"}
+        hover:bg-muted/30
         ${highlight ? "bg-slate-200" : expanded ? "bg-slate-50" : "bg-white"}`}
     >
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-black tracking-tight">
-          {expanded
-            ? editing
-              ? "Project Edit View"
-              : "Project Detail View"
-            : name}
-        </h2>
+        <h2 className="text-2xl font-black tracking-tight">{title}</h2>
 
-        {expanded ? (
+        <ButtonGroup>
+          {expanded ? (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(false);
+                setEditing(false);
+              }}
+            >
+              Collapse
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(true);
+              }}
+            >
+              View
+            </Button>
+          )}
+
           <Button
             size="lg"
             variant="default"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded(false);
-              setEditing(false);
-            }}
+            onClick={() =>
+              navigate({
+                to: "/projects/$projectId",
+                params: { projectId: String(id) },
+              })
+            }
           >
-            Collapse
+            Open Project
           </Button>
-        ) : (
-          <Button
-            size="lg"
-            variant="default"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpanded(true);
-            }}
-          >
-            View
-          </Button>
-        )}
+        </ButtonGroup>
       </div>
 
       {/* Animated content */}
@@ -200,6 +212,6 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
           )}
         </div>
       </div>
-    </button>
+    </div>
   );
 }

@@ -67,10 +67,6 @@ export default function MePage() {
     }
   }, [me?.user]);
 
-  useEffect(() => {
-    setAvatarError(false);
-  }, [form.avatar]);
-
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };

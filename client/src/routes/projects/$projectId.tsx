@@ -1,10 +1,40 @@
 // client/src/routes/projects/$projectId.tsx
 import { createFileRoute } from "@tanstack/react-router";
-import { Container } from "@/components/Container";
-import { Hero } from "@/components/Hero";
-import { Section } from "@/components/Section";
-import { Button } from "@/components/ui/button";
+import {
+  Calendar,
+  Columns2,
+  Folder,
+  FolderOpen,
+  Home,
+  Inbox,
+  List,
+  Search,
+  Settings,
+} from "lucide-react";
+import { useState } from "react";
+import {
+  FilesSection,
+  OverviewSection,
+  SettingsSection,
+  TasksSection,
+  TimelineSection,
+} from "@/components/projects/sections";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useProject } from "@/hooks/projects";
+import { cn } from "@/lib/utils";
 import { requireAuth } from "@/utils/requireAuth";
 
 export const Route = createFileRoute("/projects/$projectId")({
@@ -12,54 +42,126 @@ export const Route = createFileRoute("/projects/$projectId")({
   component: ProjectPage,
 });
 
+// Sidebar items with icons
+const SECTIONS = [
+  { label: "Overview", icon: Home },
+  { label: "Files", icon: Inbox },
+  { label: "Tasks", icon: Calendar },
+  { label: "Timeline", icon: Search },
+  { label: "Settings", icon: Settings },
+];
+
+// Mock data for sections
+const MOCK_FILES = ["File A.txt", "File B.docx", "File C.pdf"];
+const MOCK_TASKS: {
+  title: string;
+  status?: "Todo" | "In Progress" | "Done";
+}[] = [
+  { title: "Design login page", status: "In Progress" },
+  { title: "Set up database schema", status: "Todo" },
+  { title: "Write unit tests", status: "Done" },
+];
+const MOCK_TIMELINE = [
+  { event: "Kickoff Meeting", date: "2026-01-15" },
+  { event: "First Release", date: "2026-02-01" },
+];
+const MOCK_SETTINGS = {
+  notificationsEnabled: true,
+  isPublic: false,
+};
+
 function ProjectPage() {
   const { projectId } = Route.useParams();
   const id = Number(projectId);
-
   const { data: project, isLoading, error } = useProject(id);
 
-  if (isLoading) return <p>Loading project...</p>;
+  const [selectedSection, setSelectedSection] = useState("Overview");
+
+  if (isLoading) {
+    return <Skeleton className="h-[60vh] w-full rounded-md" />;
+  }
   if (error || !project) return <p>Project not found.</p>;
 
   return (
-    <>
-      <Hero
-        title={project.name}
-        subtitle={project.description || "No description"}
-      />
+    <SidebarProvider>
+      <div className="flex flex-1 w-full h-full relative">
+        {/* Sidebar */}
+        <Sidebar
+          className={cn(
+            "fixed top-16 sm:top-20 left-0 w-64",
+            "h-[calc(100vh - 4rem)] sm:h-[calc(100vh-5rem)]",
+          )}
+        >
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel className="inline-flex justify-start gap-4">
+                <Folder className="size-4" />
+                <p className="font-bold text-lg">{project.name}</p>
+              </SidebarGroupLabel>
+            </SidebarGroup>
 
-      <Section>
-        <Container>
-          <div className="grid gap-6 md:grid-cols-[260px_1fr] min-h-[60vh]">
-            {/* Sidebar */}
-            <aside className="rounded-lg border bg-card p-4">
-              <nav className="flex flex-col gap-2 text-sm">
-                <Button className="text-left font-medium">Overview</Button>
-                <Button className="text-left text-muted-foreground">
-                  Files
-                </Button>
-                <Button className="text-left text-muted-foreground">
-                  Tasks
-                </Button>
-                <Button className="text-left text-muted-foreground">
-                  Timeline
-                </Button>
-                <Button className="text-left text-muted-foreground">
-                  Settings
-                </Button>
-              </nav>
-            </aside>
+            <SidebarGroup>
+              <SidebarMenu>
+                {SECTIONS.map((item) => (
+                  <SidebarMenuItem key={item.label}>
+                    <SidebarMenuButton
+                      isActive={selectedSection === item.label}
+                      onClick={() => setSelectedSection(item.label)}
+                      asChild
+                    >
+                      <div className="inline-flex items-center gap-2">
+                        <item.icon className="size-4" />
+                        {item.label}
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          </SidebarContent>
+        </Sidebar>
 
-            {/* Main content */}
-            <main className="rounded-lg border bg-card p-6">
-              <h2 className="text-xl font-bold mb-2">Overview</h2>
-              <p className="text-muted-foreground">
-                Project workspace content will live here.
-              </p>
-            </main>
+        {/* Main content */}
+        <SidebarInset className="flex flex-col flex-1">
+          {/* Top bar */}
+          <div className="bg-accent flex items-center justify-between h-10 px-4 border-b-2">
+            <SidebarTrigger />
+            <h1 className="font-bold text-md">{selectedSection}</h1>
+            <ToggleGroup type="multiple" variant="outline">
+              <ToggleGroupItem value="bold" aria-label="Toggle bold">
+                <FolderOpen className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="italic" aria-label="Toggle italic">
+                <List className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="strikethrough"
+                aria-label="Toggle strikethrough"
+              >
+                <Columns2 className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
-        </Container>
-      </Section>
-    </>
+
+          {/* Content */}
+          <div className="p-4 flex-1 overflow-auto">
+            {selectedSection === "Overview" && (
+              <OverviewSection
+                projectName={project.name}
+                description={project.description || "No description provided"}
+              />
+            )}
+            {selectedSection === "Files" && <FilesSection files={MOCK_FILES} />}
+            {selectedSection === "Tasks" && <TasksSection tasks={MOCK_TASKS} />}
+            {selectedSection === "Timeline" && (
+              <TimelineSection events={MOCK_TIMELINE} />
+            )}
+            {selectedSection === "Settings" && (
+              <SettingsSection {...MOCK_SETTINGS} />
+            )}
+          </div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
