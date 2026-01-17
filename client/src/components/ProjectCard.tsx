@@ -1,4 +1,5 @@
 // client/src/components/ProjectCard.tsx
+import { useNavigate } from "@tanstack/react-router";
 import { useLayoutEffect, useRef, useState } from "react";
 import { DeleteProjectDialog } from "@/components/DeleteProjectDialog";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ id, name, description }: ProjectCardProps) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
@@ -55,7 +57,15 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
   };
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => {
+        if (expanded || editing) return;
+        navigate({
+          to: "/projects/$projectId",
+          params: { projectId: String(id) },
+        });
+      }}
       className={`border rounded-md px-8 py-6 transition-all duration-300 shadow hover:shadow-lg
         ${highlight ? "bg-slate-200" : expanded ? "bg-slate-50" : "bg-white"}`}
     >
@@ -68,11 +78,13 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
               : "Project Detail View"
             : name}
         </h2>
+
         {expanded ? (
           <Button
             size="lg"
             variant="default"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setExpanded(false);
               setEditing(false);
             }}
@@ -80,7 +92,14 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
             Collapse
           </Button>
         ) : (
-          <Button size="lg" variant="default" onClick={() => setExpanded(true)}>
+          <Button
+            size="lg"
+            variant="default"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(true);
+            }}
+          >
             View
           </Button>
         )}
@@ -105,7 +124,10 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
                 <Button
                   size="sm"
                   variant="default"
-                  onClick={() => setEditing(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditing(true);
+                  }}
                 >
                   Edit
                 </Button>
@@ -127,7 +149,10 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
                   type="text"
                   className="border rounded p-2 w-full"
                   value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setEditName(e.target.value);
+                  }}
                 />
               </label>
 
@@ -136,7 +161,10 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
                 <textarea
                   className="border rounded p-2 w-full"
                   value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    setEditDescription(e.target.value);
+                  }}
                 />
               </label>
 
@@ -144,7 +172,10 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
                 <Button
                   size="sm"
                   variant="default"
-                  onClick={handleSave}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSave();
+                  }}
                   disabled={updateProject.isPending}
                 >
                   Save
@@ -152,7 +183,10 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setEditing(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditing(false);
+                  }}
                 >
                   Cancel
                 </Button>
@@ -166,6 +200,6 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </button>
   );
 }

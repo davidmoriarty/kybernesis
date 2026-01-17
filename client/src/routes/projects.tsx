@@ -1,5 +1,5 @@
 // client/src/routes/projects.tsx
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Container } from "@/components/Container";
@@ -18,6 +18,9 @@ export const Route = createFileRoute("/projects")({
 });
 
 function ProjectsPage() {
+  const matchRoute = useMatchRoute();
+  const isProjectRoute = Boolean(matchRoute({ to: "/projects/$projectId" }));
+
   const { data: me } = useMe();
 
   const {
@@ -59,68 +62,75 @@ function ProjectsPage() {
 
   return (
     <>
-      <Hero title="Projects" subtitle="All your active projects in one place" />
+      {!isProjectRoute && (
+        <>
+          <Hero
+            title="Projects"
+            subtitle="All your active projects in one place"
+          />
 
-      {/* Project list */}
-      <Section>
-        <Container className="flex flex-col gap-4">
-          {projectsLoading ? (
-            <p>Loading projects...</p>
-          ) : projectsError ? (
-            <p>Failed to load projects.</p>
-          ) : projects?.projects.length ? (
-            projects.projects.map((p) => (
-              <ProjectCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                description={p.description}
+          {/* Project list */}
+          <Section>
+            <Container className="flex flex-col gap-4">
+              {projectsLoading ? (
+                <p>Loading projects...</p>
+              ) : projectsError ? (
+                <p>Failed to load projects.</p>
+              ) : projects?.projects.length ? (
+                projects.projects.map((p) => (
+                  <ProjectCard
+                    key={p.id}
+                    id={p.id}
+                    name={p.name}
+                    description={p.description}
+                  />
+                ))
+              ) : (
+                <div className="border p-6 rounded-md text-center">
+                  <p>No projects yet</p>
+                </div>
+              )}
+            </Container>
+          </Section>
+
+          {/* Create project form */}
+          <Section>
+            <FormLayout
+              title="Create a new project"
+              description="Start a new project in your workspace"
+              onSubmit={handleCreate}
+            >
+              <label htmlFor="name">Project name</label>
+              <input
+                id="name"
+                className="border p-2 rounded w-full"
+                placeholder="Project name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="off"
               />
-            ))
-          ) : (
-            <div className="border p-6 rounded-md text-center">
-              <p>No projects yet</p>
-            </div>
-          )}
-        </Container>
-      </Section>
 
-      {/* Create project form */}
-      <Section>
-        <FormLayout
-          title="Create a new project"
-          description="Start a new project in your workspace"
-          onSubmit={handleCreate}
-        >
-          <label htmlFor="name">Project name</label>
-          <input
-            id="name"
-            className="border p-2 rounded w-full"
-            placeholder="Project name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoComplete="off"
-          />
+              <label htmlFor="description">Description</label>
+              <input
+                id="description"
+                className="border p-2 rounded w-full"
+                placeholder="Description (optional)"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                autoComplete="off"
+              />
 
-          <label htmlFor="description">Description</label>
-          <input
-            id="description"
-            className="border p-2 rounded w-full"
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            autoComplete="off"
-          />
-
-          <Button
-            type="submit"
-            className="w-full cursor-pointer"
-            disabled={createProject.isPending || !me?.workspace}
-          >
-            Create Project
-          </Button>
-        </FormLayout>
-      </Section>
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={createProject.isPending || !me?.workspace}
+              >
+                Create Project
+              </Button>
+            </FormLayout>
+          </Section>
+        </>
+      )}
 
       {/* Outlet for child routes like /projects/$projectId */}
       <Outlet />

@@ -24,7 +24,14 @@ export function DeleteProjectDialog({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive" disabled={disabled}>
+        <Button
+          size="sm"
+          variant="destructive"
+          disabled={disabled}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
           Delete
         </Button>
       </AlertDialogTrigger>
@@ -39,8 +46,22 @@ export function DeleteProjectDialog({
         </AlertDialogHeader>
 
         <AlertDialogFooter className="flex gap-2">
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogCancel
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            Cancel
+          </AlertDialogCancel>
+
+          <AlertDialogAction
+            onClick={(e) => {
+              e.stopPropagation();
+              onConfirm();
+            }}
+          >
+            Delete
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
