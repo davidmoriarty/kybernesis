@@ -9,44 +9,40 @@ import {
   useProject,
   useUpdateProject,
 } from "@/hooks/projects";
+import { cn } from "@/lib/utils";
+
+export type ProjectView = "panel" | "grid" | "list";
 
 interface ProjectCardProps {
   id: number;
   name: string;
   description?: string;
+  view?: ProjectView;
 }
 
-export function ProjectCard({ id, name, description }: ProjectCardProps) {
+export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
   const [editDescription, setEditDescription] = useState(description || "");
   const [highlight, setHighlight] = useState(false);
-
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { data: fullProject } = useProject(id);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
 
-  const title = !expanded
-    ? name
-    : editing
-      ? "Project Edit View"
-      : "Project Detail View";
-
   useLayoutEffect(() => {
-    if (!contentRef.current) return;
-
     if (!expanded) {
       setEditing(false);
       setHighlight(false);
-    } else {
-      setHighlight(true);
-      const timeout = setTimeout(() => setHighlight(false), 800);
-      return () => clearTimeout(timeout);
+      return;
     }
+
+    setHighlight(true);
+    const t = setTimeout(() => setHighlight(false), 800);
+    return () => clearTimeout(t);
   }, [expanded]);
 
   const handleSave = async () => {
@@ -60,90 +56,77 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
 
   const handleDelete = async () => {
     await deleteProject.mutateAsync({ projectId: id });
-    setExpanded(false);
   };
 
-  return (
-    <div
-      className={`
-        border rounded-md px-8 py-6
-        transition-colors duration-200
-        ${expanded ? "shadow-md" : "shadow-sm"}
-        hover:bg-muted/30
-        ${highlight ? "bg-slate-200" : expanded ? "bg-slate-50" : "bg-white"}`}
-    >
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-black tracking-tight">{title}</h2>
+  /* ───────────────────────── PANEL VIEW ───────────────────────── */
 
-        <ButtonGroup>
-          {expanded ? (
+  if (view === "panel") {
+    return (
+      <div
+        className={cn(
+          "rounded-md border px-8 py-6 shadow-sm transition-all",
+          "hover:bg-muted/30",
+          expanded && "shadow-md",
+          highlight && "bg-slate-200",
+        )}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-black tracking-tight">
+            {expanded
+              ? editing
+                ? "Project Edit View"
+                : "Project Detail View"
+              : name}
+          </h2>
+
+          <ButtonGroup>
             <Button
-              size="lg"
+              size="sm"
               variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded(false);
+              onClick={() => {
+                setExpanded((v) => !v);
                 setEditing(false);
               }}
             >
-              Collapse
+              {expanded ? "Collapse" : "View"}
             </Button>
-          ) : (
+
             <Button
-              size="lg"
-              variant="outline"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded(true);
-              }}
+              size="sm"
+              onClick={() =>
+                navigate({
+                  to: "/projects/$projectId",
+                  params: { projectId: String(id) },
+                })
+              }
             >
-              View
+              Open
             </Button>
-          )}
+            <DeleteProjectDialog
+              onConfirm={handleDelete}
+              disabled={deleteProject.isPending}
+            />
+          </ButtonGroup>
+        </div>
 
-          <Button
-            size="lg"
-            variant="default"
-            onClick={() =>
-              navigate({
-                to: "/projects/$projectId",
-                params: { projectId: String(id) },
-              })
-            }
-          >
-            Open Project
-          </Button>
-        </ButtonGroup>
-      </div>
-
-      {/* Animated content */}
-      <div className="overflow-hidden transition-all duration-300 ease-in-out">
         <div
           ref={contentRef}
-          className={`mt-2 flex flex-col gap-2 transition-opacity duration-200
-            ${expanded ? "opacity-100" : "opacity-0"}`}
+          className={cn(
+            "mt-4 flex flex-col gap-3 transition-opacity",
+            expanded ? "opacity-100" : "opacity-0",
+          )}
         >
           {expanded && !editing && (
             <>
-              {/* View Mode Content */}
               <h3 className="text-xl font-bold">{fullProject?.name}</h3>
-              <p className="text-lg font-semibold">
+              <p className="text-sm text-muted-foreground">
                 {fullProject?.description || "No description"}
               </p>
 
-              <div className="flex gap-2 mt-4">
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditing(true);
-                  }}
-                >
+              <div className="mt-4 flex gap-2">
+                <Button size="sm" onClick={() => setEditing(true)}>
                   Edit
                 </Button>
-
                 <DeleteProjectDialog
                   onConfirm={handleDelete}
                   disabled={deleteProject.isPending}
@@ -154,40 +137,28 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
 
           {expanded && editing && (
             <>
-              {/* Edit Mode Content */}
-              <label>
-                Name
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">Name</span>
                 <input
-                  type="text"
-                  className="border rounded p-2 w-full"
+                  className="rounded border p-2"
                   value={editName}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    setEditName(e.target.value);
-                  }}
+                  onChange={(e) => setEditName(e.target.value)}
                 />
               </label>
 
-              <label>
-                Description
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">Description</span>
                 <textarea
-                  className="border rounded p-2 w-full"
+                  className="rounded border p-2"
                   value={editDescription}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    setEditDescription(e.target.value);
-                  }}
+                  onChange={(e) => setEditDescription(e.target.value)}
                 />
               </label>
 
-              <div className="flex gap-2 mt-2">
+              <ButtonGroup>
                 <Button
                   size="sm"
-                  variant="default"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSave();
-                  }}
+                  onClick={handleSave}
                   disabled={updateProject.isPending}
                 >
                   Save
@@ -195,23 +166,83 @@ export function ProjectCard({ id, name, description }: ProjectCardProps) {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditing(false);
-                  }}
+                  onClick={() => setEditing(false)}
                 >
                   Cancel
                 </Button>
-
                 <DeleteProjectDialog
                   onConfirm={handleDelete}
                   disabled={deleteProject.isPending}
                 />
-              </div>
+              </ButtonGroup>
             </>
           )}
         </div>
       </div>
+    );
+  }
+
+  /* ───────────────────────── GRID VIEW ───────────────────────── */
+
+  if (view === "grid") {
+    return (
+      <div className="h-40 rounded-md border p-4 shadow-sm hover:bg-muted/20">
+        <div className="flex h-full flex-col justify-between">
+          <div>
+            <h3 className="truncate text-lg font-bold">{name}</h3>
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              {description || "No description"}
+            </p>
+          </div>
+
+          <ButtonGroup>
+            <Button
+              size="sm"
+              onClick={() =>
+                navigate({
+                  to: "/projects/$projectId",
+                  params: { projectId: String(id) },
+                })
+              }
+            >
+              Open
+            </Button>
+            <DeleteProjectDialog
+              onConfirm={handleDelete}
+              disabled={deleteProject.isPending}
+            />
+          </ButtonGroup>
+        </div>
+      </div>
+    );
+  }
+
+  /* ───────────────────────── LIST VIEW ───────────────────────── */
+
+  return (
+    <div className="grid grid-cols-[2fr_3fr_auto] items-center gap-4 px-4 py-3 border-b hover:bg-muted/10">
+      <div className="truncate font-medium">{name}</div>
+      <div className="max-w-[40ch] truncate text-sm text-muted-foreground">
+        {description || "—"}
+      </div>
+      <ButtonGroup>
+        <Button
+          size="sm"
+          variant="default"
+          onClick={() =>
+            navigate({
+              to: "/projects/$projectId",
+              params: { projectId: String(id) },
+            })
+          }
+        >
+          Open
+        </Button>
+        <DeleteProjectDialog
+          onConfirm={handleDelete}
+          disabled={deleteProject.isPending}
+        />
+      </ButtonGroup>
     </div>
   );
 }

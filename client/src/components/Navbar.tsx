@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLogout } from "@/hooks/auth";
 import { useConditionalMe } from "@/hooks/useContidionalMe";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -119,12 +120,21 @@ export function Navbar() {
     "flex items-center gap-2 px-4 py-2 font-medium rounded-md hover:bg-slate-300/80 cursor-pointer";
 
   return (
-    <header className="sticky top-0 z-40 bg-background text-foreground w-full h-16 sm:h-20 border-b border-slate-200">
+    <header
+      className={cn(
+        "sticky top-0 z-40 py-3",
+        "bg-background/80 supports-backdrop-filter:backdrop-blur",
+        "border-b border-gray-300 dark:border-gray-700",
+      )}
+    >
       <nav className="h-full px-6 flex items-center justify-between">
-        {/* AppBrand */}
+        {/* Brand / App name */}
         <Button
           variant="link"
-          className="text-xl font-bold cursor-pointer bg-transparent border-0 p-0"
+          className={cn(
+            "text-xl font-bold bg-transparent",
+            "border-0 p-0 flex items-center gap-2",
+          )}
           onClick={() => navigate({ to: desktopNavLinks[0]?.to })}
           aria-label={desktopNavLinks[0]?.ariaLabel}
         >

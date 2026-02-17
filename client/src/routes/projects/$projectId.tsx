@@ -8,10 +8,11 @@ import {
   Home,
   Inbox,
   List,
-  Search,
+  type LucideIcon,
   Settings,
 } from "lucide-react";
 import { useState } from "react";
+import { ErrorState, LoadingState } from "@/components/PageCard";
 import {
   FilesSection,
   OverviewSection,
@@ -31,7 +32,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useProject } from "@/hooks/projects";
 import { cn } from "@/lib/utils";
@@ -42,102 +42,53 @@ export const Route = createFileRoute("/projects/$projectId")({
   component: ProjectPage,
 });
 
-// Sidebar items with icons
-const SECTIONS = [
+type ProjectSection = "Overview" | "Files" | "Tasks" | "Timeline" | "Settings";
+
+const SECTIONS: { label: ProjectSection; icon: LucideIcon }[] = [
   { label: "Overview", icon: Home },
   { label: "Files", icon: Inbox },
-  { label: "Tasks", icon: Calendar },
-  { label: "Timeline", icon: Search },
+  { label: "Tasks", icon: List },
+  { label: "Timeline", icon: Calendar },
   { label: "Settings", icon: Settings },
 ];
-
-// Mock data for sections
-const MOCK_FILES = ["File A.txt", "File B.docx", "File C.pdf"];
-const MOCK_TASKS: {
-  title: string;
-  status?: "Todo" | "In Progress" | "Done";
-}[] = [
-  { title: "Design login page", status: "In Progress" },
-  { title: "Set up database schema", status: "Todo" },
-  { title: "Write unit tests", status: "Done" },
-];
-const MOCK_TIMELINE = [
-  { event: "Kickoff Meeting", date: "2026-01-15" },
-  { event: "First Release", date: "2026-02-01" },
-];
-const MOCK_SETTINGS = {
-  notificationsEnabled: true,
-  isPublic: false,
-};
 
 function ProjectPage() {
   const { projectId } = Route.useParams();
   const id = Number(projectId);
-  const { data: project, isLoading, error } = useProject(id);
 
-  const [selectedSection, setSelectedSection] = useState("Overview");
+  const { data: project, isLoading, error } = useProject(id);
+  const [section, setSection] = useState<ProjectSection>("Overview");
 
   if (isLoading) {
-    return <Skeleton className="h-[60vh] w-full rounded-md" />;
+    return <LoadingState message="Loading project…" />;
   }
-  if (error || !project) return <p>Project not found.</p>;
+
+  if (error || !project) {
+    return <ErrorState message="Project not found." />;
+  }
 
   return (
     <SidebarProvider>
       <div className="flex flex-1 w-full h-full relative">
-        {/* Sidebar */}
-        <Sidebar
-          className={cn(
-            "fixed top-16 sm:top-20 left-0 w-64",
-            "h-[calc(100vh - 4rem)] sm:h-[calc(100vh-5rem)]",
-          )}
-        >
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="inline-flex justify-start gap-4">
-                <Folder className="size-4" />
-                <p className="font-bold text-lg">{project.name}</p>
-              </SidebarGroupLabel>
-            </SidebarGroup>
+        <ProjectSidebar
+          projectName={project.name}
+          selected={section}
+          onSelect={setSection}
+        />
 
-            <SidebarGroup>
-              <SidebarMenu>
-                {SECTIONS.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton
-                      isActive={selectedSection === item.label}
-                      onClick={() => setSelectedSection(item.label)}
-                      asChild
-                    >
-                      <div className="inline-flex items-center gap-2">
-                        <item.icon className="size-4" />
-                        {item.label}
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
-
-        {/* Main content */}
         <SidebarInset className="flex flex-col flex-1">
           {/* Top bar */}
-          <div className="bg-accent flex items-center justify-between h-10 px-4 border-b-2">
+          <div className="bg-accent flex items-center justify-between h-10 px-4 border-b">
             <SidebarTrigger />
-            <h1 className="font-bold text-md">{selectedSection}</h1>
+            <h1 className="font-bold text-md">{section}</h1>
             <ToggleGroup type="multiple" variant="outline">
-              <ToggleGroupItem value="bold" aria-label="Toggle bold">
+              <ToggleGroupItem value="files">
                 <FolderOpen className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="italic" aria-label="Toggle italic">
+              <ToggleGroupItem value="list">
                 <List className="h-4 w-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem
-                value="strikethrough"
-                aria-label="Toggle strikethrough"
-              >
+              <ToggleGroupItem value="columns">
                 <Columns2 className="h-4 w-4" />
               </ToggleGroupItem>
             </ToggleGroup>
@@ -145,23 +96,65 @@ function ProjectPage() {
 
           {/* Content */}
           <div className="p-4 flex-1 overflow-auto">
-            {selectedSection === "Overview" && (
+            {section === "Overview" && (
               <OverviewSection
                 projectName={project.name}
                 description={project.description || "No description provided"}
+                owner={project?.owner}
+                createdAt={project?.createdAt}
               />
             )}
-            {selectedSection === "Files" && <FilesSection files={MOCK_FILES} />}
-            {selectedSection === "Tasks" && <TasksSection tasks={MOCK_TASKS} />}
-            {selectedSection === "Timeline" && (
-              <TimelineSection events={MOCK_TIMELINE} />
-            )}
-            {selectedSection === "Settings" && (
-              <SettingsSection {...MOCK_SETTINGS} />
-            )}
+            {section === "Files" && <FilesSection files={[]} />}
+            {section === "Tasks" && <TasksSection tasks={[]} />}
+            {section === "Timeline" && <TimelineSection events={[]} />}
+            {section === "Settings" && <SettingsSection />}
           </div>
         </SidebarInset>
       </div>
     </SidebarProvider>
+  );
+}
+
+function ProjectSidebar({
+  projectName,
+  selected,
+  onSelect,
+}: {
+  projectName: string;
+  selected: ProjectSection;
+  onSelect: (s: ProjectSection) => void;
+}) {
+  return (
+    <Sidebar
+      className={cn(
+        "fixed top-16 sm:top-20 left-0 w-64",
+        "h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)]",
+      )}
+    >
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel className="inline-flex items-center gap-2">
+            <Folder className="size-4" />
+            <span className="font-bold text-lg">{projectName}</span>
+          </SidebarGroupLabel>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarMenu>
+            {SECTIONS.map(({ label, icon: Icon }) => (
+              <SidebarMenuItem key={label}>
+                <SidebarMenuButton
+                  isActive={selected === label}
+                  onClick={() => onSelect(label)}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 }

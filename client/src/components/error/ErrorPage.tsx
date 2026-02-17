@@ -1,6 +1,6 @@
 // ErrorPage.tsx
-import { Container } from "@/components/Container";
-import { Section } from "@/components/Section";
+import { PageCard } from "@/components/PageCard";
+import { Button } from "@/components/ui/button";
 
 interface ErrorPageProps {
   status: number;
@@ -35,26 +35,20 @@ export function ErrorPage({ status, title, message }: ErrorPageProps) {
   };
 
   return (
-    <Section className="min-h-screen flex flex-col items-center justify-center">
-      <Container>
-        <h1 className="text-5xl font-extrabold text-center">{status}</h1>
-        <h2 className="text-2xl font-bold text-center">
-          {title ?? defaults.title}
-        </h2>
-        <p className="text-lg text-center mb-6">
-          {message ?? defaults.message}
-        </p>
-        {status === 401 && (
-          <div className="flex items-center justify-center">
-            <a
-              href="/login"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Go to Login
-            </a>
-          </div>
-        )}
-      </Container>
-    </Section>
+    <PageCard>
+      <h1 className="text-5xl font-extrabold mb-4 text-center">{status}</h1>
+      <h2 className="text-2xl font-bold mb-2 text-center">
+        {title ?? defaults.title}
+      </h2>
+      <p className="text-lg mb-6 text-center">{message ?? defaults.message}</p>
+
+      {status === 401 && (
+        <div className="flex justify-center">
+          <Button asChild variant="default">
+            <a href="/login">Go to Login</a>
+          </Button>
+        </div>
+      )}
+    </PageCard>
   );
 }

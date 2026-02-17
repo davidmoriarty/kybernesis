@@ -1,4 +1,5 @@
 // client/src/hooks/projects.ts
+import type { Project } from "@shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { rpc } from "@/lib/rpc";
@@ -21,9 +22,15 @@ export function useProject(projectId: number) {
     queryKey: ["projects", projectId],
     queryFn: async () => {
       const res = await rpc.$get(`/projects/${projectId}`);
-      return parseOrThrow<{ id: number; name: string; description?: string }>(
-        res,
-      );
+      return parseOrThrow<{
+        id: number;
+        name: string;
+        description?: string;
+        workspaceId: number;
+        owner: string;
+        createdAt: number;
+        updatedAt: number;
+      }>(res);
     },
   });
 }
@@ -32,7 +39,7 @@ export function useCreateProject() {
   const qc = useQueryClient();
 
   return useMutation<
-    { message: string },
+    { project: Project },
     Error,
     {
       name: string;
@@ -43,7 +50,16 @@ export function useCreateProject() {
     retry: false,
     mutationFn: async (body) => {
       const res = await rpc.$post("/projects", { body });
-      return parseOrThrow<{ message: string }>(res, { message: "" });
+      return parseOrThrow<{ project: Project }>(res, {
+        project: {
+          id: 0,
+          workspaceId: 0,
+          name: "",
+          description: "",
+          createdAt: 0,
+          updatedAt: 0,
+        },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["projects"] });

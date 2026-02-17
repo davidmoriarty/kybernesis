@@ -5,7 +5,7 @@ import { meHandler, updateProfileHandler } from "@auth/me";
 import { signupHandler } from "@auth/signup";
 import { db, Projects, Sessions, WorkspaceMembers, Workspaces } from "@db";
 import type { ApiResponse } from "@shared/types/api";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -94,6 +94,7 @@ export const app = new Hono()
 
     const now = Math.floor(Date.now() / 1000);
 
+    // Insert the new project
     db.insert(Projects.projects)
       .values({
         workspaceId,
@@ -104,7 +105,20 @@ export const app = new Hono()
       })
       .run();
 
-    return ctx.json({ message: "Project created" }, { status: 201 });
+    // Fetch the last inserted row
+    const [project] = db
+      .select()
+      .from(Projects.projects)
+      .where(eq(Projects.projects.workspaceId, workspaceId))
+      .orderBy(sql`${Projects.projects.id} DESC`)
+      .limit(1)
+      .all();
+
+    if (!project) {
+      return ctx.json({ error: "Failed to create project" }, { status: 500 });
+    }
+
+    return ctx.json({ project }, { status: 201 });
   })
 
   // PUT update project

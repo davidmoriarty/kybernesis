@@ -19,10 +19,10 @@ export function FormLayout({
   return (
     <div className={`max-w-md mx-auto px-4 ${className}`}>
       {title && (
-        <h2 className="text-2xl font-bold mb-2 text-center">{title}</h2>
+        <h1 className="text-4xl font-black mb-2 text-center">{title}</h1>
       )}
       {description && (
-        <p className="text-center text-sm text-muted-foreground mb-6">
+        <p className="text-center text-md text-muted-foreground mb-6">
           {description}
         </p>
       )}

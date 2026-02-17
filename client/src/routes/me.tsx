@@ -1,14 +1,20 @@
 // client/src/routes/me.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Container } from "@/components/Container";
-import { Section } from "@/components/Section";
+import { PageCard } from "@/components/PageCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLogout, useMe, useUpdateProfile } from "@/hooks/auth";
 import { requireAuth } from "@/utils/requireAuth";
+
+const PROFILE_FIELDS = [
+  "name",
+  "email",
+  "nickname",
+  "location",
+  "timezone",
+] as const;
 
 export const Route = createFileRoute("/me")({
   beforeLoad: requireAuth,
@@ -38,11 +44,15 @@ function AvatarFallback({ size = 96 }: { size?: number }) {
   );
 }
 
+function formatLabel(field: string) {
+  // Capitalize first letter and replace underscores with spaces
+  return field.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+}
+
 export default function MePage() {
   const { data: me, isLoading, isError } = useMe();
   const updateProfile = useUpdateProfile();
   const logout = useLogout();
-
   const [editing, setEditing] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
   const [form, setForm] = useState({
@@ -106,154 +116,126 @@ export default function MePage() {
   // Loading state
   if (isLoading)
     return (
-      <Section>
-        <Container>
-          <Card>
-            <CardContent className="text-center text-lg">
-              <span className="animate-spin inline-block mr-2">⏳</span>
-              Loading profile...
-            </CardContent>
-          </Card>
-        </Container>
-      </Section>
+      <PageCard>
+        <p className="text-center text-lg">
+          <span className="animate-spin inline-block mr-2">⏳</span>
+          Loading profile...
+        </p>
+      </PageCard>
     );
 
   // Error state
   if (isError)
     return (
-      <Section>
-        <Container>
-          <Card>
-            <CardContent className="text-center text-lg text-destructive">
-              Failed to load profile.
-            </CardContent>
-          </Card>
-        </Container>
-      </Section>
+      <PageCard>
+        <p className="text-center text-lg text-destructive">
+          Failed to load profile.
+        </p>
+      </PageCard>
     );
 
   return (
     <>
-      <Section>
-        <Container>
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-black text-2xl text-center">
-                Your Profile
-              </CardTitle>
-            </CardHeader>
+      <PageCard>
+        <header>
+          <h2 className="font-black text-2xl text-center mb-4">Your Profile</h2>
+        </header>
 
-            <CardContent className="grid gap-6 md:grid-cols-[220px_1fr]">
-              {/* Left column: avatar */}
-              <div className="flex flex-col items-center gap-3">
-                {form.avatar && !avatarError ? (
-                  <img
-                    src={form.avatar}
-                    alt="Avatar"
-                    className="h-24 w-24 rounded-full object-cover"
-                    onError={() => setAvatarError(true)}
+        <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+          {/* Left column: avatar */}
+          <figure className="flex flex-col items-center gap-3">
+            {form.avatar && !avatarError ? (
+              <img
+                src={form.avatar}
+                alt="Avatar"
+                className="h-24 w-24 rounded-full object-cover"
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              <AvatarFallback size={96} />
+            )}
+
+            {editing && (
+              <Input
+                placeholder="Avatar URL"
+                value={form.avatar}
+                onChange={(e) => handleChange("avatar", e.target.value)}
+              />
+            )}
+
+            {me?.user?.createdAt && !editing && (
+              <figcaption className="text-xs text-muted-foreground text-center">
+                Member since{" "}
+                {new Intl.DateTimeFormat("en-CA", {
+                  year: "numeric",
+                  month: "long",
+                }).format(new Date(me.user.createdAt * 1000))}
+              </figcaption>
+            )}
+          </figure>
+
+          {/* Right column: fields + buttons */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {PROFILE_FIELDS.map((field) => (
+              <div key={field} className="flex flex-col gap-1">
+                <Label>{formatLabel(field)}</Label>
+                {editing ? (
+                  <Input
+                    value={form[field]}
+                    onChange={(e) => handleChange(field, e.target.value)}
                   />
                 ) : (
-                  <AvatarFallback size={96} />
-                )}
-
-                {editing && (
-                  <Input
-                    placeholder="Avatar URL"
-                    value={form.avatar}
-                    onChange={(e) => handleChange("avatar", e.target.value)}
-                  />
-                )}
-
-                {me?.user?.createdAt && !editing && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    Member since{" "}
-                    {new Intl.DateTimeFormat("en-CA", {
-                      year: "numeric",
-                      month: "long",
-                    }).format(new Date(me.user.createdAt * 1000))}
-                  </p>
+                  <p className="text-sm">{form[field] || "-"}</p>
                 )}
               </div>
+            ))}
 
-              {/* Right column: fields */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                {(
-                  ["name", "email", "nickname", "location", "timezone"] as const
-                ).map((field) => (
-                  <div key={field} className="flex flex-col gap-1">
-                    <Label>
-                      {field.charAt(0).toUpperCase() + field.slice(1)}
-                    </Label>
-                    {editing ? (
-                      <Input
-                        value={form[field]}
-                        onChange={(e) => handleChange(field, e.target.value)}
-                      />
-                    ) : (
-                      <p className="text-sm">{form[field] || "-"}</p>
-                    )}
-                  </div>
-                ))}
-
-                <div className="col-span-full flex gap-2 pt-4">
-                  {editing ? (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={handleSave}
-                        disabled={updateProfile.isPending || isUnchanged()}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <Button size="sm" onClick={() => setEditing(true)}>
-                      Edit Profile
-                    </Button>
-                  )}
+            <div className="col-span-full flex flex-wrap gap-2 pt-4">
+              {editing ? (
+                <>
                   <Button
                     size="sm"
-                    variant="destructive"
-                    onClick={() => logout.mutate()}
+                    onClick={handleSave}
+                    disabled={updateProfile.isPending || isUnchanged()}
                   >
-                    Log Out
+                    Save
                   </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Container>
-      </Section>
+                  <Button size="sm" variant="outline" onClick={handleCancel}>
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button size="sm" onClick={() => setEditing(true)}>
+                  Edit Profile
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => logout.mutate()}
+              >
+                Log Out
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PageCard>
 
       {me?.workspace && (
-        <Section>
-          <Container>
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-black text-2xl text-center">
-                  Workspace
-                </CardTitle>
-              </CardHeader>
+        <PageCard>
+          <header>
+            <h2 className="font-black text-2xl text-center">Workspace</h2>
+          </header>
 
-              <CardContent className="flex flex-col gap-2 text-center">
-                <p>
-                  <strong>Name:</strong> {me.workspace.name}
-                </p>
-                <p>
-                  <strong>Role:</strong> {me.workspace.role}
-                </p>
-              </CardContent>
-            </Card>
-          </Container>
-        </Section>
+          <div className="flex flex-col gap-2 text-center">
+            <p>
+              <strong>Name:</strong> {me.workspace.name}
+            </p>
+            <p>
+              <strong>Role:</strong> {me.workspace.role}
+            </p>
+          </div>
+        </PageCard>
       )}
     </>
   );
