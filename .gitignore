@@ -1,33 +1,34 @@
-# bhvr/.gitignore
-# dependencies
-node_modules
-.pnp
-.pnp.js
+# Dependencies
+node_modules/
 
-# testing
+# Bun
+bun.lockb
+.turbo/
+
+# Build output
+dist/
+build/
+client/dist/
+
+# Coverage
 coverage
 
-# production
-dist
-build
-
-# misc
-.DS_Store
+# Environment
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
+.env.*
+!.env.example
 
-# logs
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# editor directories and files
-.idea
+# OS
+.DS_Store
+
+# Editor
+.idea/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
@@ -36,7 +37,3 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
-
-# Bun
-bun.lockb
-.turbo
