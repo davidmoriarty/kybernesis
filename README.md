@@ -124,7 +124,7 @@ Run in development:
 bun run dev
 ```
 
-Or individuality:
+Or individually:
 ```bash
 bun run dev:client
 bun run dev:server
@@ -168,12 +168,12 @@ Kybernesis aims to be:
 
 Active development.
 
-**Core infrastructure:**
+Core infrastructure:
 - Authentication
 - Multi-tenant database structure
 - Project management UI shell
 
-**Next phases:**
+Next phases:
 - File handling
 - Activity timelines
 - Role-based management UI
