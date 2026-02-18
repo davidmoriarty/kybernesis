@@ -1,92 +1,76 @@
 // packages/auth/src/signup.ts
 import { db, Sessions, Users, WorkspaceMembers, Workspaces } from "@db";
-import { hashPassword } from "@shared";
+
+type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
-import { v4 as uuid } from "uuid";
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_MS,
+  sessionCookieOptions,
+} from "./constants";
+import { hashPassword } from "./crypto/password";
+import type { SignupInput } from "./types";
 
-export async function signupHandler(ctx: Context) {
-  const { name, email, password } = await ctx.req.json();
+export async function signupHandler(ctx: Context): Promise<Response> {
+  const { name, email, password } = (await ctx.req.json()) as SignupInput;
 
   if (!name || !email || !password) {
-    return ctx.json(
-      { error: "Name, email, and password are required" },
-      { status: 400 },
-    );
+    return ctx.json({ error: "Name, email, and password are required" }, 400);
   }
 
-  const existingUser = Users.getUserByEmail(email);
-  if (existingUser) {
-    return ctx.json({ error: "User already exists" }, { status: 409 });
-  }
+  const existingUser = await Users.getUserByEmail(email);
+  if (existingUser) return ctx.json({ error: "User already exists" }, 409);
 
   const passwordHash = await hashPassword(password);
-  const now = Math.floor(Date.now() / 1000);
 
-  const { userId, workspaceId } = db.transaction(() => {
-    const user = db
-      .insert(Users.users)
-      .values({
-        name,
-        email,
-        passwordHash,
-        createdAt: now,
-        updatedAt: now,
-        nickname: undefined,
-        timezone: undefined,
-        location: undefined,
-        avatar: undefined,
-      })
-      .returning()
-      .get();
+  const result = await db.transaction(async (tx: DbTx) => {
+    const user = (
+      await tx
+        .insert(Users.users)
+        .values({
+          name,
+          email,
+          passwordHash,
+          nickname: null,
+          timezone: null,
+          location: null,
+          avatar: null,
+        })
+        .returning()
+    )[0];
 
-    const workspace = db
-      .insert(Workspaces.workspaces)
-      .values({
-        name: `${name}'s Workspace`,
-        ownerId: user.id,
-      })
-      .returning()
-      .get();
+    if (!user) throw new Error("Failed to create user");
 
-    db.insert(WorkspaceMembers.workspaceMembers)
-      .values({
-        userId: user.id,
-        workspaceId: workspace.id,
-        role: "admin",
-      })
-      .run();
+    const workspace = (
+      await tx
+        .insert(Workspaces.workspaces)
+        .values({
+          name: `${name}'s Workspace`,
+          ownerId: user.id,
+        })
+        .returning()
+    )[0];
+    if (!workspace) throw new Error("Failed to create workspace");
 
-    return {
+    await tx.insert(WorkspaceMembers.workspaceMembers).values({
       userId: user.id,
       workspaceId: workspace.id,
-    };
+      role: "admin",
+    });
+
+    const session = await Sessions.createSessionTx(tx, {
+      userId: user.id,
+      workspaceId: workspace.id,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    });
+    if (!session) throw new Error("Failed to create session");
+
+    return { sessionId: session.id };
   });
 
-  // Create session (same as login)
-  const sessionId = uuid();
-  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
+  setCookie(ctx, SESSION_COOKIE_NAME, result.sessionId, sessionCookieOptions);
 
-  db.insert(Sessions.sessions)
-    .values({
-      id: sessionId,
-      userId,
-      workspaceId,
-      expiresAt,
-    })
-    .run();
-
-  // 4. Set cookies
-  setCookie(ctx, "session_id", sessionId, {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-    secure: false,
-    maxAge: 60 * 60 * 24,
-  });
-
-  // 5. Return response
-  console.log("Set session_id cookie:", sessionId);
-
-  return ctx.json({ message: "Account created" }, { status: 201 });
+  return ctx.json({ message: "Account created", success: true }, 201);
 }

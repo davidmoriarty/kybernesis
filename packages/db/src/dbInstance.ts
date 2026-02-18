@@ -1,13 +1,20 @@
 // packages/db/src/dbInstance.ts
-import Database from "bun:sqlite";
-import fs from "node:fs";
-import { drizzle } from "drizzle-orm/bun-sqlite";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
-// DB connection
-const dbPath = new URL("../../../kybernesis.db", import.meta.url).pathname;
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not set");
+}
 
-console.log("DB PATH USED BY SERVER:", dbPath);
-console.log("DB EXISTS:", fs.existsSync(dbPath));
+console.log("DATABASE_URL (db):", process.env.DATABASE_URL);
 
-const sqlite = new Database(dbPath);
-export const db = drizzle(sqlite);
+// Create a connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
+});
+
+export const db = drizzle(pool);

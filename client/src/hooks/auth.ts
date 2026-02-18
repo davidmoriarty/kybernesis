@@ -6,6 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { rpc } from "@/lib/rpc";
 import { appToast } from "@/lib/toast";
@@ -140,6 +141,7 @@ export function useLogin() {
 
 export function useLogout() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation<{ message: string }, Error, void>({
     retry: false,
@@ -149,9 +151,20 @@ export function useLogout() {
       });
       return parseOrThrow(res, { message: "" });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // stop any in-flight /me, /projects, /project/:id refetches
+      await qc.cancelQueries();
+
+      // clear auth-scoped data (adjust keys to match your app)
       qc.removeQueries({ queryKey: ["me"] });
+      qc.removeQueries({ queryKey: ["projects"] });
+      qc.removeQueries({ queryKey: ["project"] });
+      qc.removeQueries({ queryKey: ["workspaces"] });
+
       appToast.auth.logoutSuccess();
+
+      // leave protected routes
+      navigate({ to: "/login", replace: true });
     },
     onError: () => {
       appToast.auth.logoutError();

@@ -57,25 +57,27 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
       return;
     }
 
-    const workspaceId = Number(me.workspace.id);
+    const workspaceId = me.workspace.id;
 
     // Temporary project ID for optimistic update
-    const tempId = Math.floor(Math.random() * 1_000_000);
-    const tempProject: Project = {
+    const tempId = crypto.randomUUID();
+    const nowIso = new Date().toISOString();
+
+    const optimistic: Project = {
       id: tempId,
+      workspaceId,
       name,
       description,
-      workspaceId,
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
+      createdAt: nowIso,
+      updatedAt: nowIso,
     };
 
     // Optimistically add project to the query cache
     qc.setQueryData<ProjectsData>(["projects"], (oldData) => {
-      if (!oldData) return oldData;
+      if (!oldData) return { projects: [optimistic] };
       return {
         ...oldData,
-        projects: [...oldData.projects, tempProject],
+        projects: [...oldData.projects, optimistic],
       };
     });
 

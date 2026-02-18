@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export type ProjectView = "panel" | "grid" | "list";
 
 interface ProjectCardProps {
-  id: number;
+  id: string;
   name: string;
   description?: string;
   view?: ProjectView;
@@ -96,7 +96,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
               onClick={() =>
                 navigate({
                   to: "/projects/$projectId",
-                  params: { projectId: String(id) },
+                  params: { projectId: id },
                 })
               }
             >
@@ -201,7 +201,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
               onClick={() =>
                 navigate({
                   to: "/projects/$projectId",
-                  params: { projectId: String(id) },
+                  params: { projectId: id },
                 })
               }
             >
@@ -232,7 +232,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
           onClick={() =>
             navigate({
               to: "/projects/$projectId",
-              params: { projectId: String(id) },
+              params: { projectId: id },
             })
           }
         >

@@ -1,68 +1,35 @@
 // packages/auth/src/login.ts
-import { db, Sessions, Users, WorkspaceMembers, Workspaces } from "@db";
-import { verifyPassword } from "@shared";
-import { eq } from "drizzle-orm";
+import { Sessions, Users, Workspaces } from "@db";
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
-import { v4 as uuid } from "uuid";
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_MS,
+  sessionCookieOptions,
+} from "./constants";
+import { verifyPassword } from "./crypto/password";
+import type { LoginInput } from "./types";
 
-export async function loginHandler(ctx: Context) {
-  const { email, password } = await ctx.req.json();
+export async function loginHandler(ctx: Context): Promise<Response> {
+  const { email, password } = (await ctx.req.json()) as LoginInput;
 
-  const user = Users.getUserByEmail(email);
-  if (!user) {
-    return ctx.json({ error: "Invalid email or password" }, { status: 401 });
-  }
+  const user = await Users.getUserByEmail(email);
+  if (!user) return ctx.json({ error: "Invalid email or password" }, 401);
 
   const isValid = await verifyPassword(password, user.passwordHash);
-  if (!isValid) {
-    return ctx.json({ error: "Invalid email or password" }, { status: 401 });
-  }
+  if (!isValid) return ctx.json({ error: "Invalid email or password" }, 401);
 
-  // Resolve a workspace for this user (owner or member)
-  const ownedWorkspace = db
-    .select()
-    .from(Workspaces.workspaces)
-    .where(eq(Workspaces.workspaces.ownerId, user.id))
-    .get();
+  const workspaceId = await Workspaces.getAnyWorkspaceIdForUser(user.id);
+  if (!workspaceId) return ctx.json({ error: "User has no workspace" }, 403);
 
-  const memberWorkspace = !ownedWorkspace
-    ? db
-        .select()
-        .from(WorkspaceMembers.workspaceMembers)
-        .where(eq(WorkspaceMembers.workspaceMembers.userId, user.id))
-        .get()
-    : null;
-
-  const workspaceId =
-    ownedWorkspace?.id ?? memberWorkspace?.workspaceId ?? null;
-
-  if (!workspaceId) {
-    return ctx.json({ error: "User has no workspace" }, { status: 403 });
-  }
-
-  // Create session with workspace_id
-  const sessionId = uuid();
-  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
-
-  db.insert(Sessions.sessions)
-    .values({
-      id: sessionId,
-      userId: user.id,
-      workspaceId,
-      expiresAt,
-    })
-    .run();
-
-  setCookie(ctx, "session_id", sessionId, {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-    secure: false,
-    maxAge: 60 * 60 * 24,
+  const session = await Sessions.createSession({
+    userId: user.id,
+    workspaceId,
+    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
   });
+  if (!session) return ctx.json({ error: "Failed to create session" }, 500);
 
-  console.log("Set session_id cookie:", sessionId);
+  setCookie(ctx, SESSION_COOKIE_NAME, session.id, sessionCookieOptions);
 
-  return ctx.json({ message: `Welcome, ${user.email}` }, { status: 200 });
+  return ctx.json({ message: `Welcome, ${user.email}`, success: true }, 200);
 }

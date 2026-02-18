@@ -9,12 +9,12 @@ import { rpc } from "@/lib/rpc";
 export function useWorkspaces(
   options?: Partial<
     UseQueryOptions<{
-      workspaces: { id: number; name: string; description?: string }[];
+      workspaces: { id: string; name: string; description?: string }[];
     }>
   >,
 ) {
   return useQuery<{
-    workspaces: { id: number; name: string; description?: string }[];
+    workspaces: { id: string; name: string; description?: string }[];
   }>({
     queryKey: ["workspaces"],
     queryFn: async () => {
@@ -31,11 +31,11 @@ export function useSelectWorkspace() {
   const qc = useQueryClient();
 
   return useMutation<
-    { workspaces: { id: number; name: string; description?: string }[] },
+    { workspaces: { id: string; name: string; description?: string }[] },
     Error,
-    { workspaceId: number }
+    { workspaceId: string }
   >({
-    mutationFn: async (body: { workspaceId: number }) => {
+    mutationFn: async (body: { workspaceId: string }) => {
       const res = await rpc.$post("/workspaces", { body });
       return parseOrThrow(res, { workspaces: [] });
     },

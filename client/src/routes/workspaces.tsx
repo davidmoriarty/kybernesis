@@ -30,7 +30,7 @@ function WorkspaceList({
   >["workspaces"];
   isLoading: boolean;
   error: unknown;
-  meWorkspaceId?: number;
+  meWorkspaceId?: string;
   meRole?: string;
 }) {
   if (isLoading) return <LoadingState message="Loading workspaces..." />;

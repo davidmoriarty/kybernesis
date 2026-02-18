@@ -11,25 +11,25 @@ export function useProjects() {
     queryFn: async () => {
       const res = await rpc.$get("/projects");
       return parseOrThrow<{
-        projects: { id: number; name: string; description?: string }[];
+        projects: { id: string; name: string; description?: string }[];
       }>(res, { projects: [] });
     },
   });
 }
 
-export function useProject(projectId: number) {
+export function useProject(projectId: string) {
   return useQuery({
     queryKey: ["projects", projectId],
     queryFn: async () => {
       const res = await rpc.$get(`/projects/${projectId}`);
       return parseOrThrow<{
-        id: number;
+        id: string;
         name: string;
         description?: string;
-        workspaceId: number;
+        workspaceId: string;
         owner: string;
-        createdAt: number;
-        updatedAt: number;
+        createdAt: string;
+        updatedAt: string;
       }>(res);
     },
   });
@@ -44,7 +44,7 @@ export function useCreateProject() {
     {
       name: string;
       description?: string;
-      workspaceId: number;
+      workspaceId: string;
     }
   >({
     retry: false,
@@ -52,12 +52,12 @@ export function useCreateProject() {
       const res = await rpc.$post("/projects", { body });
       return parseOrThrow<{ project: Project }>(res, {
         project: {
-          id: 0,
-          workspaceId: 0,
+          id: "",
+          workspaceId: "",
           name: "",
           description: "",
-          createdAt: 0,
-          updatedAt: 0,
+          createdAt: "",
+          updatedAt: "",
         },
       });
     },
@@ -77,7 +77,7 @@ export function useUpdateProject() {
   return useMutation<
     { message: string },
     Error,
-    { projectId: number; name: string; description?: string }
+    { projectId: string; name: string; description?: string }
   >({
     retry: false,
     mutationFn: async ({ projectId, ...body }) => {
@@ -97,7 +97,7 @@ export function useUpdateProject() {
 export function useDeleteProject() {
   const qc = useQueryClient();
 
-  return useMutation<{ message: string }, Error, { projectId: number }>({
+  return useMutation<{ message: string }, Error, { projectId: string }>({
     retry: false,
     mutationFn: async ({ projectId }) => {
       const res = await rpc.$delete(`/projects/${projectId}`);

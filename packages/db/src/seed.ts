@@ -1,104 +1,77 @@
 // packages/db/src/seed.ts
-import { hashPassword } from "@shared";
-import { and, eq } from "drizzle-orm";
-import { db, Users, WorkspaceMembers, Workspaces } from "./index";
+import { Users, WorkspaceMembers, Workspaces } from "./index";
+
+const ADMIN_EMAIL = "admin@example.com";
+const ADMIN_NAME = "Admin";
+const ADMIN_PASSWORD = "password123";
+
+async function seedHashPassword(password: string): Promise<string> {
+  return Bun.password.hash(password, { algorithm: "argon2id" });
+}
 
 async function getOrCreateAdminUser() {
-  let user = db
-    .select()
-    .from(Users.users)
-    .where(eq(Users.users.email, "admin@example.com"))
-    .get();
+  const existing = await Users.getUserByEmail(ADMIN_EMAIL);
+  if (existing) return existing;
 
-  if (!user) {
-    const passwordHash = await hashPassword("password123");
+  const passwordHash = await seedHashPassword(ADMIN_PASSWORD);
 
-    // Insert user
-    db.insert(Users.users)
-      .values({
-        email: "admin@example.com",
-        passwordHash,
-        name: "Admin",
-      })
-      .run();
+  const created = await Users.createUser({
+    name: ADMIN_NAME,
+    email: ADMIN_EMAIL,
+    passwordHash,
+  });
 
-    // Query back the inserted user
-    user = db
-      .select()
-      .from(Users.users)
-      .where(eq(Users.users.email, "admin@example.com"))
-      .get();
-  }
-
-  if (!user) throw new Error("Failed to seed admin user");
-
-  return user as {
-    id: number;
-    name: string;
-    email: string;
-    passwordHash: string;
-    createdAt: number;
-    updatedAt: number;
-  };
+  if (!created) throw new Error("Failed to seed admin user");
+  return created;
 }
 
-function getOrCreateWorkspace(user: { id: number; name: string }) {
-  let workspace = db
-    .select()
-    .from(Workspaces.workspaces)
-    .where(eq(Workspaces.workspaces.name, `${user.name}'s Workspace`))
-    .get();
+async function getOrCreateWorkspace(user: { id: string; name: string }) {
+  const name = `${user.name}'s Workspace`;
 
-  if (!workspace) {
-    db.insert(Workspaces.workspaces)
-      .values({ name: `${user.name}'s Workspace`, ownerId: user.id })
-      .run();
+  const existing = await Workspaces.getWorkspaceByName(name);
+  if (existing) return existing;
 
-    workspace = db
-      .select()
-      .from(Workspaces.workspaces)
-      .where(eq(Workspaces.workspaces.name, `${user.name}'s Workspace`))
-      .get();
-  }
+  const created = await Workspaces.createWorkspace({
+    name,
+    ownerId: user.id,
+  });
 
-  if (!workspace) throw new Error("Failed to seed workspace");
-  return workspace as { id: number; name: string; ownerId: number };
+  if (!created) throw new Error("Failed to seed workspace");
+  return created;
 }
 
-function ensureMembership(userId: number, workspaceId: number) {
-  const membership = db
-    .select()
-    .from(WorkspaceMembers.workspaceMembers)
-    .where(
-      and(
-        eq(WorkspaceMembers.workspaceMembers.userId, userId),
-        eq(WorkspaceMembers.workspaceMembers.workspaceId, workspaceId),
-      ),
-    )
-    .get();
+async function ensureMembership(userId: string, workspaceId: string) {
+  const existing = await WorkspaceMembers.getWorkspaceMembership(
+    userId,
+    workspaceId,
+  );
+  if (existing) return existing;
 
-  if (!membership) {
-    db.insert(WorkspaceMembers.workspaceMembers)
-      .values({
-        userId,
-        workspaceId,
-        role: "admin",
-      })
-      .run();
-  }
+  const created = await WorkspaceMembers.createWorkspaceMembership({
+    userId,
+    workspaceId,
+    role: "admin",
+  });
 
-  return membership;
+  if (!created) throw new Error("Failed to seed membership");
+  return created;
 }
 
 async function seed() {
   const user = await getOrCreateAdminUser();
-  const workspace = getOrCreateWorkspace(user);
-  const membership = ensureMembership(user.id, workspace.id);
+  const workspace = await getOrCreateWorkspace({
+    id: user.id,
+    name: user.name,
+  });
+  const membership = await ensureMembership(user.id, workspace.id);
 
   console.log("Seed complete");
-  console.log("User:", user);
-  console.log("Workspace:", workspace);
+  console.log("User:", { id: user.id, email: user.email });
+  console.log("Workspace:", { id: workspace.id, name: workspace.name });
   console.log("Membership:", membership);
 }
 
-seed();
+seed().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

@@ -54,7 +54,7 @@ const SECTIONS: { label: ProjectSection; icon: LucideIcon }[] = [
 
 function ProjectPage() {
   const { projectId } = Route.useParams();
-  const id = Number(projectId);
+  const id = projectId;
 
   const { data: project, isLoading, error } = useProject(id);
   const [section, setSection] = useState<ProjectSection>("Overview");

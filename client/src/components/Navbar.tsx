@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +27,9 @@ export function Navbar() {
   const location = useLocation();
   const { data: me } = useConditionalMe();
   const logout = useLogout();
+
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   interface NavLink {
     to: string;
@@ -163,7 +167,7 @@ export function Navbar() {
 
           {/* Account dropdown */}
           {me?.user && (
-            <DropdownMenu>
+            <DropdownMenu open={accountOpen} onOpenChange={setAccountOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
@@ -182,13 +186,14 @@ export function Navbar() {
                       aria-label={ariaLabel}
                       className={active ? "bg-slate-300/80 font-bold" : ""}
                       onClick={() => {
+                        setAccountOpen(false);
+
                         if (to === "/logout") {
-                          logout.mutate(undefined, {
-                            onSuccess: () => navigate({ to: "/login" }),
-                          });
-                        } else {
-                          navigate({ to });
+                          logout.mutate();
+                          return;
                         }
+
+                        navigate({ to });
                       }}
                     >
                       {Icon && <Icon className="w-4 h-4" />}
@@ -203,7 +208,7 @@ export function Navbar() {
 
         {/* Mobile menu button */}
         <div className="sm:hidden">
-          <DropdownMenu>
+          <DropdownMenu open={mobileOpen} onOpenChange={setMobileOpen}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon-lg" aria-label="Menu">
                 <Menu />
@@ -217,13 +222,14 @@ export function Navbar() {
                     aria-label={ariaLabel}
                     className={active ? "bg-slate-300/80 font-bold" : ""}
                     onClick={() => {
+                      setMobileOpen(false);
+
                       if (to === "/logout") {
-                        logout.mutate(undefined, {
-                          onSuccess: () => navigate({ to: "/login" }),
-                        });
-                      } else {
-                        navigate({ to });
+                        logout.mutate();
+                        return;
                       }
+
+                      navigate({ to });
                     }}
                   >
                     {Icon && <Icon className="w-4 h-4" />}

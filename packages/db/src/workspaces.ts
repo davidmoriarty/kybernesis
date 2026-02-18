@@ -1,25 +1,134 @@
 // packages/db/src/workspaces.ts
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { and, eq } from "drizzle-orm";
+import { index, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
+import type { WorkspaceRow, WorkspaceSummary } from "./types";
+import { users } from "./users";
+import { workspaceMembers } from "./workspaceMembers";
 
-export const workspaces = sqliteTable("workspaces", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  ownerId: integer("owner_id").notNull(),
-});
+export const workspaces = pgTable(
+  "workspaces",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => [index("workspaces_owner_id_idx").on(t.ownerId)],
+);
 
-export function createWorkspacesTable() {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS workspaces (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      owner_id INTEGER NOT NULL
-    );
-  `);
+export async function createWorkspace(input: {
+  name: string;
+  ownerId: string;
+}): Promise<WorkspaceRow> {
+  const inserted = (
+    await db
+      .insert(workspaces)
+      .values({
+        name: input.name,
+        ownerId: input.ownerId,
+      })
+      .returning()
+  )[0];
+
+  if (!inserted) throw new Error("Failed to create workspace");
+  return inserted;
+}
+
+export async function getWorkspaceByName(
+  name: string,
+): Promise<WorkspaceSummary | undefined> {
+  return (
+    await db
+      .select({
+        id: workspaces.id,
+        name: workspaces.name,
+      })
+      .from(workspaces)
+      .where(eq(workspaces.name, name))
+      .limit(1)
+  )[0];
+}
+
+export async function getWorkspaceById(
+  workspaceId: string,
+): Promise<WorkspaceSummary | undefined> {
+  return (
+    await db
+      .select({
+        id: workspaces.id,
+        name: workspaces.name,
+      })
+      .from(workspaces)
+      .where(eq(workspaces.id, workspaceId))
+      .limit(1)
+  )[0];
+}
+
+export async function getWorkspacesForUser(
+  userId: string,
+): Promise<Array<{ id: string; name: string; role: "admin" | "member" }>> {
+  return await db
+    .select({
+      id: workspaces.id,
+      name: workspaces.name,
+      role: workspaceMembers.role,
+    })
+    .from(workspaceMembers)
+    .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+    .where(eq(workspaceMembers.userId, userId));
+}
+
+export async function getAnyWorkspaceIdForUser(
+  userId: string,
+): Promise<string | null> {
+  const owned = (
+    await db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(eq(workspaces.ownerId, userId))
+      .limit(1)
+  )[0];
+
+  if (owned) return owned.id;
+
+  const member = (
+    await db
+      .select({ workspaceId: workspaceMembers.workspaceId })
+      .from(workspaceMembers)
+      .where(eq(workspaceMembers.userId, userId))
+      .limit(1)
+  )[0];
+
+  return member?.workspaceId ?? null;
+}
+
+export async function getWorkspaceWithRoleForUser(
+  userId: string,
+  workspaceId: string,
+): Promise<{ id: string; name: string; role: "admin" | "member" } | undefined> {
+  return (
+    await db
+      .select({
+        id: workspaces.id,
+        name: workspaces.name,
+        role: workspaceMembers.role,
+      })
+      .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaceMembers.workspaceId, workspaceId),
+        ),
+      )
+      .limit(1)
+  )[0];
 }
 
 export type Workspace = {
-  id: number;
+  id: string;
   name: string;
-  ownerId: number;
+  ownerId: string;
 };

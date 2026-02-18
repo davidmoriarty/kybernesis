@@ -1,10 +1,10 @@
 // packages/shared/src/types/auth.ts
 export interface User {
-  id: number;
+  id: string; // uuid
   email: string;
   name: string;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
   nickname?: string;
   timezone?: string;
   location?: string;
@@ -12,7 +12,7 @@ export interface User {
 }
 
 export interface Workspace {
-  id: number;
+  id: string; // uuid
   name: string;
   role: "admin" | "member";
 }

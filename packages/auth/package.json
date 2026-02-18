@@ -1,15 +1,22 @@
 {
   "name": "auth",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
     "hono": "^4.11.3",
-    "uuid": "^13.0.0",
     "shared": "workspace:*",
     "schemas": "workspace:*",
     "db": "workspace:*"

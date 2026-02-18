@@ -1,6 +1,12 @@
 # Dependencies
 node_modules/
 
+# TypeScript incremental build
+*.tsbuildinfo
+
+# Database
+*.db
+
 # Bun
 bun.lockb
 .turbo/

@@ -6,7 +6,7 @@ interface OverviewSectionProps {
   projectName: string;
   description?: string;
   owner?: string;
-  createdAt?: number;
+  createdAt?: string;
 }
 
 export default function OverviewSection({

@@ -1,17 +1,22 @@
 {
-	"name": "db",
-	"version": "0.1.0",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"scripts": {
-		"build": "tsc",
-		"seed": "bun run tsx src/seed.ts"
-	},
-	"dependencies": {
-		"shared": "workspace:*",
-		"schemas": "workspace:*"
-	},
-	"devDependencies": {
-		"typescript": "^5.8.3"
-	}
+  "name": "db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "seed": "bun src/seed.ts"
+  },
+  "dependencies": {
+    "pg": "^8.18.0",
+    "schemas": "workspace:*",
+    "shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.16.0",
+    "drizzle-orm": "^0.45.1",
+    "typescript": "^5.8.3"
+  }
 }

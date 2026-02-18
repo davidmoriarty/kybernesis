@@ -1,31 +1,21 @@
 // server/src/types/hono.d.ts
 import "hono";
+import type { User, Workspace } from "@shared";
 
 declare module "hono" {
   interface Context {
-    user?: {
-      id: number;
-      email: string;
-      name: string;
-      createdAt: number;
-      updatedAt: number;
-      nickname?: string;
-      timezone?: string;
-      location?: string;
-      avatar?: string;
-    };
+    user?: User;
+
     session?: {
-      id: string;
-      userId: number;
-      workspaceId: number | null;
+      id: string; // session token (uuid)
+      userId: string; // uuid
+      workspaceId: string | null; // uuid | null
     };
-    workspace?: {
-      id: number;
-      name: string;
-      role: "admin" | "member";
-    };
+
+    workspace?: Workspace;
+
     workspaceMember?: {
-      workspaceId: number;
+      workspaceId: string; // uuid
       role: "admin" | "member";
     };
   }

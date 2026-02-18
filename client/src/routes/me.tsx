@@ -169,7 +169,7 @@ export default function MePage() {
                 {new Intl.DateTimeFormat("en-CA", {
                   year: "numeric",
                   month: "long",
-                }).format(new Date(me.user.createdAt * 1000))}
+                }).format(new Date(me.user.createdAt))}
               </figcaption>
             )}
           </figure>

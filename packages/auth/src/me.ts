@@ -1,72 +1,44 @@
-// packages/auth/src/me.ts
-import { db, UserMappers, Users } from "@db";
+import { type Contracts, UserMappers, Users } from "@db";
 import type {} from "@shared/hono";
-import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 
 const { mapUserRowToUser } = UserMappers;
 
-export async function meHandler(ctx: Context) {
-  if (!ctx.user) {
-    return ctx.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function meHandler(ctx: Context): Promise<Response> {
+  if (!ctx.user) return ctx.json({ error: "Unauthorized" }, 401);
 
-  const userRow = Users.getUserById(ctx.user.id);
-  if (!userRow) {
-    return ctx.json({ error: "User not found" }, { status: 404 });
-  }
+  const userRow = await Users.getUserById(ctx.user.id);
+  if (!userRow) return ctx.json({ error: "User not found" }, 404);
 
-  const user = mapUserRowToUser(userRow);
-
-  return ctx.json({
-    user,
-    workspace: ctx.workspace,
-  });
+  return ctx.json(
+    { user: mapUserRowToUser(userRow), workspace: ctx.workspace },
+    200,
+  );
 }
 
-export async function updateProfileHandler(ctx: Context) {
-  if (!ctx.user) {
-    return ctx.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function updateProfileHandler(ctx: Context): Promise<Response> {
+  if (!ctx.user) return ctx.json({ error: "Unauthorized" }, 401);
 
   const { name, email, nickname, timezone, location, avatar } =
-    await ctx.req.json();
-  const now = Math.floor(Date.now() / 1000);
+    (await ctx.req.json()) as Contracts.UpdateUserProfileInput;
 
-  // Build update object only with defined fields
-  const updateData: Partial<{
-    name: string;
-    email: string;
-    nickname?: string | null;
-    timezone?: string | null;
-    location?: string | null;
-    avatar?: string | null;
-    updatedAt: number;
-  }> = { updatedAt: now };
-
-  if (name !== undefined) updateData.name = name;
-  if (email !== undefined) updateData.email = email;
-  if (nickname !== undefined) updateData.nickname = nickname;
-  if (timezone !== undefined) updateData.timezone = timezone;
-  if (location !== undefined) updateData.location = location;
-  if (avatar !== undefined) updateData.avatar = avatar;
-
-  // Update user in DB
-  const updatedRow = db
-    .update(Users.users)
-    .set(updateData)
-    .where(eq(Users.users.id, ctx.user.id))
-    .returning()
-    .get();
-
-  if (!updatedRow) {
-    return ctx.json({ error: "Failed to update profile" }, { status: 500 });
-  }
-
-  const updatedUser = mapUserRowToUser(updatedRow);
-
-  return ctx.json({
-    message: "Profile updated successfully",
-    user: updatedUser,
+  const updatedRow = await Users.updateUserProfile(ctx.user.id, {
+    name,
+    email,
+    nickname: nickname ?? undefined,
+    timezone: timezone ?? undefined,
+    location: location ?? undefined,
+    avatar: avatar ?? undefined,
   });
+
+  if (!updatedRow) return ctx.json({ error: "Failed to update profile" }, 500);
+
+  return ctx.json(
+    {
+      message: "Profile updated successfully",
+      success: true,
+      user: mapUserRowToUser(updatedRow),
+    },
+    200,
+  );
 }

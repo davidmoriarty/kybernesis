@@ -1,11 +1,14 @@
 // server/src/index.ts
-import { loginHandler } from "@auth/login";
-import { logoutHandler } from "@auth/logout";
-import { meHandler, updateProfileHandler } from "@auth/me";
-import { signupHandler } from "@auth/signup";
-import { db, Projects, Sessions, WorkspaceMembers, Workspaces } from "@db";
+import {
+  loginHandler,
+  logoutHandler,
+  meHandler,
+  signupHandler,
+  updateProfileHandler,
+} from "@auth";
+import { Projects, Sessions, Workspaces } from "@db";
+import type {} from "@shared/hono";
 import type { ApiResponse } from "@shared/types/api";
-import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -24,12 +27,9 @@ export const app = new Hono()
 
   // Top-level routes
   .get("/", (c) => c.text("Hello Hono!"))
-  .get("/hello", async (c) => {
-    const data: ApiResponse = {
-      message: "Hello BHVR!",
-      success: true,
-    };
-    return c.json(data, { status: 200 });
+  .get("/hello", (c) => {
+    const data: ApiResponse = { message: "Hello BHVR!", success: true };
+    return c.json(data, 200);
   })
 
   // Auth routes
@@ -41,84 +41,54 @@ export const app = new Hono()
 
   // Project routes
 
-  // GET all projects
-  .get("/api/projects", requireSession, requireWorkspace, (ctx) => {
-    const workspaceId = Number(ctx.workspace?.id);
-    const allProjects = db
-      .select()
-      .from(Projects.projects)
-      .where(eq(Projects.projects.workspaceId, workspaceId))
-      .all()
-      .map((p) => ({
-        ...p,
-        createdAt: Number(p.createdAt),
-        updatedAt: Number(p.updatedAt),
-      }));
-    return ctx.json({ projects: allProjects });
+  // GET all projects for active workspace
+  .get("/api/projects", requireSession, requireWorkspace, async (ctx) => {
+    const workspaceId = ctx.workspace?.id;
+    if (!workspaceId) return ctx.json({ error: "Forbidden" }, 403);
+
+    const projects = await Projects.getProjectsByWorkspace(workspaceId);
+    return ctx.json({ projects }, 200);
   })
 
-  // GET single project
-  .get("/api/projects/:projectId", requireSession, requireWorkspace, (ctx) => {
-    const projectId = Number(ctx.req.param("projectId"));
-    const workspaceId = Number(ctx.workspace?.id);
+  // GET single project (scoped for workspace)
+  .get(
+    "/api/projects/:projectId",
+    requireSession,
+    requireWorkspace,
+    async (ctx) => {
+      const workspaceId = ctx.workspace?.id;
+      if (!workspaceId) return ctx.json({ error: "Forbidden" }, 403);
 
-    const project = db
-      .select()
-      .from(Projects.projects)
-      .where(
-        and(
-          eq(Projects.projects.id, projectId),
-          eq(Projects.projects.workspaceId, workspaceId),
-        ),
-      )
-      .get();
+      const projectId = ctx.req.param("projectId");
+      const project = await Projects.getProjectByIdForWorkspace(
+        projectId,
+        workspaceId,
+      );
 
-    if (!project) {
-      return ctx.json({ error: "Project not found" }, { status: 404 });
-    }
+      if (!project) return ctx.json({ error: "Project not found" }, 404);
+      return ctx.json(project, 200);
+    },
+  )
 
-    return ctx.json({
-      ...project,
-      createdAt: Number(project.createdAt),
-      updatedAt: Number(project.updatedAt),
-    });
-  })
-
-  // POST create a new project
+  // POST create project
   .post("/api/projects", requireSession, requireWorkspace, async (ctx) => {
-    const workspaceId = Number(ctx.workspace?.id);
+    const workspaceId = ctx.workspace?.id;
+    if (!workspaceId) return ctx.json({ error: "Forbidden" }, 403);
+
     const { name, description } = await ctx.req.json<{
       name: string;
       description?: string;
     }>();
 
-    const now = Math.floor(Date.now() / 1000);
+    if (!name) return ctx.json({ error: "Name is required" }, 400);
 
-    // Insert the new project
-    db.insert(Projects.projects)
-      .values({
-        workspaceId,
-        name,
-        description,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .run();
+    const project = await Projects.createProject({
+      workspaceId,
+      name,
+      description: description ?? null,
+    });
 
-    // Fetch the last inserted row
-    const [project] = db
-      .select()
-      .from(Projects.projects)
-      .where(eq(Projects.projects.workspaceId, workspaceId))
-      .orderBy(sql`${Projects.projects.id} DESC`)
-      .limit(1)
-      .all();
-
-    if (!project) {
-      return ctx.json({ error: "Failed to create project" }, { status: 500 });
-    }
-
-    return ctx.json({ project }, { status: 201 });
+    return ctx.json({ project }, 201);
   })
 
   // PUT update project
@@ -127,31 +97,27 @@ export const app = new Hono()
     requireSession,
     requireWorkspace,
     async (ctx) => {
-      const projectId = Number(ctx.req.param("projectId"));
-      const workspaceId = Number(ctx.workspace?.id);
+      const workspaceId = ctx.workspace?.id;
+      if (!workspaceId) return ctx.json({ error: "Forbidden" }, 403);
+
+      const projectId = ctx.req.param("projectId");
       const { name, description } = await ctx.req.json<{
         name?: string;
         description?: string;
       }>();
 
-      const updateData: Partial<{ name: string; description?: string }> = {};
-      if (name !== undefined) updateData.name = name;
-      if (description !== undefined) updateData.description = description;
+      const updated = await Projects.updateProjectForWorkspace(
+        projectId,
+        workspaceId,
+        {
+          name,
+          description:
+            description === undefined ? undefined : (description ?? null),
+        },
+      );
 
-      db.update(Projects.projects)
-        .set({
-          ...updateData,
-          updatedAt: Math.floor(Date.now() / 1000),
-        })
-        .where(
-          and(
-            eq(Projects.projects.id, projectId),
-            eq(Projects.projects.workspaceId, workspaceId),
-          ),
-        )
-        .run();
-
-      return ctx.json({ message: "Project updated" });
+      if (!updated) return ctx.json({ error: "Project not found" }, 404);
+      return ctx.json({ message: "Project updated", success: true }, 200);
     },
   )
 
@@ -160,89 +126,53 @@ export const app = new Hono()
     "/api/projects/:projectId",
     requireSession,
     requireWorkspace,
-    (ctx) => {
-      const projectId = Number(ctx.req.param("projectId"));
-      const workspaceId = Number(ctx.workspace?.id);
+    async (ctx) => {
+      const workspaceId = ctx.workspace?.id;
+      if (!workspaceId) return ctx.json({ error: "Forbidden" }, 403);
 
-      db.delete(Projects.projects)
-        .where(
-          and(
-            eq(Projects.projects.id, projectId),
-            eq(Projects.projects.workspaceId, workspaceId),
-          ),
-        )
-        .run();
+      const projectId = ctx.req.param("projectId");
+      const ok = await Projects.deleteProjectForWorkspace(
+        projectId,
+        workspaceId,
+      );
 
-      return ctx.json({ message: "Project deleted" });
+      if (!ok) return ctx.json({ error: "Project not found" }, 404);
+      return ctx.json({ message: "Project deleted", success: true }, 200);
     },
   )
 
   // Workspace routes
-  .get("/api/workspaces", requireSession, (ctx) => {
+
+  // List workspaces user belongs to
+  .get("/api/workspaces", requireSession, async (ctx) => {
     const userId = ctx.user?.id;
-    if (!userId) {
-      return ctx.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId) return ctx.json({ error: "Unauthorized" }, 401);
 
-    const rows = db
-      .select({
-        id: Workspaces.workspaces.id,
-        name: Workspaces.workspaces.name,
-        role: WorkspaceMembers.workspaceMembers.role,
-      })
-      .from(WorkspaceMembers.workspaceMembers)
-      .innerJoin(
-        Workspaces.workspaces,
-        eq(
-          WorkspaceMembers.workspaceMembers.workspaceId,
-          Workspaces.workspaces.id,
-        ),
-      )
-      .where(eq(WorkspaceMembers.workspaceMembers.userId, userId))
-      .all();
+    const rows = await Workspaces.getWorkspacesForUser(userId);
 
-    // Always return refresh data, prevent 304
     return ctx.json(
       { workspaces: rows ?? [] },
       { status: 200, headers: { "Cache-Control": "no-store" } },
     );
   })
 
+  // Select active workspace for the current session
   .post("/api/workspaces/select", requireSession, async (ctx) => {
     const userId = ctx.user?.id;
     const sessionId = ctx.session?.id;
-    if (!userId || !sessionId) {
-      return ctx.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!userId || !sessionId) return ctx.json({ error: "Unauthorized" }, 401);
 
-    const { workspaceId } = await ctx.req.json<{ workspaceId: number }>();
-    if (!workspaceId) {
-      return ctx.json({ error: "workspaceId required" }, { status: 400 });
-    }
+    const { workspaceId } = await ctx.req.json<{ workspaceId: string }>();
+    if (!workspaceId) return ctx.json({ error: "workspaceId required" }, 400);
 
-    // Verify membership
-    const membership = db
-      .select()
-      .from(WorkspaceMembers.workspaceMembers)
-      .where(
-        and(
-          eq(WorkspaceMembers.workspaceMembers.userId, userId),
-          eq(WorkspaceMembers.workspaceMembers.workspaceId, workspaceId),
-        ),
-      )
-      .get();
+    const ok = await Sessions.setSessionWorkspaceForUser({
+      sessionId,
+      userId,
+      workspaceId,
+    });
 
-    if (!membership) {
-      return ctx.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    // Bind workspace to session
-    db.update(Sessions.sessions)
-      .set({ workspaceId })
-      .where(eq(Sessions.sessions.id, sessionId))
-      .run();
-
-    return ctx.json({ message: "Workspace selected" }, { status: 200 });
+    if (!ok) return ctx.json({ error: "Forbidden" }, 403);
+    return ctx.json({ message: "Workspace selected", success: true }, 200);
   });
 
 export default app;

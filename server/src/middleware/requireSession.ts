@@ -1,46 +1,20 @@
-// middleware/requireSession.ts
-import { db, Sessions, Users, WorkspaceMembers, Workspaces } from "@db";
-import { and, eq, gt } from "drizzle-orm";
+import { SESSION_COOKIE_NAME } from "@auth";
+import { Sessions, UserMappers, Users, Workspaces } from "@db";
+import type {} from "@shared/hono";
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 
 export async function requireSession(ctx: Context, next: Next) {
-  const sessionId = getCookie(ctx, "session_id");
-  if (!sessionId) {
-    return ctx.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const sessionId = getCookie(ctx, SESSION_COOKIE_NAME);
+  if (!sessionId) return ctx.json({ error: "Unauthorized" }, 401);
 
-  const now = Math.floor(Date.now() / 1000);
+  const session = await Sessions.getActiveSessionById(sessionId);
+  if (!session) return ctx.json({ error: "Unauthorized" }, 401);
 
-  // Synchronous DB query for session
-  const session = db
-    .select()
-    .from(Sessions.sessions)
-    .where(
-      and(
-        eq(Sessions.sessions.id, sessionId),
-        gt(Sessions.sessions.expiresAt, now),
-      ),
-    )
-    .get();
+  const user = await Users.getUserById(session.userId);
+  if (!user) return ctx.json({ error: "Unauthorized" }, 401);
 
-  if (!session) return ctx.json({ error: "Unauthorized" }, { status: 401 });
-
-  const user = Users.getUserById(session.userId);
-  if (!user) return ctx.json({ error: "Unauthorized" }, { status: 401 });
-
-  // Attach user and session to context
-  ctx.user = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-    nickname: user.nickname,
-    timezone: user.timezone,
-    location: user.location,
-    avatar: user.avatar,
-  };
+  ctx.user = UserMappers.mapUserRowToUser(user);
 
   ctx.session = {
     id: session.id,
@@ -49,30 +23,10 @@ export async function requireSession(ctx: Context, next: Next) {
   };
 
   if (session.workspaceId) {
-    const workspaceWithRole = db
-      .select({
-        id: Workspaces.workspaces.id,
-        name: Workspaces.workspaces.name,
-        role: WorkspaceMembers.workspaceMembers.role,
-      })
-      .from(WorkspaceMembers.workspaceMembers)
-      .innerJoin(
-        Workspaces.workspaces,
-        eq(
-          WorkspaceMembers.workspaceMembers.workspaceId,
-          Workspaces.workspaces.id,
-        ),
-      )
-      .where(
-        and(
-          eq(WorkspaceMembers.workspaceMembers.userId, user.id),
-          eq(
-            WorkspaceMembers.workspaceMembers.workspaceId,
-            session.workspaceId,
-          ),
-        ),
-      )
-      .get();
+    const workspaceWithRole = await Workspaces.getWorkspaceWithRoleForUser(
+      user.id,
+      session.workspaceId,
+    );
 
     if (workspaceWithRole) {
       ctx.workspace = {
@@ -80,6 +34,7 @@ export async function requireSession(ctx: Context, next: Next) {
         name: workspaceWithRole.name,
         role: workspaceWithRole.role,
       };
+
       ctx.workspaceMember = {
         workspaceId: session.workspaceId,
         role: workspaceWithRole.role,

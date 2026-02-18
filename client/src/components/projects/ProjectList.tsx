@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { ProjectView } from "./ProjectsToolbar";
 
 interface Project {
-  id: number;
+  id: string;
   name: string;
   description?: string;
 }

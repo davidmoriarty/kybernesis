@@ -5,10 +5,10 @@ export type ApiResponse = {
 };
 
 export interface Project {
-  id: number;
-  workspaceId: number;
+  id: string; // uuid
+  workspaceId: string; // uuid
   name: string;
   description?: string;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
 }
