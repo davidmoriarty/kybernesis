@@ -1,5 +1,5 @@
 // packages/db/src/sessions.ts
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, lt, sql } from "drizzle-orm";
 import { index, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import type { SessionRow } from "./types";
@@ -165,4 +165,40 @@ export async function touchSession(sessionId: string): Promise<void> {
     .update(sessions)
     .set({ lastSeenAt: new Date() })
     .where(eq(sessions.id, sessionId));
+}
+
+export async function touchAndExtendSessionIfStale(
+  sessionId: string,
+  opts: { ttlMs: number; touchEveryMs: number },
+): Promise<{ id: string; expiresAt: Date; lastSeenAt: Date } | undefined> {
+  const now = new Date();
+  const touchCutoff = new Date(Date.now() - opts.touchEveryMs);
+  const newExpiresAt = new Date(Date.now() + opts.ttlMs);
+
+  // Only touch/extend if:
+  // - session is active (not revoked, not expired)
+  // - lastSeenAt is older than the cutoff (throttle)
+  const updated = (
+    await db
+      .update(sessions)
+      .set({
+        lastSeenAt: now,
+        expiresAt: newExpiresAt,
+      })
+      .where(
+        and(
+          eq(sessions.id, sessionId),
+          isNull(sessions.revokedAt),
+          gt(sessions.expiresAt, now),
+          lt(sessions.lastSeenAt, touchCutoff), // only if lastSeenAt < cutoff
+        ),
+      )
+      .returning({
+        id: sessions.id,
+        expiresAt: sessions.expiresAt,
+        lastSeenAt: sessions.lastSeenAt,
+      })
+  )[0];
+
+  return updated;
 }

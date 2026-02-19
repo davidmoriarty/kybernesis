@@ -16,6 +16,13 @@ import { workspaces } from "./workspaces";
 
 type UserUpdateSet = UpdateUserProfileInput & { updatedAt: Date };
 
+// Use the real tx type from your db instance (drizzle transaction)
+export type Tx = Parameters<typeof db.transaction>[0] extends (
+  tx: infer T,
+) => any
+  ? T
+  : never;
+
 // Table definition (source of truth)
 export const users = pgTable(
   "users",
@@ -40,7 +47,7 @@ export const users = pgTable(
   (t) => [uniqueIndex("users_email_unique").on(t.email)],
 );
 
-// Queries (async on Postgres)
+// ----- Create user (non-tx) -----
 
 export async function createUser(input: {
   name: string;
@@ -69,6 +76,41 @@ export async function createUser(input: {
   if (!inserted) throw new Error("Failed to create user");
   return inserted;
 }
+
+// ----- Create user (tx helper) -----
+
+export async function createUserTx(
+  tx: Tx,
+  input: {
+    name: string;
+    email: string;
+    passwordHash: string;
+    nickname?: string | null;
+    timezone?: string | null;
+    location?: string | null;
+    avatar?: string | null;
+  },
+): Promise<UserRow> {
+  const inserted = (
+    await tx
+      .insert(users)
+      .values({
+        name: input.name,
+        email: input.email,
+        passwordHash: input.passwordHash,
+        nickname: input.nickname ?? null,
+        timezone: input.timezone ?? null,
+        location: input.location ?? null,
+        avatar: input.avatar ?? null,
+      })
+      .returning()
+  )[0];
+
+  if (!inserted) throw new Error("Failed to create user");
+  return inserted;
+}
+
+// ----- Workflow: create user + workspace + membership + session -----
 
 export async function createUserWithWorkspaceAndSession(input: {
   name: string;
@@ -125,6 +167,8 @@ export async function createUserWithWorkspaceAndSession(input: {
   });
 }
 
+// ----- Update profile -----
+
 export async function updateUserProfile(
   userId: string,
   input: UpdateUserProfileInput,
@@ -147,12 +191,12 @@ export async function updateUserProfile(
   )[0];
 }
 
-// GET User by Id
+// ----- Gets -----
+
 export async function getUserById(id: string): Promise<UserRow | undefined> {
   return (await db.select().from(users).where(eq(users.id, id)).limit(1))[0];
 }
 
-// GET User by Email
 export async function getUserByEmail(
   email: string,
 ): Promise<UserRow | undefined> {
@@ -161,7 +205,6 @@ export async function getUserByEmail(
   )[0];
 }
 
-// GET User by Name
 export async function getUserByName(
   name: string,
 ): Promise<UserRow | undefined> {

@@ -1,8 +1,14 @@
 // packages/db/src/workspaces.ts
-import { and, eq } from "drizzle-orm";
+import type { Workspace } from "@shared/types/auth";
+import { and, asc, eq } from "drizzle-orm";
 import { index, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
-import type { WorkspaceRow, WorkspaceSummary } from "./types";
+import { mapWorkspaceSummaryWithRoleToWorkspace } from "./mappers/workspace";
+import type {
+  WorkspaceRow,
+  WorkspaceSummary,
+  WorkspaceSummaryWithRole,
+} from "./types";
 import { users } from "./users";
 import { workspaceMembers } from "./workspaceMembers";
 
@@ -68,8 +74,8 @@ export async function getWorkspaceById(
 
 export async function getWorkspacesForUser(
   userId: string,
-): Promise<Array<{ id: string; name: string; role: "admin" | "member" }>> {
-  return await db
+): Promise<Workspace[]> {
+  const rows: WorkspaceSummaryWithRole[] = await db
     .select({
       id: workspaces.id,
       name: workspaces.name,
@@ -77,7 +83,10 @@ export async function getWorkspacesForUser(
     })
     .from(workspaceMembers)
     .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
-    .where(eq(workspaceMembers.userId, userId));
+    .where(eq(workspaceMembers.userId, userId))
+    .orderBy(asc(workspaces.name));
+
+  return rows.map(mapWorkspaceSummaryWithRoleToWorkspace);
 }
 
 export async function getAnyWorkspaceIdForUser(
@@ -107,8 +116,8 @@ export async function getAnyWorkspaceIdForUser(
 export async function getWorkspaceWithRoleForUser(
   userId: string,
   workspaceId: string,
-): Promise<{ id: string; name: string; role: "admin" | "member" } | undefined> {
-  return (
+): Promise<Workspace | undefined> {
+  const row = (
     await db
       .select({
         id: workspaces.id,
@@ -125,10 +134,6 @@ export async function getWorkspaceWithRoleForUser(
       )
       .limit(1)
   )[0];
-}
 
-export type Workspace = {
-  id: string;
-  name: string;
-  ownerId: string;
-};
+  return row ? mapWorkspaceSummaryWithRoleToWorkspace(row) : undefined;
+}

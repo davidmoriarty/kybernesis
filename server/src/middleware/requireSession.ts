@@ -1,8 +1,13 @@
-import { SESSION_COOKIE_NAME } from "@auth";
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_MS,
+  sessionCookieOptions,
+  TOUCH_EVERY_MS,
+} from "@auth";
 import { Sessions, UserMappers, Users, Workspaces } from "@db";
 import type {} from "@shared/hono";
 import type { Context, Next } from "hono";
-import { getCookie } from "hono/cookie";
+import { getCookie, setCookie } from "hono/cookie";
 
 export async function requireSession(ctx: Context, next: Next) {
   const sessionId = getCookie(ctx, SESSION_COOKIE_NAME);
@@ -11,9 +16,27 @@ export async function requireSession(ctx: Context, next: Next) {
   const session = await Sessions.getActiveSessionById(sessionId);
   if (!session) return ctx.json({ error: "Unauthorized" }, 401);
 
+  // Sliding expiration (throttled)
+  const updatedSession = await Sessions.touchAndExtendSessionIfStale(
+    session.id,
+    {
+      ttlMs: SESSION_TTL_MS,
+      touchEveryMs: TOUCH_EVERY_MS,
+    },
+  );
+
+  // If we extended it, refresh cookie maxAge too
+  if (updatedSession) {
+    setCookie(ctx, SESSION_COOKIE_NAME, session.id, {
+      ...sessionCookieOptions,
+      expires: updatedSession.expiresAt,
+    });
+  }
+
   const user = await Users.getUserById(session.userId);
   if (!user) return ctx.json({ error: "Unauthorized" }, 401);
 
+  // Attach context
   ctx.user = UserMappers.mapUserRowToUser(user);
 
   ctx.session = {

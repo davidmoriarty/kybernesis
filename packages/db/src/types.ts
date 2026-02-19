@@ -10,7 +10,11 @@ export type NewUserRow = typeof users.$inferInsert;
 
 export type WorkspaceRow = typeof workspaces.$inferSelect;
 export type NewWorkspaceRow = typeof workspaces.$inferInsert;
+
 export type WorkspaceSummary = Pick<WorkspaceRow, "id" | "name">;
+export type WorkspaceSummaryWithRole = WorkspaceSummary & {
+  role: WorkspaceMemberRow["role"];
+};
 
 export type WorkspaceMemberRow = typeof workspaceMembers.$inferSelect;
 export type NewWorkspaceMemberRow = typeof workspaceMembers.$inferInsert;

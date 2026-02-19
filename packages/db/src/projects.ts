@@ -1,7 +1,9 @@
 // packages/db/src/projects.ts
+import type { Project } from "@shared/types/api";
 import { and, eq } from "drizzle-orm";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
+import { mapProjectRowToProject } from "./mappers/project";
 import type { ProjectRow } from "./types";
 import { workspaces } from "./workspaces";
 
@@ -34,7 +36,7 @@ export async function createProject(input: {
   workspaceId: string;
   name: string;
   description: string | null;
-}): Promise<ProjectRow> {
+}): Promise<Project> {
   const inserted = (
     await db
       .insert(projects)
@@ -42,20 +44,19 @@ export async function createProject(input: {
         workspaceId: input.workspaceId,
         name: input.name,
         description: input.description,
-        updatedAt: new Date(),
       })
       .returning()
   )[0];
 
   if (!inserted) throw new Error("Failed to create project");
-  return inserted;
+  return mapProjectRowToProject(inserted);
 }
 
 export async function updateProjectForWorkspace(
   projectId: string,
   workspaceId: string,
   input: { name?: string; description?: string | null },
-): Promise<ProjectRow | undefined> {
+): Promise<Project | undefined> {
   const set: Partial<{
     name: string;
     description: string | null;
@@ -76,7 +77,7 @@ export async function updateProjectForWorkspace(
       .returning()
   )[0];
 
-  return updated;
+  return updated ? mapProjectRowToProject(updated) : undefined;
 }
 
 export async function deleteProjectForWorkspace(
@@ -95,30 +96,30 @@ export async function deleteProjectForWorkspace(
   return Boolean(deleted);
 }
 
-export async function getProjectById(
-  id: string,
-): Promise<ProjectRow | undefined> {
-  return (
+export async function getProjectById(id: string): Promise<Project | undefined> {
+  const row = (
     await db.select().from(projects).where(eq(projects.id, id)).limit(1)
   )[0];
+
+  return row ? mapProjectRowToProject(row) : undefined;
 }
 
 export async function getProjectsByWorkspace(
   workspaceId: string,
-): Promise<ProjectRow[]> {
+): Promise<Project[]> {
   const rows = await db
     .select()
     .from(projects)
     .where(eq(projects.workspaceId, workspaceId));
 
-  return rows;
+  return rows.map(mapProjectRowToProject);
 }
 
 export async function getProjectByIdForWorkspace(
   projectId: string,
   workspaceId: string,
-): Promise<ProjectRow | undefined> {
-  return (
+): Promise<Project | undefined> {
+  const row = (
     await db
       .select()
       .from(projects)
@@ -127,4 +128,6 @@ export async function getProjectByIdForWorkspace(
       )
       .limit(1)
   )[0];
+
+  return row ? mapProjectRowToProject(row) : undefined;
 }

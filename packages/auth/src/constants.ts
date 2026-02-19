@@ -1,7 +1,7 @@
 // packages/auth/src/constants.ts
-
 export const SESSION_COOKIE_NAME = "session_id";
 export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+export const TOUCH_EVERY_MS = 5 * 60 * 1000; // 5 mins
 
 export const sessionCookieOptions = {
   httpOnly: true,

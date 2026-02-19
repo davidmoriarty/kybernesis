@@ -28,7 +28,7 @@ export const workspaceMembers = pgTable(
 export async function createWorkspaceMembership(input: {
   userId: string;
   workspaceId: string;
-  role: "admin" | "member";
+  role: WorkspaceMemberRow["role"];
 }): Promise<WorkspaceMemberRow> {
   const inserted = (
     await db
@@ -62,9 +62,3 @@ export async function getWorkspaceMembership(
       .limit(1)
   )[0];
 }
-
-export type WorkspaceMember = {
-  userId: string;
-  workspaceId: string;
-  role: "admin" | "member";
-};
