@@ -57,7 +57,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "ts-prune": "^0.10.3",
-    "turbo": "^2.7.2"
+    "turbo": "^2.8.12"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"
