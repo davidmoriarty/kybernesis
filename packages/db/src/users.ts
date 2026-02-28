@@ -7,21 +7,11 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import type { UpdateUserProfileInput } from "./contracts";
 import { db } from "./dbInstance";
-import { sessions } from "./sessions";
-import type { SessionRow, UserRow } from "./types";
-import { workspaceMembers } from "./workspaceMembers";
-import { workspaces } from "./workspaces";
+import type { UpdateUserProfileInput } from "./types/contracts";
+import type { Tx, UserRow } from "./types";
 
 type UserUpdateSet = UpdateUserProfileInput & { updatedAt: Date };
-
-// Use the real tx type from your db instance (drizzle transaction)
-export type Tx = Parameters<typeof db.transaction>[0] extends (
-  tx: infer T,
-) => any
-  ? T
-  : never;
 
 // Table definition (source of truth)
 export const users = pgTable(
@@ -108,63 +98,6 @@ export async function createUserTx(
 
   if (!inserted) throw new Error("Failed to create user");
   return inserted;
-}
-
-// ----- Workflow: create user + workspace + membership + session -----
-
-export async function createUserWithWorkspaceAndSession(input: {
-  name: string;
-  email: string;
-  passwordHash: string;
-  sessionExpiresAt: Date;
-}): Promise<{ session: SessionRow }> {
-  return db.transaction(async (tx) => {
-    const user = (
-      await tx
-        .insert(users)
-        .values({
-          name: input.name,
-          email: input.email,
-          passwordHash: input.passwordHash,
-        })
-        .returning()
-    )[0];
-
-    if (!user) throw new Error("Failed to create user");
-
-    const workspace = (
-      await tx
-        .insert(workspaces)
-        .values({
-          name: `${input.name}'s Workspace`,
-          ownerId: user.id,
-        })
-        .returning()
-    )[0];
-
-    if (!workspace) throw new Error("Failed to create workspace");
-
-    await tx.insert(workspaceMembers).values({
-      userId: user.id,
-      workspaceId: workspace.id,
-      role: "admin",
-    });
-
-    const session = (
-      await tx
-        .insert(sessions)
-        .values({
-          userId: user.id,
-          workspaceId: workspace.id,
-          expiresAt: input.sessionExpiresAt,
-        })
-        .returning()
-    )[0];
-
-    if (!session) throw new Error("Failed to create session");
-
-    return { session };
-  });
 }
 
 // ----- Update profile -----

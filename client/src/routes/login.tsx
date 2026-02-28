@@ -69,7 +69,7 @@ function LoginPage() {
         </Button>
       </FormLayout>
 
-      <div className="flex flex-row items-center justify-center gap-4">
+      <div className="flex flex-row items-center justify-center gap-4 py-3">
         <p>Don't have an account?</p>
         <Button variant="outline" onClick={() => navigate({ to: "/signup" })}>
           <Rocket />

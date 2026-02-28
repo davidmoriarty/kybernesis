@@ -8,7 +8,7 @@
     "allowJs": false,
     "types": ["bun-types"],
     "noEmit": false,
-    "emitDecoratorMetadata": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*", "types/**/*.d.ts"],
   "references": [

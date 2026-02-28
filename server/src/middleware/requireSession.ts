@@ -4,7 +4,8 @@ import {
   sessionCookieOptions,
   TOUCH_EVERY_MS,
 } from "@auth";
-import { Sessions, UserMappers, Users, Workspaces } from "@db";
+import { Sessions, Users, Workspaces } from "@db";
+import { mapUserRowToUser } from "@db/mappers";
 import type {} from "@shared/hono";
 import type { Context, Next } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
@@ -37,7 +38,7 @@ export async function requireSession(ctx: Context, next: Next) {
   if (!user) return ctx.json({ error: "Unauthorized" }, 401);
 
   // Attach context
-  ctx.user = UserMappers.mapUserRowToUser(user);
+  ctx.user = mapUserRowToUser(user);
 
   ctx.session = {
     id: session.id,

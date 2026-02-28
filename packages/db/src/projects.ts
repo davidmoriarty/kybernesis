@@ -1,11 +1,10 @@
 // packages/db/src/projects.ts
-import type { Project } from "@shared/types/api";
 import { and, eq } from "drizzle-orm";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
-import { mapProjectRowToProject } from "./mappers/project";
-import type { ProjectRow } from "./types";
+import { mapProjectRowToProject } from "./mappers";
 import { workspaces } from "./workspaces";
+import type { Project } from "@shared/types/api";
 
 // Table definition (source of truth)
 export const projects = pgTable(

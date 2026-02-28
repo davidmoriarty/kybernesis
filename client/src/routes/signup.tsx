@@ -76,7 +76,7 @@ function SignupPage() {
         </Button>
       </FormLayout>
 
-      <div className="flex flex-row items-center justify-center gap-4">
+      <div className="flex flex-row items-center justify-center gap-4 py-3">
         <p>Already have an account?</p>
         <Button variant="outline" onClick={() => navigate({ to: "/login" })}>
           <LogIn />

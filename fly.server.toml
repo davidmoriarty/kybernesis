@@ -1,0 +1,20 @@
+# fly.server.toml
+app = "kybernesis-server"
+primary_region = "yyz"
+
+[build]
+dockerfile = "server/Dockerfile"
+
+[http_service]
+internal_port = 3000
+force_https = true
+auto_start_machines = true
+auto_stop_machine = false
+min_machines_running = 1
+
+[[http_service.checks]]
+interval = "15s"
+timeout = "5s"
+grace_period = "10s"
+method = "GET"
+path = "/_info"

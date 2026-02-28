@@ -1,8 +1,8 @@
-import { type Contracts, UserMappers, Users } from "@db";
+import { Users } from "@db";
+import { mapUserRowToUser } from "@db/mappers";
+import type { UpdateUserProfileInput } from "@db/types";
 import type {} from "@shared/hono";
 import type { Context } from "hono";
-
-const { mapUserRowToUser } = UserMappers;
 
 export async function meHandler(ctx: Context): Promise<Response> {
   if (!ctx.user) return ctx.json({ error: "Unauthorized" }, 401);
@@ -20,7 +20,7 @@ export async function updateProfileHandler(ctx: Context): Promise<Response> {
   if (!ctx.user) return ctx.json({ error: "Unauthorized" }, 401);
 
   const { name, email, nickname, timezone, location, avatar } =
-    (await ctx.req.json()) as Contracts.UpdateUserProfileInput;
+    (await ctx.req.json()) as UpdateUserProfileInput;
 
   const updatedRow = await Users.updateUserProfile(ctx.user.id, {
     name,

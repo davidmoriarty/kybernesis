@@ -1,14 +1,14 @@
 // packages/db/src/workspaces.ts
-import type { Workspace } from "@shared/types/auth";
-import { and, asc, eq } from "drizzle-orm";
-import { index, pgTable, text, uuid } from "drizzle-orm/pg-core";
-import { db } from "./dbInstance";
-import { mapWorkspaceSummaryWithRoleToWorkspace } from "./mappers/workspace";
 import type {
   WorkspaceRow,
   WorkspaceSummary,
   WorkspaceSummaryWithRole,
 } from "./types";
+import type { Workspace } from "@shared/types/auth";
+import { and, asc, eq } from "drizzle-orm";
+import { index, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { db } from "./dbInstance";
+import { mapWorkspaceSummaryWithRoleToWorkspace } from "./mappers";
 import { users } from "./users";
 import { workspaceMembers } from "./workspaceMembers";
 

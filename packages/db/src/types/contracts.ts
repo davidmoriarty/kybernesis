@@ -1,4 +1,4 @@
-// packages/db/src/contracts.ts
+// packages/db/src/types/contracts.ts
 export type UpdateUserProfileInput = Partial<{
   name: string;
   email: string;

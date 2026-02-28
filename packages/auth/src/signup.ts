@@ -1,17 +1,14 @@
 // packages/auth/src/signup.ts
-import { db, Sessions, Users, WorkspaceMembers, Workspaces } from "@db";
-
-type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
+import { Flows, Users } from "@db";
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
+import { hashPassword } from "./crypto/password";
+import type { SignupInput } from "./types";
 import {
   SESSION_COOKIE_NAME,
   SESSION_TTL_MS,
   sessionCookieOptions,
 } from "./constants";
-import { hashPassword } from "./crypto/password";
-import type { SignupInput } from "./types";
 
 export async function signupHandler(ctx: Context): Promise<Response> {
   const { name, email, password } = (await ctx.req.json()) as SignupInput;
@@ -25,52 +22,14 @@ export async function signupHandler(ctx: Context): Promise<Response> {
 
   const passwordHash = await hashPassword(password);
 
-  const result = await db.transaction(async (tx: DbTx) => {
-    const user = (
-      await tx
-        .insert(Users.users)
-        .values({
-          name,
-          email,
-          passwordHash,
-          nickname: null,
-          timezone: null,
-          location: null,
-          avatar: null,
-        })
-        .returning()
-    )[0];
-
-    if (!user) throw new Error("Failed to create user");
-
-    const workspace = (
-      await tx
-        .insert(Workspaces.workspaces)
-        .values({
-          name: `${name}'s Workspace`,
-          ownerId: user.id,
-        })
-        .returning()
-    )[0];
-    if (!workspace) throw new Error("Failed to create workspace");
-
-    await tx.insert(WorkspaceMembers.workspaceMembers).values({
-      userId: user.id,
-      workspaceId: workspace.id,
-      role: "admin",
-    });
-
-    const session = await Sessions.createSessionTx(tx, {
-      userId: user.id,
-      workspaceId: workspace.id,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
-    });
-    if (!session) throw new Error("Failed to create session");
-
-    return { sessionId: session.id };
+  const { session } = await Flows.createUserWithWorkspaceAndSession({
+    name,
+    email,
+    passwordHash,
+    sessionExpiresAt: new Date(Date.now() + SESSION_TTL_MS),
   });
 
-  setCookie(ctx, SESSION_COOKIE_NAME, result.sessionId, sessionCookieOptions);
+  setCookie(ctx, SESSION_COOKIE_NAME, session.id, sessionCookieOptions);
 
   return ctx.json({ message: "Account created", success: true }, 201);
 }

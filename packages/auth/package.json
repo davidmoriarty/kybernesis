@@ -1,8 +1,8 @@
 {
   "name": "auth",
-  "version": "0.1.0",
   "private": true,
   "type": "module",
+  "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -13,7 +13,9 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "echo \"no tests yet\""
   },
   "dependencies": {
     "hono": "^4.11.3",

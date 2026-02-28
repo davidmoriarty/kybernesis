@@ -1,5 +1,7 @@
 // packages/db/src/seed.ts
-import { Users, WorkspaceMembers, Workspaces } from "./index";
+import * as Users from "./users";
+import * as Workspaces from "./workspaces";
+import * as WorkspaceMembers from "./workspaceMembers";
 
 const ADMIN_EMAIL = "admin@example.com";
 const ADMIN_NAME = "Admin";
