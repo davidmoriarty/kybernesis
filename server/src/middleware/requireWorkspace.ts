@@ -1,33 +1,49 @@
+// server/src/middleware/requireWorkspace.ts
 import { WorkspaceMembers, Workspaces } from "@db";
-import type {} from "@shared/hono";
+import "@shared/hono";
 import type { Context, Next } from "hono";
 
 export async function requireWorkspace(ctx: Context, next: Next) {
-  if (!ctx.user || !ctx.workspace?.id) {
+  const session = ctx.get("session");
+  const user = ctx.get("user");
+
+  if (!session?.tenantId || !user?.id) {
     return ctx.json({ error: "Forbidden" }, 403);
   }
 
-  const workspaceId = ctx.workspace.id;
+  const tenantId = session.tenantId;
+  const workspaceId = session.workspaceId;
 
-  const workspace = await Workspaces.getWorkspaceById(workspaceId);
-  if (!workspace) return ctx.json({ error: "Workspace not found" }, 404);
+  if (!workspaceId) {
+    return ctx.json({ error: "Workspace not selected" }, 409);
+  }
 
+  // Ensure workspace exists and belongs to tenant
+  const workspaceRow = await Workspaces.getWorkspaceById({
+    tenantId,
+    workspaceId,
+  });
+  if (!workspaceRow) return ctx.json({ error: "Workspace not found" }, 404);
+
+  // Ensure membership (membership table is indirectly tenant-scoped via workspaceId)
   const membership = await WorkspaceMembers.getWorkspaceMembership(
-    ctx.user.id,
+    user.id,
     workspaceId,
   );
   if (!membership) return ctx.json({ error: "Forbidden" }, 403);
 
-  ctx.workspace = {
-    id: workspace.id,
-    name: workspace.name,
+  // Keep ctx workspace in sync (name from DB, role from membership)
+  ctx.set("workspace", {
+    id: workspaceRow.id,
+    tenantId: workspaceRow.tenantId,
+    name: workspaceRow.name,
     role: membership.role,
-  };
+  });
 
-  ctx.workspaceMember = {
+  ctx.set("workspaceMember", {
     workspaceId: membership.workspaceId,
     role: membership.role,
-  };
+  });
 
   await next();
 }

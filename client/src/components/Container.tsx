@@ -7,6 +7,6 @@ export function Container({
   className?: string;
 }) {
   return (
-    <div className={`max-w-5xl mx-auto px-8 ${className}`}>{children}</div>
+    <div className={`container mx-auto px-8 ${className}`}>{children}</div>
   );
 }

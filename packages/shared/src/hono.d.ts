@@ -1,21 +1,33 @@
-// server/src/types/hono.d.ts
+// packages/shared/src/hono.d.ts
 import "hono";
-import type { User, Workspace } from "@shared";
+import type { User } from "./index";
 
 declare module "hono" {
-  interface Context {
-    user?: User;
+  interface ContextVariableMap {
+    // --- tenancy ---
+    tenantSlug: string | null;
+    tenantId: string | null;
 
-    session?: {
-      id: string; // session token (uuid)
-      userId: string; // uuid
-      workspaceId: string | null; // uuid | null
+    // --- auth/session ---
+    user: User;
+    tenantRole: "tenant" | "admin" | "member" | undefined;
+
+    workspace: {
+      id: string;
+      tenantId: string;
+      name: string;
+      role: "admin" | "member";
     };
 
-    workspace?: Workspace;
+    session: {
+      id: string;
+      tenantId: string;
+      userId: string;
+      workspaceId: string | null;
+    };
 
-    workspaceMember?: {
-      workspaceId: string; // uuid
+    workspaceMember: {
+      workspaceId: string;
       role: "admin" | "member";
     };
   }

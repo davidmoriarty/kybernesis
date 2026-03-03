@@ -9,7 +9,7 @@ export function useProjects() {
   return useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
-      const res = await rpc.$get("/projects");
+      const res = await rpc.$get("/projects", { credentials: "include" });
       return parseOrThrow<{
         projects: { id: string; name: string; description?: string }[];
       }>(res, { projects: [] });
@@ -21,7 +21,9 @@ export function useProject(projectId: string) {
   return useQuery({
     queryKey: ["projects", projectId],
     queryFn: async () => {
-      const res = await rpc.$get(`/projects/${projectId}`);
+      const res = await rpc.$get(`/projects/${projectId}`, {
+        credentials: "include",
+      });
       return parseOrThrow<{
         id: string;
         name: string;
@@ -49,7 +51,10 @@ export function useCreateProject() {
   >({
     retry: false,
     mutationFn: async (body) => {
-      const res = await rpc.$post("/projects", { body });
+      const res = await rpc.$post("/projects", {
+        body,
+        credentials: "include",
+      });
       return parseOrThrow<{ project: Project }>(res, {
         project: {
           id: "",
@@ -81,7 +86,10 @@ export function useUpdateProject() {
   >({
     retry: false,
     mutationFn: async ({ projectId, ...body }) => {
-      const res = await rpc.$put(`/projects/${projectId}`, { body });
+      const res = await rpc.$put(`/projects/${projectId}`, {
+        body,
+        credentials: "include",
+      });
       return parseOrThrow(res);
     },
     onSuccess: () => {
@@ -100,7 +108,9 @@ export function useDeleteProject() {
   return useMutation<{ message: string }, Error, { projectId: string }>({
     retry: false,
     mutationFn: async ({ projectId }) => {
-      const res = await rpc.$delete(`/projects/${projectId}`);
+      const res = await rpc.$delete(`/projects/${projectId}`, {
+        credentials: "include",
+      });
       return parseOrThrow(res);
     },
     onSuccess: () => {

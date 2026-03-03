@@ -1,5 +1,4 @@
 // client/src/routes/projects.tsx
-
 import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageCard } from "@/components/PageCard";

@@ -1,13 +1,13 @@
 // client/src/components/PageCard.tsx
-import { Container } from "@/components/Container";
 import { Section } from "@/components/Section";
+import { Container } from "@/components/Container";
 
 export function PageCard({ children }: { children: React.ReactNode }) {
   return (
-    <Section className="flex-1 flex flex-col overflow-y-auto py-6">
-      <Container className="flex flex-col w-full max-w-3xl gap-6">
-        <div className="border rounded-lg p-6 bg-background shadow-sm">
-          {children}
+    <Section>
+      <Container>
+        <div className="bg-slate-200 dark:bg-slate-700 max-w-7xl mx-auto px-8 py-16 border rounded shadow">
+          <div className="flex flex-col gap-4">{children}</div>
         </div>
       </Container>
     </Section>

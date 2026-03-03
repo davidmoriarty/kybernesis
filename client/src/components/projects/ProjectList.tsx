@@ -49,7 +49,7 @@ export function ProjectList({
   return (
     <>
       {view === "list" && (
-        <div className="grid grid-cols-[2fr_3fr_auto] gap-4 px-4 py-3 text-sm font-semibold border-b bg-muted/40">
+        <div className="grid grid-cols-[2fr_3fr_auto] gap-4 px-4 py-3 text-sm font-semibold border-b">
           <div>Name</div>
           <div>Description</div>
           <div>Actions</div>

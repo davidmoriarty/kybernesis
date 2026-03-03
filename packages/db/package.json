@@ -6,14 +6,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "type-check": "tsc --noEmit",
+    "build": "tsc -b",
+    "type-check": "tsc -b --pretty false",
     "test": "echo \"no tests yet\"",
-    "seed": "bun src/seed.ts"
+    "seed": "bun --env-file=../../.env run scripts/seed-dev.ts"
   },
   "dependencies": {
     "pg": "^8.18.0",
-    "schemas": "workspace:*",
     "shared": "workspace:*"
   },
   "devDependencies": {

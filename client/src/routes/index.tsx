@@ -15,7 +15,7 @@ function Index() {
   return (
     <>
       {/* Hero section */}
-      <Section className="bg-accent min-h-[50vh] flex items-center">
+      <Section className="bg-accent dark:bg-gray-600 min-h-[55vh] flex items-center">
         <Container className="flex flex-col items-center justify-center space-y-6 text-center">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-snug">
             Kybernesis

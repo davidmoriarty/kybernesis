@@ -6,6 +6,7 @@ import type { SessionRow } from "./types";
 import { users } from "./users";
 import { workspaceMembers } from "./workspaceMembers";
 import { workspaces } from "./workspaces";
+import { tenants } from "./tenants";
 
 // Narrow Drizzle transaction type (enough for what we use here)
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -16,6 +17,10 @@ export const sessions = pgTable(
   {
     // cookie token value
     id: uuid("id").defaultRandom().primaryKey(),
+
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
 
     userId: uuid("user_id")
       .notNull()
@@ -29,22 +34,21 @@ export const sessions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
-
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
-
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
   },
   (t) => [
+    index("sessions_tenant_id_idx").on(t.tenantId),
     index("sessions_user_id_idx").on(t.userId),
     index("sessions_expires_at_idx").on(t.expiresAt),
   ],
 );
 
 export async function createSession(input: {
+  tenantId: string;
   userId: string;
   workspaceId: string | null;
   expiresAt: Date;
@@ -53,6 +57,7 @@ export async function createSession(input: {
     await db
       .insert(sessions)
       .values({
+        tenantId: input.tenantId,
         userId: input.userId,
         workspaceId: input.workspaceId,
         expiresAt: input.expiresAt,
@@ -67,6 +72,7 @@ export async function createSession(input: {
 export async function createSessionTx(
   tx: Tx,
   input: {
+    tenantId: string;
     userId: string;
     workspaceId: string | null;
     expiresAt: Date;
@@ -76,6 +82,7 @@ export async function createSessionTx(
     await tx
       .insert(sessions)
       .values({
+        tenantId: input.tenantId,
         userId: input.userId,
         workspaceId: input.workspaceId,
         expiresAt: input.expiresAt,
@@ -87,18 +94,22 @@ export async function createSessionTx(
   return inserted;
 }
 
-export async function getActiveSessionById(
-  sessionId: string,
-): Promise<SessionRow | undefined> {
+export async function getActiveSessionById(input: {
+  tenantId: string;
+  sessionId: string;
+}): Promise<SessionRow | undefined> {
+  const now = new Date();
+
   return (
     await db
       .select()
       .from(sessions)
       .where(
         and(
-          eq(sessions.id, sessionId),
+          eq(sessions.id, input.sessionId),
+          eq(sessions.tenantId, input.tenantId),
           isNull(sessions.revokedAt),
-          gt(sessions.expiresAt, new Date()),
+          gt(sessions.expiresAt, now),
         ),
       )
       .limit(1)
@@ -106,10 +117,46 @@ export async function getActiveSessionById(
 }
 
 export async function setSessionWorkspaceForUser(input: {
+  tenantId: string;
   sessionId: string;
   userId: string;
   workspaceId: string;
 }): Promise<boolean> {
+  const now = new Date();
+
+  // Load active session (also gives us tenantId for scoping)
+  const session = (
+    await db
+      .select({ id: sessions.id, tenantId: sessions.tenantId })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.id, input.sessionId),
+          eq(sessions.tenantId, input.tenantId),
+          eq(sessions.userId, input.userId),
+          isNull(sessions.revokedAt),
+          gt(sessions.expiresAt, now),
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (!session) return false;
+
+  // Ensure workspace belongs to the same tenant as the session
+  const workspace = (
+    await db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(
+        and(
+          eq(workspaces.id, input.workspaceId),
+          eq(workspaces.tenantId, session.tenantId),
+        ),
+      )
+      .limit(1)
+  )[0];
+  if (!workspace) return false;
+
   // Ensure the user is a member of the workspace they’re selecting
   const membership = (
     await db
@@ -123,7 +170,6 @@ export async function setSessionWorkspaceForUser(input: {
       )
       .limit(1)
   )[0];
-
   if (!membership) return false;
 
   // Only allow updating an active (not revoked, not expired) session
@@ -132,14 +178,15 @@ export async function setSessionWorkspaceForUser(input: {
       .update(sessions)
       .set({
         workspaceId: input.workspaceId,
-        lastSeenAt: new Date(),
+        lastSeenAt: now,
       })
       .where(
         and(
           eq(sessions.id, input.sessionId),
+          eq(sessions.tenantId, input.tenantId),
           eq(sessions.userId, input.userId),
           isNull(sessions.revokedAt),
-          gt(sessions.expiresAt, new Date()),
+          gt(sessions.expiresAt, now),
         ),
       )
       .returning({ id: sessions.id })
@@ -148,36 +195,72 @@ export async function setSessionWorkspaceForUser(input: {
   return Boolean(updated);
 }
 
-export async function revokeSession(sessionId: string): Promise<boolean> {
+export async function revokeSession(input: {
+  tenantId: string;
+  sessionId: string;
+}): Promise<boolean> {
+  const now = new Date();
+
   const row = (
     await db
       .update(sessions)
-      .set({ revokedAt: new Date() })
-      .where(eq(sessions.id, sessionId))
+      .set({ revokedAt: now })
+      .where(
+        and(
+          eq(sessions.id, input.sessionId),
+          eq(sessions.tenantId, input.tenantId),
+        ),
+      )
       .returning({ id: sessions.id })
   )[0];
 
   return Boolean(row);
 }
 
-export async function touchSession(sessionId: string): Promise<void> {
+export async function touchSession(input: {
+  tenantId: string;
+  sessionId: string;
+}): Promise<void> {
+  const now = new Date();
+
   await db
     .update(sessions)
-    .set({ lastSeenAt: new Date() })
-    .where(eq(sessions.id, sessionId));
+    .set({ lastSeenAt: now })
+    .where(
+      and(
+        eq(sessions.id, input.sessionId),
+        eq(sessions.tenantId, input.tenantId),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, now),
+      ),
+    );
+}
+
+export async function clearSessionWorkspace(input: {
+  tenantId: string;
+  sessionId: string;
+}): Promise<void> {
+  await db
+    .update(sessions)
+    .set({ workspaceId: null, lastSeenAt: new Date() })
+    .where(
+      and(
+        eq(sessions.id, input.sessionId),
+        eq(sessions.tenantId, input.tenantId),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, new Date()),
+      ),
+    );
 }
 
 export async function touchAndExtendSessionIfStale(
-  sessionId: string,
+  input: { tenantId: string; sessionId: string },
   opts: { ttlMs: number; touchEveryMs: number },
 ): Promise<{ id: string; expiresAt: Date; lastSeenAt: Date } | undefined> {
   const now = new Date();
   const touchCutoff = new Date(Date.now() - opts.touchEveryMs);
   const newExpiresAt = new Date(Date.now() + opts.ttlMs);
 
-  // Only touch/extend if:
-  // - session is active (not revoked, not expired)
-  // - lastSeenAt is older than the cutoff (throttle)
   const updated = (
     await db
       .update(sessions)
@@ -187,10 +270,11 @@ export async function touchAndExtendSessionIfStale(
       })
       .where(
         and(
-          eq(sessions.id, sessionId),
+          eq(sessions.id, input.sessionId),
+          eq(sessions.tenantId, input.tenantId),
           isNull(sessions.revokedAt),
           gt(sessions.expiresAt, now),
-          lt(sessions.lastSeenAt, touchCutoff), // only if lastSeenAt < cutoff
+          lt(sessions.lastSeenAt, touchCutoff),
         ),
       )
       .returning({

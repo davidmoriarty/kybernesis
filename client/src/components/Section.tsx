@@ -1,10 +1,14 @@
 // Section.tsx
 export function Section({
   children,
+  padding = "py-8",
   className = "",
 }: {
   children: React.ReactNode;
+  padding?: string;
   className?: string; // for bg color, padding, etc.
 }) {
-  return <section className={`w-full py-12 ${className}`}>{children}</section>;
+  return (
+    <section className={`w-full ${padding} ${className}`}>{children}</section>
+  );
 }

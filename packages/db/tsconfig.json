@@ -11,5 +11,5 @@
   },
   "include": ["src/**/*"],
   "references": [{ "path": "../shared" }],
-  "exclude": ["node_modules", "dist", "src/seed.ts"]
+  "exclude": ["node_modules", "dist"]
 }

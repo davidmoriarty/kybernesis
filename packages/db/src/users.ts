@@ -1,6 +1,7 @@
 // packages/db/src/users.ts
-import { eq } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import {
+  index,
   pgTable,
   text,
   timestamp,
@@ -10,6 +11,7 @@ import {
 import { db } from "./dbInstance";
 import type { UpdateUserProfileInput } from "./types/contracts";
 import type { Tx, UserRow } from "./types";
+import { tenants } from "./tenants";
 
 type UserUpdateSet = UpdateUserProfileInput & { updatedAt: Date };
 
@@ -18,6 +20,11 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+
     name: text("name").notNull(),
     email: text("email").notNull(),
     passwordHash: text("password_hash").notNull(),
@@ -33,13 +40,18 @@ export const users = pgTable(
     timezone: text("timezone"),
     location: text("location"),
     avatar: text("avatar"),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
   },
-  (t) => [uniqueIndex("users_email_unique").on(t.email)],
+  (t) => [
+    uniqueIndex("users_tenant_id_email_unique").on(t.tenantId, t.email),
+    index("users_tenant_id_idx").on(t.tenantId),
+  ],
 );
 
 // ----- Create user (non-tx) -----
 
 export async function createUser(input: {
+  tenantId: string;
   name: string;
   email: string;
   passwordHash: string;
@@ -52,6 +64,7 @@ export async function createUser(input: {
     await db
       .insert(users)
       .values({
+        tenantId: input.tenantId,
         name: input.name,
         email: input.email,
         passwordHash: input.passwordHash,
@@ -72,6 +85,7 @@ export async function createUser(input: {
 export async function createUserTx(
   tx: Tx,
   input: {
+    tenantId: string;
     name: string;
     email: string;
     passwordHash: string;
@@ -85,6 +99,7 @@ export async function createUserTx(
     await tx
       .insert(users)
       .values({
+        tenantId: input.tenantId,
         name: input.name,
         email: input.email,
         passwordHash: input.passwordHash,
@@ -103,45 +118,84 @@ export async function createUserTx(
 // ----- Update profile -----
 
 export async function updateUserProfile(
-  userId: string,
-  input: UpdateUserProfileInput,
+  input: { tenantId: string; userId: string },
+  profile: UpdateUserProfileInput,
 ): Promise<UserRow | undefined> {
   const updateData: UserUpdateSet = { updatedAt: new Date() };
 
-  if (input.name !== undefined) updateData.name = input.name;
-  if (input.email !== undefined) updateData.email = input.email;
-  if (input.nickname !== undefined) updateData.nickname = input.nickname;
-  if (input.timezone !== undefined) updateData.timezone = input.timezone;
-  if (input.location !== undefined) updateData.location = input.location;
-  if (input.avatar !== undefined) updateData.avatar = input.avatar;
+  if (profile.name !== undefined) updateData.name = profile.name;
+  if (profile.email !== undefined) updateData.email = profile.email;
+  if (profile.nickname !== undefined) updateData.nickname = profile.nickname;
+  if (profile.timezone !== undefined) updateData.timezone = profile.timezone;
+  if (profile.location !== undefined) updateData.location = profile.location;
+  if (profile.avatar !== undefined) updateData.avatar = profile.avatar;
 
   return (
     await db
       .update(users)
       .set(updateData)
-      .where(eq(users.id, userId))
+      .where(
+        and(eq(users.tenantId, input.tenantId), eq(users.id, input.userId)),
+      )
       .returning()
   )[0];
 }
 
 // ----- Gets -----
 
-export async function getUserById(id: string): Promise<UserRow | undefined> {
-  return (await db.select().from(users).where(eq(users.id, id)).limit(1))[0];
-}
-
-export async function getUserByEmail(
-  email: string,
-): Promise<UserRow | undefined> {
+export async function getUserById(input: {
+  tenantId: string;
+  userId: string;
+}): Promise<UserRow | undefined> {
   return (
-    await db.select().from(users).where(eq(users.email, email)).limit(1)
+    await db
+      .select()
+      .from(users)
+      .where(
+        and(eq(users.tenantId, input.tenantId), eq(users.id, input.userId)),
+      )
+      .limit(1)
   )[0];
 }
 
-export async function getUserByName(
-  name: string,
-): Promise<UserRow | undefined> {
+export async function getUserByEmail(input: {
+  tenantId: string;
+  email: string;
+}): Promise<UserRow | undefined> {
   return (
-    await db.select().from(users).where(eq(users.name, name)).limit(1)
+    await db
+      .select()
+      .from(users)
+      .where(
+        and(eq(users.tenantId, input.tenantId), eq(users.email, input.email)),
+      )
+      .limit(1)
   )[0];
+}
+
+export async function getUserByName(input: {
+  tenantId: string;
+  name: string;
+}): Promise<UserRow | undefined> {
+  return (
+    await db
+      .select()
+      .from(users)
+      .where(
+        and(eq(users.tenantId, input.tenantId), eq(users.name, input.name)),
+      )
+      .limit(1)
+  )[0];
+}
+
+export async function touchLastSeenIfStale(input: {
+  tenantId: string;
+  userId: string;
+}): Promise<void> {
+  await db
+    .update(users)
+    .set({ lastSeenAt: new Date() })
+    .where(
+      sql`${users.tenantId} = ${input.tenantId} AND ${users.id} = ${input.userId} AND (${users.lastSeenAt} IS NULL OR ${users.lastSeenAt} < now() - interval '30 seconds')`,
+    );
 }

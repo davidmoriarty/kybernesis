@@ -164,7 +164,7 @@ export default function MePage() {
             )}
 
             {me?.user?.createdAt && !editing && (
-              <figcaption className="text-xs text-muted-foreground text-center">
+              <figcaption className="text-sm text-center">
                 Member since{" "}
                 {new Intl.DateTimeFormat("en-CA", {
                   year: "numeric",

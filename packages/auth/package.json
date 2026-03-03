@@ -13,14 +13,13 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsc",
-    "type-check": "tsc --noEmit",
+    "build": "tsc -b",
+    "type-check": "tsc -b --pretty false",
     "test": "echo \"no tests yet\""
   },
   "dependencies": {
-    "hono": "^4.11.3",
+    "hono": "^4.12.3",
     "shared": "workspace:*",
-    "schemas": "workspace:*",
     "db": "workspace:*"
   },
   "devDependencies": {

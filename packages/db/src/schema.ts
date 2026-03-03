@@ -1,6 +1,8 @@
 // packages/db/src/schema.ts
-export * from "./projects";
-export * from "./sessions";
-export * from "./users";
-export * from "./workspaceMembers";
-export * from "./workspaces";
+export { projects } from "./projects";
+export { sessions } from "./sessions";
+export { tenantMembers } from "./tenantMembers";
+export { tenants } from "./tenants";
+export { users } from "./users";
+export { workspaceMembers } from "./workspaceMembers";
+export { workspaces } from "./workspaces";

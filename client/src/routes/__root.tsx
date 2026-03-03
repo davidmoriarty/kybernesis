@@ -8,7 +8,7 @@ export const Route = createRootRoute({
   notFoundComponent: () => <ErrorPage status={404} />,
   component: () => {
     return (
-      <div className="flex min-h-full flex-col">
+      <div className="min-h-full flex flex-col">
         <Navbar />
 
         <main className="flex-1 flex flex-col overflow-hidden">

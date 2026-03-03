@@ -64,8 +64,8 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
     return (
       <div
         className={cn(
-          "rounded-md border px-8 py-6 shadow-sm transition-all",
-          "hover:bg-muted/30",
+          "bg-background rounded-md border px-8 py-6 shadow-sm transition-all",
+          "hover:bg-background/80",
           expanded && "shadow-md",
           highlight && "bg-slate-200",
         )}

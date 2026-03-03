@@ -25,19 +25,12 @@ export type RpcClient = {
   ) => Promise<Response>;
 };
 
-/**
- * Create a simple RPC client that wraps fetch
- * and supports $get/$post helpers.
- * Allows passing RequestInit (credentials, headers, ...)
- * per request
- * @param baseUrl
- * @returns
- */
 export function createRpcClient(baseUrl: string): RpcClient {
   return {
     $get: (path, options) =>
       fetch(`${baseUrl}${path}`, {
         method: "GET",
+        credentials: "include",
         ...options,
       }),
 
@@ -45,6 +38,7 @@ export function createRpcClient(baseUrl: string): RpcClient {
       const { body, ...init } = options ?? {};
       return fetch(`${baseUrl}${path}`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(init.headers ?? {}),
@@ -58,6 +52,7 @@ export function createRpcClient(baseUrl: string): RpcClient {
       const { body, ...init } = options ?? {};
       return fetch(`${baseUrl}${path}`, {
         method: "PUT",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(init.headers ?? {}),
@@ -71,6 +66,7 @@ export function createRpcClient(baseUrl: string): RpcClient {
       const { body, ...init } = options ?? {};
       return fetch(`${baseUrl}${path}`, {
         method: "DELETE",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           ...(init.headers ?? {}),

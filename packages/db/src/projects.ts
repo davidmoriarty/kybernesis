@@ -1,10 +1,10 @@
 // packages/db/src/projects.ts
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import { mapProjectRowToProject } from "./mappers";
 import { workspaces } from "./workspaces";
-import type { Project } from "@shared/types/api";
+import type { Project } from "@shared";
 
 // Table definition (source of truth)
 export const projects = pgTable(
@@ -95,38 +95,92 @@ export async function deleteProjectForWorkspace(
   return Boolean(deleted);
 }
 
-export async function getProjectById(id: string): Promise<Project | undefined> {
-  const row = (
-    await db.select().from(projects).where(eq(projects.id, id)).limit(1)
-  )[0];
-
-  return row ? mapProjectRowToProject(row) : undefined;
-}
-
-export async function getProjectsByWorkspace(
-  workspaceId: string,
-): Promise<Project[]> {
+export async function getProjectsForTenantWorkspace(input: {
+  tenantId: string;
+  workspaceId: string;
+}): Promise<Project[]> {
   const rows = await db
-    .select()
+    .select({ p: projects })
     .from(projects)
-    .where(eq(projects.workspaceId, workspaceId));
+    .innerJoin(workspaces, eq(projects.workspaceId, workspaces.id))
+    .where(
+      and(
+        eq(projects.workspaceId, input.workspaceId),
+        eq(workspaces.tenantId, input.tenantId),
+      ),
+    );
 
-  return rows.map(mapProjectRowToProject);
+  return rows.map((r) => mapProjectRowToProject(r.p));
 }
 
-export async function getProjectByIdForWorkspace(
-  projectId: string,
-  workspaceId: string,
-): Promise<Project | undefined> {
+export async function getProjectByIdForTenantWorkspace(input: {
+  tenantId: string;
+  workspaceId: string;
+  projectId: string;
+}): Promise<Project | undefined> {
   const row = (
     await db
-      .select()
+      .select({ p: projects })
       .from(projects)
+      .innerJoin(workspaces, eq(projects.workspaceId, workspaces.id))
       .where(
-        and(eq(projects.id, projectId), eq(projects.workspaceId, workspaceId)),
+        and(
+          eq(projects.id, input.projectId),
+          eq(projects.workspaceId, input.workspaceId),
+          eq(workspaces.tenantId, input.tenantId),
+        ),
       )
       .limit(1)
   )[0];
 
-  return row ? mapProjectRowToProject(row) : undefined;
+  return row ? mapProjectRowToProject(row.p) : undefined;
+}
+
+export async function getProjectCountForTenantWorkspace(input: {
+  tenantId: string;
+  workspaceId: string;
+}): Promise<number> {
+  const row = (
+    await db
+      .select({ count: sql<number>`count(*)` })
+      .from(projects)
+      .innerJoin(workspaces, eq(projects.workspaceId, workspaces.id))
+      .where(
+        and(
+          eq(projects.workspaceId, input.workspaceId),
+          eq(workspaces.tenantId, input.tenantId),
+        ),
+      )
+      .limit(1)
+  )[0];
+
+  return Number(row?.count ?? 0);
+}
+
+export async function getRecentProjectsForTenantWorkspace(
+  tenantId: string,
+  workspaceId: string,
+  limit = 5,
+): Promise<Pick<Project, "id" | "name" | "updatedAt">[]> {
+  const rows = await db
+    .select({ p: projects })
+    .from(projects)
+    .innerJoin(workspaces, eq(projects.workspaceId, workspaces.id))
+    .where(
+      and(
+        eq(projects.workspaceId, workspaceId),
+        eq(workspaces.tenantId, tenantId),
+      ),
+    )
+    .orderBy(desc(projects.updatedAt))
+    .limit(limit);
+
+  return rows.map((r) => {
+    const p = mapProjectRowToProject(r.p);
+    return {
+      id: p.id,
+      name: p.name,
+      updatedAt: p.updatedAt,
+    };
+  });
 }

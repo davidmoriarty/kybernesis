@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -b",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -b --pretty false",
     "test": "echo \"no tests\"",
     "start": "bun /app/server/dist/index.js",
     "dev": "bun --env-file=../.env --watch run src/dev.ts"
@@ -17,7 +17,7 @@
     "db": "workspace:*",
     "auth": "workspace:*",
     "schemas": "workspace:*",
-    "hono": "^4.11.3"
+    "hono": "^4.12.3"
   },
   "devDependencies": {
     "bun-types": "^1.3.10"

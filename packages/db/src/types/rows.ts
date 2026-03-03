@@ -1,9 +1,17 @@
-// packages/db/src/types/schema.ts
+// packages/db/src/types/rows.ts
 import type { projects } from "../projects";
 import type { sessions } from "../sessions";
+import type { tenantMembers } from "../tenantMembers";
+import type { tenants } from "../tenants";
 import type { users } from "../users";
 import type { workspaceMembers } from "../workspaceMembers";
 import type { workspaces } from "../workspaces";
+
+export type TenantRow = typeof tenants.$inferSelect;
+export type NewTenantRow = typeof tenants.$inferInsert;
+
+export type TenantMemberRow = typeof tenantMembers.$inferSelect;
+export type NewTenantMemberRow = typeof tenantMembers.$inferInsert;
 
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
@@ -14,8 +22,11 @@ export type NewWorkspaceRow = typeof workspaces.$inferInsert;
 export type WorkspaceMemberRow = typeof workspaceMembers.$inferSelect;
 export type NewWorkspaceMemberRow = typeof workspaceMembers.$inferInsert;
 
-export type WorkspaceSummary = Pick<WorkspaceRow, "id" | "name">;
-export type WorkspaceSummaryWithRole = WorkspaceSummary & {
+export type WorkspaceRowSummary = Pick<
+  WorkspaceRow,
+  "id" | "name" | "tenantId"
+>;
+export type WorkspaceRowSummaryWithRole = WorkspaceRowSummary & {
   role: WorkspaceMemberRow["role"];
 };
 

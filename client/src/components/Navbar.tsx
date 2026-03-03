@@ -1,3 +1,4 @@
+// client/src/components/Navbar.tsx
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Brain,
@@ -126,17 +127,17 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 py-3",
-        "bg-background/80 supports-backdrop-filter:backdrop-blur",
-        "border-b border-gray-300 dark:border-gray-700",
+        "sticky top-0 z-40",
+        "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 supports-backdrop-filter:backdrop-blur",
+        "border-b border-gray-200 dark:border-gray-600",
       )}
     >
-      <nav className="h-full px-6 flex items-center justify-between">
+      <nav className="py-3 px-6 flex items-center justify-between">
         {/* Brand / App name */}
         <Button
           variant="link"
           className={cn(
-            "text-xl font-bold bg-transparent",
+            "text-xl font-bold text-gray-900 dark:text-gray-200",
             "border-0 p-0 flex items-center gap-2",
           )}
           onClick={() => navigate({ to: desktopNavLinks[0]?.to })}
