@@ -131,7 +131,7 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <div className="flex items-center justify-center">
-          <Button variant="default" size="sm">
+          <Button variant="default" size="lg">
             {cta}
           </Button>
         </div>

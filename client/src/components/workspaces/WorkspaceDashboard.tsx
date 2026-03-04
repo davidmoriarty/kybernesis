@@ -11,39 +11,41 @@ import type { WorkspaceSummary } from "@/hooks/workspaces";
 export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
   return (
     <section className="space-y-6">
-      <div className="space-y-1 pl-2">
-        <h2 className="font-semibold text-xl">{summary.workspace.name}</h2>
+      <div className="space-y-2 pb-4">
+        <h2 className="font-bold text-2xl">{summary.workspace.name}</h2>
 
         <Badge
           variant={summary.workspace.role === "admin" ? "default" : "secondary"}
-          className="capitalize"
+          className="capitalize text-base"
         >
           <strong>Role: </strong>
           {summary.workspace.role}
         </Badge>
 
-        <p className="text-sm text-gray-600">
+        <p className="text-base">
           <strong>Workspace ID:</strong> {summary.workspace.id}
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="bg-slate-100 dark:bg-slate-600 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle>Members</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-background">Members</CardTitle>
+            <CardDescription className="text-background">
               Online if active within the last 5 minutes
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2  text-background">
             {summary.members.length === 0 ? (
               <p className="text-sm text-muted-foreground">No members found.</p>
             ) : (
               summary.members.map((m) => (
-                <div key={m.id} className="flex items-center justify-between">
-                  <span className="font-medium">{m.name}</span>
-
-                  <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                <div
+                  key={m.id}
+                  className="flex items-center justify-start gap-6"
+                >
+                  <span className="text-base font-medium">{m.name}</span>
+                  <span className="inline-flex items-center gap-2 text-base text-background">
                     <span
                       className={[
                         "inline-block h-2.5 w-2.5 rounded-full",
@@ -65,20 +67,31 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-slate-100 dark:bg-slate-600 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle>Active Projects</CardTitle>
-            <CardDescription>All projects (status TBD)</CardDescription>
+            <CardTitle className="text-background">Active Projects</CardTitle>
+            <CardDescription className="text-background">
+              All projects (status TBD)
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black">
-              {summary.counts.activeProjects}
+              {summary.counts.activeProjects} Projects
             </div>
             {summary.recentProjects.length > 0 && (
-              <div className="mt-3 space-y-1 text-sm text-muted-foreground">
+              <div className="mt-3 space-y-2 text-base text-background">
                 {summary.recentProjects.map((p) => (
-                  <div key={p.id} className="truncate">
-                    {p.name}
+                  <div key={p.id} className="truncate space-x-6">
+                    <span>{p.name}</span>
+                    <span className="inline-flex items-center gap-2 text-base text-background">
+                      <span
+                        className={[
+                          "inline-block h-2.5 w-2.5 rounded-full bg-emerald-500",
+                        ].join(" ")}
+                        aria-hidden="true"
+                      />
+                      <span className="capitalize">Active</span>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -86,14 +99,18 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-slate-100 dark:bg-slate-600 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle>Completed Projects</CardTitle>
-            <CardDescription>Requires project status</CardDescription>
+            <CardTitle className="text-background">
+              Completed Projects
+            </CardTitle>
+            <CardDescription className="text-background">
+              Requires project status
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black">
-              {summary.counts.completedProjects}
+              {summary.counts.completedProjects} Complete
             </div>
           </CardContent>
         </Card>

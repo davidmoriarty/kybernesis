@@ -14,7 +14,7 @@ interface ProjectsToolbarProps {
 
 export function ProjectsToolbar({ view, onViewChange }: ProjectsToolbarProps) {
   return (
-    <div className="sticky top-(--navbar-height) z-30 border-b border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 supports-backdrop-filter:backdrop-blur">
+    <div className="sticky top-(--navbar-height) z-30 border-b border-gray-300 dark:border-gray-500 supports-backdrop-filter:backdrop-blur">
       <Container className="py-5">
         <div className="grid gap-3 sm:grid-cols-[auto_1fr_auto] sm:items-center">
           <FormDialog

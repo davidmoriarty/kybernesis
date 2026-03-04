@@ -132,7 +132,7 @@ export function Navbar() {
         "border-b border-gray-300 dark:border-gray-500",
       )}
     >
-      <nav className="py-3 px-6 flex items-center justify-between">
+      <nav className="container mx-auto py-3 flex items-center justify-between">
         {/* Brand / App name */}
         <Button
           variant="link"

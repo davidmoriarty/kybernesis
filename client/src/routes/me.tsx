@@ -1,6 +1,8 @@
 // client/src/routes/me.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Section } from "@/components/Section";
+import { Container } from "@/components/Container";
 import { PageCard } from "@/components/PageCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -136,106 +138,116 @@ export default function MePage() {
 
   return (
     <>
-      <PageCard>
-        <header>
-          <h2 className="font-black text-2xl text-center mb-4">Your Profile</h2>
-        </header>
+      <Section padding="py-32">
+        <Container>
+          <div className="max-w-7xl mx-auto">
+            <header className="mb-16">
+              <h2 className="font-black text-4xl text-center">Your Profile</h2>
+            </header>
 
-        <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-          {/* Left column: avatar */}
-          <figure className="flex flex-col items-center gap-3">
-            {form.avatar && !avatarError ? (
-              <img
-                src={form.avatar}
-                alt="Avatar"
-                className="h-24 w-24 rounded-full object-cover"
-                onError={() => setAvatarError(true)}
-              />
-            ) : (
-              <AvatarFallback size={96} />
-            )}
-
-            {editing && (
-              <Input
-                placeholder="Avatar URL"
-                value={form.avatar}
-                onChange={(e) => handleChange("avatar", e.target.value)}
-              />
-            )}
-
-            {me?.user?.createdAt && !editing && (
-              <figcaption className="text-sm text-center">
-                Member since{" "}
-                {new Intl.DateTimeFormat("en-CA", {
-                  year: "numeric",
-                  month: "long",
-                }).format(new Date(me.user.createdAt))}
-              </figcaption>
-            )}
-          </figure>
-
-          {/* Right column: fields + buttons */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {PROFILE_FIELDS.map((field) => (
-              <div key={field} className="flex flex-col gap-1">
-                <Label>{formatLabel(field)}</Label>
-                {editing ? (
-                  <Input
-                    value={form[field]}
-                    onChange={(e) => handleChange(field, e.target.value)}
+            <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+              {/* Left column: avatar */}
+              <figure className="flex flex-col items-center gap-3">
+                {form.avatar && !avatarError ? (
+                  <img
+                    src={form.avatar}
+                    alt="Avatar"
+                    className="h-24 w-24 rounded-full object-cover"
+                    onError={() => setAvatarError(true)}
                   />
                 ) : (
-                  <p className="text-sm">{form[field] || "-"}</p>
+                  <AvatarFallback size={96} />
                 )}
-              </div>
-            ))}
 
-            <div className="col-span-full flex flex-wrap gap-2 pt-4">
-              {editing ? (
-                <>
+                {editing && (
+                  <Input
+                    placeholder="Avatar URL"
+                    value={form.avatar}
+                    onChange={(e) => handleChange("avatar", e.target.value)}
+                  />
+                )}
+
+                {me?.user?.createdAt && !editing && (
+                  <figcaption className="text-base text-center">
+                    Member since{" "}
+                    {new Intl.DateTimeFormat("en-CA", {
+                      year: "numeric",
+                      month: "long",
+                    }).format(new Date(me.user.createdAt))}
+                  </figcaption>
+                )}
+              </figure>
+
+              {/* Right column: fields + buttons */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {PROFILE_FIELDS.map((field) => (
+                  <div key={field} className="flex flex-col gap-1">
+                    <Label>{formatLabel(field)}</Label>
+                    {editing ? (
+                      <Input
+                        value={form[field]}
+                        onChange={(e) => handleChange(field, e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-sm">{form[field] || "-"}</p>
+                    )}
+                  </div>
+                ))}
+
+                <div className="col-span-full flex flex-wrap gap-2 pt-4">
+                  {editing ? (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={updateProfile.isPending || isUnchanged()}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancel}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="sm" onClick={() => setEditing(true)}>
+                      Edit Profile
+                    </Button>
+                  )}
                   <Button
                     size="sm"
-                    onClick={handleSave}
-                    disabled={updateProfile.isPending || isUnchanged()}
+                    variant="destructive"
+                    onClick={() => logout.mutate()}
                   >
-                    Save
+                    Log Out
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <Button size="sm" onClick={() => setEditing(true)}>
-                  Edit Profile
-                </Button>
-              )}
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => logout.mutate()}
-              >
-                Log Out
-              </Button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </PageCard>
+        </Container>
+      </Section>
 
       {me?.workspace && (
-        <PageCard>
-          <header>
-            <h2 className="font-black text-2xl text-center">Workspace</h2>
-          </header>
+        <Section padding="py-16">
+          <Container>
+            <div className="flex flex-col gap-4 text-center">
+              <header>
+                <h2 className="font-black text-2xl text-center">Workspace</h2>
+              </header>
 
-          <div className="flex flex-col gap-2 text-center">
-            <p>
-              <strong>Name:</strong> {me.workspace.name}
-            </p>
-            <p>
-              <strong>Role:</strong> {me.workspace.role}
-            </p>
-          </div>
-        </PageCard>
+              <p>
+                <strong>Name:</strong> {me.workspace.name}
+              </p>
+              <p>
+                <strong>Role:</strong> {me.workspace.role}
+              </p>
+            </div>
+          </Container>
+        </Section>
       )}
     </>
   );

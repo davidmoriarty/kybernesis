@@ -1,7 +1,8 @@
 // client/src/routes/projects.tsx
 import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { PageCard } from "@/components/PageCard";
+import { Section } from "@/components/Section";
+import { Container } from "@/components/Container";
 import { ProjectList } from "@/components/projects/ProjectList";
 import {
   ProjectsToolbar,
@@ -46,14 +47,16 @@ function ProjectsPage() {
     <>
       <ProjectsToolbar view={view} onViewChange={setView} />
 
-      <PageCard>
-        <ProjectList
-          projects={projects?.projects}
-          view={view}
-          isLoading={projectsLoading}
-          error={projectsError}
-        />
-      </PageCard>
+      <Section>
+        <Container>
+          <ProjectList
+            projects={projects?.projects}
+            view={view}
+            isLoading={projectsLoading}
+            error={projectsError}
+          />
+        </Container>
+      </Section>
 
       <Outlet />
     </>

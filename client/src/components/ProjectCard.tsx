@@ -64,7 +64,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
     return (
       <div
         className={cn(
-          "bg-background rounded-md border px-8 py-6 shadow-sm transition-all",
+          "bg-slate-100 dark:bg-slate-600 rounded-md border border-slate-200 dark:border-slate-700 px-8 py-6 shadow-sm transition-all",
           "hover:bg-background/80",
           expanded && "shadow-md",
           highlight && "bg-slate-200",
@@ -186,11 +186,13 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
 
   if (view === "grid") {
     return (
-      <div className="h-40 rounded-md border p-4 shadow-sm hover:bg-muted/20">
+      <div className="bg-slate-100 dark:bg-slate-600 h-40 rounded-md border border-slate-200 dark:border-slate-700 p-4 shadow-lg shadow-slate-800">
         <div className="flex h-full flex-col justify-between">
           <div>
-            <h3 className="truncate text-lg font-bold">{name}</h3>
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+            <h3 className="text-background truncate text-lg font-bold">
+              {name}
+            </h3>
+            <p className="mt-1 line-clamp-2 text-sm text-background">
               {description || "No description"}
             </p>
           </div>
@@ -220,9 +222,9 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
   /* ───────────────────────── LIST VIEW ───────────────────────── */
 
   return (
-    <div className="grid grid-cols-[2fr_3fr_auto] items-center gap-4 px-4 py-3 border-b hover:bg-muted/10">
-      <div className="truncate font-medium">{name}</div>
-      <div className="max-w-[40ch] truncate text-sm text-muted-foreground">
+    <div className="grid grid-cols-[2fr_3fr_auto] items-center gap-4 px-4 py-5 border-b hover:bg-muted/10">
+      <div className="truncate text-background font-medium">{name}</div>
+      <div className="max-w-[40ch] truncate text-sm text-background">
         {description || "—"}
       </div>
       <ButtonGroup>
