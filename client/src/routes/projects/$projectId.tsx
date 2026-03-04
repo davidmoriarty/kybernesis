@@ -78,24 +78,33 @@ function ProjectPage() {
 
         <SidebarInset className="flex flex-col flex-1">
           {/* Top bar */}
-          <div className="bg-accent flex items-center justify-between h-10 px-4 border-b">
-            <SidebarTrigger />
-            <h1 className="font-bold text-md">{section}</h1>
-            <ToggleGroup type="multiple" variant="outline">
-              <ToggleGroupItem value="files">
-                <FolderOpen className="h-4 w-4" />
+          <div className="bg-gray-200 dark:bg-gray-500 flex items-center justify-between text-foreground h-10 px-4 border-b">
+            <SidebarTrigger className="text-background" />
+            <h1 className="font-bold text-lg text-background">{section}</h1>
+            <ToggleGroup type="multiple">
+              <ToggleGroupItem
+                value="files"
+                className="border border-background"
+              >
+                <FolderOpen className="h-4 w-4 text-background" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="list">
-                <List className="h-4 w-4" />
+              <ToggleGroupItem
+                value="list"
+                className="border border-background"
+              >
+                <List className="h-4 w-4 text-background" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="columns">
-                <Columns2 className="h-4 w-4" />
+              <ToggleGroupItem
+                value="columns"
+                className="border border-background"
+              >
+                <Columns2 className="h-4 w-4 text-background" />
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
 
           {/* Content */}
-          <div className="p-4 flex-1 overflow-auto">
+          <div className="min-h-screen bg-gray-200 dark:bg-gray-500 p-4 flex-1 overflow-auto">
             {section === "Overview" && (
               <OverviewSection
                 projectName={project.name}
@@ -127,7 +136,7 @@ function ProjectSidebar({
   return (
     <Sidebar
       className={cn(
-        "fixed top-16 sm:top-20 left-0 w-64",
+        "fixed top-15 sm:top-15 left-0 w-64 bg-gray-600 dark:bg-gray-700",
         "h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)]",
       )}
     >

@@ -65,7 +65,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
       <div
         className={cn(
           "bg-slate-100 dark:bg-slate-600 rounded-md border border-slate-200 dark:border-slate-700 px-8 py-6 shadow-sm transition-all",
-          "hover:bg-background/80",
+          "hover:bg-slate-200 dark:hover:bg-slate-700",
           expanded && "shadow-md",
           highlight && "bg-slate-200",
         )}
@@ -119,7 +119,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
           {expanded && !editing && (
             <>
               <h3 className="text-xl font-bold">{fullProject?.name}</h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-background">
                 {fullProject?.description || "No description"}
               </p>
 
@@ -164,8 +164,8 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
                   Save
                 </Button>
                 <Button
-                  size="sm"
                   variant="outline"
+                  size="sm"
                   onClick={() => setEditing(false)}
                 >
                   Cancel

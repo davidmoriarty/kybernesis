@@ -140,91 +140,96 @@ export default function MePage() {
     <>
       <Section padding="py-32">
         <Container>
-          <div className="max-w-7xl mx-auto">
-            <header className="mb-16">
-              <h2 className="font-black text-4xl text-center">Your Profile</h2>
-            </header>
+          <header className="mb-8">
+            <h2 className="font-black text-4xl text-center">Your Profile</h2>
+          </header>
 
-            <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-              {/* Left column: avatar */}
-              <figure className="flex flex-col items-center gap-3">
-                {form.avatar && !avatarError ? (
-                  <img
-                    src={form.avatar}
-                    alt="Avatar"
-                    className="h-24 w-24 rounded-full object-cover"
-                    onError={() => setAvatarError(true)}
-                  />
-                ) : (
-                  <AvatarFallback size={96} />
-                )}
+          <div className="max-w-7xl mx-auto p-4 border rounded-lg grid gap-3 md:grid-cols-[220px_1fr]">
+            {/* Left column: avatar */}
+            <figure className="flex flex-col items-center justify-center gap-3">
+              {form.avatar && !avatarError ? (
+                <img
+                  src={form.avatar}
+                  alt="Avatar"
+                  className="h-24 w-24 mx-auto rounded-full object-cover"
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                <AvatarFallback size={96} />
+              )}
 
-                {editing && (
-                  <Input
-                    placeholder="Avatar URL"
-                    value={form.avatar}
-                    onChange={(e) => handleChange("avatar", e.target.value)}
-                  />
-                )}
+              {editing && (
+                <Input
+                  placeholder="Avatar URL"
+                  value={form.avatar}
+                  onChange={(e) => handleChange("avatar", e.target.value)}
+                />
+              )}
 
-                {me?.user?.createdAt && !editing && (
-                  <figcaption className="text-base text-center">
-                    Member since{" "}
-                    {new Intl.DateTimeFormat("en-CA", {
-                      year: "numeric",
-                      month: "long",
-                    }).format(new Date(me.user.createdAt))}
-                  </figcaption>
-                )}
-              </figure>
+              {me?.user?.createdAt && !editing && (
+                <figcaption className="py-2 text-sm text-center">
+                  Member since{" "}
+                  {new Intl.DateTimeFormat("en-CA", {
+                    year: "numeric",
+                    month: "long",
+                  }).format(new Date(me.user.createdAt))}
+                </figcaption>
+              )}
+            </figure>
 
-              {/* Right column: fields + buttons */}
-              <div className="grid gap-4 sm:grid-cols-2">
-                {PROFILE_FIELDS.map((field) => (
-                  <div key={field} className="flex flex-col gap-1">
-                    <Label>{formatLabel(field)}</Label>
-                    {editing ? (
-                      <Input
-                        value={form[field]}
-                        onChange={(e) => handleChange(field, e.target.value)}
-                      />
-                    ) : (
-                      <p className="text-sm">{form[field] || "-"}</p>
-                    )}
-                  </div>
-                ))}
-
-                <div className="col-span-full flex flex-wrap gap-2 pt-4">
+            {/* Right column: fields + buttons */}
+            <div className="grid gap-6 ml-0 md:grid-cols-2 md:ml-20">
+              {PROFILE_FIELDS.map((field) => (
+                <div key={field} className="flex flex-col gap-1">
+                  <Label className="font-bold text-base">
+                    {formatLabel(field)}
+                  </Label>
                   {editing ? (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={handleSave}
-                        disabled={updateProfile.isPending || isUnchanged()}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </Button>
-                    </>
+                    <Input
+                      value={form[field]}
+                      onChange={(e) => handleChange(field, e.target.value)}
+                    />
                   ) : (
-                    <Button size="sm" onClick={() => setEditing(true)}>
-                      Edit Profile
-                    </Button>
+                    <p className="text-base">{form[field] || "-"}</p>
                   )}
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => logout.mutate()}
-                  >
-                    Log Out
-                  </Button>
                 </div>
+              ))}
+
+              <div className="col-span-full flex flex-wrap gap-4 pt-4">
+                {editing ? (
+                  <>
+                    <Button
+                      variant="default"
+                      size="default"
+                      onClick={handleSave}
+                      disabled={updateProfile.isPending || isUnchanged()}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="default"
+                      onClick={handleCancel}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="default"
+                    onClick={() => setEditing(true)}
+                  >
+                    Edit Profile
+                  </Button>
+                )}
+                <Button
+                  variant="destructive"
+                  size="default"
+                  onClick={() => logout.mutate()}
+                >
+                  Log Out
+                </Button>
               </div>
             </div>
           </div>
@@ -232,9 +237,9 @@ export default function MePage() {
       </Section>
 
       {me?.workspace && (
-        <Section padding="py-16">
+        <Section>
           <Container>
-            <div className="flex flex-col gap-4 text-center">
+            <div className="flex flex-col gap-3 text-center">
               <header>
                 <h2 className="font-black text-2xl text-center">Workspace</h2>
               </header>
