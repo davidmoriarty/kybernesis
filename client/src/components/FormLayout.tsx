@@ -21,11 +21,7 @@ export function FormLayout({
       {title && (
         <h1 className="text-4xl font-black mb-2 text-center">{title}</h1>
       )}
-      {description && (
-        <p className="text-center text-md text-muted-foreground mb-6">
-          {description}
-        </p>
-      )}
+      {description && <p className="text-center text-md mb-6">{description}</p>}
       <form className="space-y-4" onSubmit={onSubmit}>
         {children}
       </form>

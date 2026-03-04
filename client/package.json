@@ -5,8 +5,8 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "vite",
-    "type-check": "tsc -p tsconfig.app.json --noEmit",
     "build": "vite build",
+    "type-check": "tsc -p tsconfig.app.json --noEmit",
     "test": "echo \"no tests yet\"",
     "preview": "vite preview"
   },

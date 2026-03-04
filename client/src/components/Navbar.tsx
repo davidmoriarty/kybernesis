@@ -128,8 +128,8 @@ export function Navbar() {
     <header
       className={cn(
         "sticky top-0 z-40",
-        "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 supports-backdrop-filter:backdrop-blur",
-        "border-b border-gray-200 dark:border-gray-600",
+        "supports-backdrop-filter:backdrop-blur",
+        "border-b border-gray-300 dark:border-gray-500",
       )}
     >
       <nav className="py-3 px-6 flex items-center justify-between">

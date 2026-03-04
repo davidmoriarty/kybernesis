@@ -39,7 +39,7 @@ function SignupPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoComplete="name"
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-background"
           required
         />
 
@@ -51,7 +51,7 @@ function SignupPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-background"
           required
         />
 
@@ -63,7 +63,7 @@ function SignupPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-background"
           required
         />
 
@@ -78,7 +78,7 @@ function SignupPage() {
 
       <div className="flex flex-row items-center justify-center gap-4 py-3">
         <p>Already have an account?</p>
-        <Button variant="outline" onClick={() => navigate({ to: "/login" })}>
+        <Button variant="ghost" onClick={() => navigate({ to: "/login" })}>
           <LogIn />
           Login
         </Button>

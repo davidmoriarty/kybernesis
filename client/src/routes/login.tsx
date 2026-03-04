@@ -44,7 +44,7 @@ function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-background"
           required
         />
 
@@ -56,7 +56,7 @@ function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-background"
           required
         />
 
@@ -64,14 +64,18 @@ function LoginPage() {
           <p className="text-sm text-destructive">{login.error.message}</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={login.isPending}>
+        <Button
+          type="submit"
+          className="w-full mt-4"
+          disabled={login.isPending}
+        >
           {login.isPending ? "Signing in..." : "Login"}
         </Button>
       </FormLayout>
 
-      <div className="flex flex-row items-center justify-center gap-4 py-3">
+      <div className="flex flex-row items-center justify-center gap-4 mt-4">
         <p>Don't have an account?</p>
-        <Button variant="outline" onClick={() => navigate({ to: "/signup" })}>
+        <Button variant="ghost" onClick={() => navigate({ to: "/signup" })}>
           <Rocket />
           Sign up
         </Button>

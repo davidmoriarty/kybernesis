@@ -4,12 +4,8 @@ import { Container } from "@/components/Container";
 
 export function PageCard({ children }: { children: React.ReactNode }) {
   return (
-    <Section>
-      <Container>
-        <div className="bg-slate-200 dark:bg-slate-700 max-w-7xl mx-auto px-8 py-16 border rounded shadow">
-          <div className="flex flex-col gap-4">{children}</div>
-        </div>
-      </Container>
+    <Section className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
+      <Container>{children}</Container>
     </Section>
   );
 }
