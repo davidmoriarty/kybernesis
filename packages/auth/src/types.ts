@@ -11,7 +11,6 @@ export type AuthErrorResponse = {
 // --- Login ---
 
 export type LoginInput = {
-  tenantId: string;
   email: string;
   password: string;
 };
@@ -28,7 +27,8 @@ export type TenantSignupInput = {
 
 // --- User Signup (creates user within tenant + session) ---
 export type UserSignupInput = {
-  tenantId?: string;
+  tenantId: string;
+
   name: string;
   email: string;
   password: string;

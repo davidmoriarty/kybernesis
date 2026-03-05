@@ -1,4 +1,5 @@
 // packages/db/src/schema.ts
+export { projectMembers } from "./projectMembers";
 export { projects } from "./projects";
 export { sessions } from "./sessions";
 export { tenantMembers } from "./tenantMembers";

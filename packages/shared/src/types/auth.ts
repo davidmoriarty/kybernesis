@@ -2,8 +2,6 @@
 export interface User {
   id: string; // uuid
 
-  tenantId: string;
-
   email: string;
   name: string;
 
@@ -21,7 +19,6 @@ export interface User {
 export interface Workspace {
   id: string; // uuid
   tenantId: string; // uuid
-
   name: string;
 
   // NOTE: this is the user's role within this workspace

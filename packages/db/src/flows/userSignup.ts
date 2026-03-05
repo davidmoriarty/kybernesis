@@ -18,7 +18,7 @@ export async function createUserInTenantWithSession(input: {
     email: string;
     passwordHash: string;
   };
-  tenantRole?: Exclude<TenantMemberRow["role"], "tenant">; // default: "member"
+  tenantRole?: Exclude<TenantMemberRow["role"], "owner">; // default: "member"
   sessionExpiresAt: Date;
 
   // Workspace behavior:
@@ -42,12 +42,11 @@ export async function createUserInTenantWithSession(input: {
     )[0];
     if (!tenantExists) throw new Error("Tenant not found");
 
-    // 1) Create user
+    // 1) Create user (global)
     const user = (
       await tx
         .insert(users)
         .values({
-          tenantId: input.tenantId,
           name: input.user.name,
           email: input.user.email,
           passwordHash: input.user.passwordHash,
@@ -57,8 +56,7 @@ export async function createUserInTenantWithSession(input: {
     if (!user) throw new Error("Failed to create user");
 
     // 2) Tenant membership (member/admin)
-    const role: Exclude<TenantMemberRow["role"], "tenant"> =
-      input.tenantRole ?? "member";
+    const role: TenantMemberRow["role"] = input.tenantRole ?? "member";
 
     const tenantMember = (
       await tx
@@ -107,7 +105,7 @@ export async function createUserInTenantWithSession(input: {
       if (!wm) throw new Error("Failed to create workspace membership");
     }
 
-    // 4) Session
+    // 4) Session (tenant-scoped)
     const session = (
       await tx
         .insert(sessions)

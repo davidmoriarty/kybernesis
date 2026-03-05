@@ -1,10 +1,11 @@
 // packages/db/src/workspaceMembers.ts
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { index, pgTable, primaryKey, text, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import type { WorkspaceMemberRow } from "./types";
 import { users } from "./users";
 import { workspaces } from "./workspaces";
+import { tenantMembers } from "./tenantMembers";
 
 // Workspace Members Table
 export const workspaceMembers = pgTable(
@@ -19,71 +20,11 @@ export const workspaceMembers = pgTable(
     role: text("role").$type<"admin" | "member">().notNull(),
   },
   (t) => [
-    primaryKey({ columns: [t.userId, t.workspaceId] }),
+    primaryKey({ columns: [t.workspaceId, t.userId] }),
     index("workspace_members_workspace_id_idx").on(t.workspaceId),
     index("workspace_members_user_id_idx").on(t.userId),
   ],
 );
-
-export async function createWorkspaceMembership(input: {
-  userId: string;
-  workspaceId: string;
-  role: WorkspaceMemberRow["role"];
-}): Promise<WorkspaceMemberRow> {
-  const inserted = (
-    await db
-      .insert(workspaceMembers)
-      .values({
-        userId: input.userId,
-        workspaceId: input.workspaceId,
-        role: input.role,
-      })
-      .returning()
-  )[0];
-
-  if (!inserted) throw new Error("Failed to create workspace membership");
-  return inserted;
-}
-
-export async function getWorkspaceMembership(
-  userId: string,
-  workspaceId: string,
-): Promise<WorkspaceMemberRow | undefined> {
-  return (
-    await db
-      .select()
-      .from(workspaceMembers)
-      .where(
-        and(
-          eq(workspaceMembers.userId, userId),
-          eq(workspaceMembers.workspaceId, workspaceId),
-        ),
-      )
-      .limit(1)
-  )[0];
-}
-
-export async function getMembersForWorkspace(workspaceId: string): Promise<
-  {
-    userId: string;
-    role: WorkspaceMemberRow["role"];
-    name: string;
-    email: string;
-    lastSeenAt: Date | null;
-  }[]
-> {
-  return await db
-    .select({
-      userId: workspaceMembers.userId,
-      role: workspaceMembers.role,
-      name: users.name,
-      email: users.email,
-      lastSeenAt: users.lastSeenAt,
-    })
-    .from(workspaceMembers)
-    .innerJoin(users, eq(users.id, workspaceMembers.userId))
-    .where(eq(workspaceMembers.workspaceId, workspaceId));
-}
 
 // --- Tenant-scoped variants (use these going forward) ---
 
@@ -96,19 +37,28 @@ export async function createWorkspaceMembershipForTenant(input: {
   // Ensure user + workspace are in same tenant
   const ok = (
     await db
-      .select({ ok: sql`1` })
-      .from(users)
-      .innerJoin(workspaces, eq(workspaces.id, input.workspaceId))
+      .select({ workspaceId: workspaces.id })
+      .from(workspaces)
+      .innerJoin(
+        tenantMembers,
+        and(
+          eq(tenantMembers.tenantId, workspaces.tenantId),
+          eq(tenantMembers.userId, input.userId),
+        ),
+      )
       .where(
         and(
-          eq(users.id, input.userId),
+          eq(workspaces.id, input.workspaceId),
           eq(workspaces.tenantId, input.tenantId),
         ),
       )
       .limit(1)
   )[0];
 
-  if (!ok) throw new Error("Tenant mismatch (user/workspace)");
+  if (!ok)
+    throw new Error(
+      "Tenant mismatch (user not in tenant or workspace not in tenant)",
+    );
 
   const inserted = (
     await db
@@ -174,5 +124,6 @@ export async function getMembersForWorkspaceForTenant(input: {
         eq(workspaces.tenantId, input.tenantId),
         eq(workspaceMembers.workspaceId, input.workspaceId),
       ),
-    );
+    )
+    .orderBy(users.name);
 }

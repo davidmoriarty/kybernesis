@@ -10,6 +10,9 @@ import {
 } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import type { TenantRow } from "./types";
+import { tenantMembers } from "./tenantMembers";
+
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export const tenants = pgTable(
   "tenants",
@@ -33,15 +36,30 @@ export const tenants = pgTable(
 export async function createTenant(input: {
   name: string;
   slug: string;
+  creatorUserId: string;
 }): Promise<TenantRow> {
+  return db.transaction((tx) => createTenantTx(tx, input));
+}
+
+export async function createTenantTx(
+  tx: Tx,
+  input: { name: string; slug: string; creatorUserId: string },
+): Promise<TenantRow> {
   const inserted = (
-    await db
+    await tx
       .insert(tenants)
       .values({ name: input.name, slug: input.slug, updatedAt: new Date() })
       .returning()
   )[0];
 
   if (!inserted) throw new Error("Failed to create tenant");
+
+  await tx.insert(tenantMembers).values({
+    tenantId: inserted.id,
+    userId: input.creatorUserId,
+    role: "owner",
+  });
+
   return inserted;
 }
 

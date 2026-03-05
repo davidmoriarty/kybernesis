@@ -1,5 +1,6 @@
 // packages/db/src/types/rows.ts
 import type { projects } from "../projects";
+import type { projectMembers } from "../projectMembers";
 import type { sessions } from "../sessions";
 import type { tenantMembers } from "../tenantMembers";
 import type { tenants } from "../tenants";
@@ -32,6 +33,14 @@ export type WorkspaceRowSummaryWithRole = WorkspaceRowSummary & {
 
 export type ProjectRow = typeof projects.$inferSelect;
 export type NewProjectRow = typeof projects.$inferInsert;
+
+export type ProjectRowSummary = Pick<ProjectRow, "id" | "workspaceId" | "name">;
+export type ProjectRowSummaryWithRole = ProjectRowSummary & {
+  role: ProjectMemberRow["role"];
+};
+
+export type ProjectMemberRow = typeof projectMembers.$inferSelect;
+export type NewProjectMemberRow = typeof projectMembers.$inferInsert;
 
 export type SessionRow = typeof sessions.$inferSelect;
 export type NewSessionRow = typeof sessions.$inferInsert;

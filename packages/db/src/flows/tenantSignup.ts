@@ -2,8 +2,7 @@
 import { db } from "../dbInstance";
 import { sessions } from "../sessions";
 import type { SessionRow, TenantRow, UserRow, WorkspaceRow } from "../types";
-import { tenantMembers } from "../tenantMembers";
-import { tenants } from "../tenants";
+import { createTenantTx } from "../tenants";
 import { users } from "../users";
 import { workspaceMembers } from "../workspaceMembers";
 import { workspaces } from "../workspaces";
@@ -27,25 +26,11 @@ export async function createTenantWithOwnerAndSession(input: {
   defaultWorkspace: WorkspaceRow;
 }> {
   return db.transaction(async (tx) => {
-    // 1) Tenant
-    const tenant = (
-      await tx
-        .insert(tenants)
-        .values({
-          name: input.tenantName,
-          slug: input.tenantSlug,
-          updatedAt: new Date(),
-        })
-        .returning()
-    )[0];
-    if (!tenant) throw new Error("Failed to create tenant");
-
-    // 2) Owner user (scoped to tenant)
+    // 1) Owner user (global)
     const ownerUser = (
       await tx
         .insert(users)
         .values({
-          tenantId: tenant.id,
           name: input.owner.name,
           email: input.owner.email,
           passwordHash: input.owner.passwordHash,
@@ -54,20 +39,14 @@ export async function createTenantWithOwnerAndSession(input: {
     )[0];
     if (!ownerUser) throw new Error("Failed to create owner user");
 
-    // 3) Tenant membership for owner (role = tenant)
-    const tm = (
-      await tx
-        .insert(tenantMembers)
-        .values({
-          tenantId: tenant.id,
-          userId: ownerUser.id,
-          role: "tenant",
-        })
-        .returning()
-    )[0];
-    if (!tm) throw new Error("Failed to create tenant membership");
+    // 2) Tenant + owner membership (atomic via helper)
+    const tenant = await createTenantTx(tx, {
+      name: input.tenantName,
+      slug: input.tenantSlug,
+      creatorUserId: ownerUser.id,
+    });
 
-    // 4) Default workspace for tenant
+    // 3) Default workspace for tenant
     const defaultWorkspaceName =
       input.defaultWorkspaceName ?? "Default Workspace";
     const defaultWorkspace = (
@@ -76,14 +55,13 @@ export async function createTenantWithOwnerAndSession(input: {
         .values({
           tenantId: tenant.id,
           name: defaultWorkspaceName,
-          ownerId: ownerUser.id,
         })
         .returning()
     )[0];
     if (!defaultWorkspace)
       throw new Error("Failed to create default workspace");
 
-    // 5) Workspace membership for owner (admin)
+    // 4) Workspace membership for owner (admin)
     const wm = (
       await tx
         .insert(workspaceMembers)

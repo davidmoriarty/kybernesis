@@ -5,12 +5,12 @@ import type {
   WorkspaceRowSummaryWithRole,
 } from "./types";
 import type { Workspace } from "@shared";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { index, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import { mapWorkspaceSummaryWithRoleToWorkspace } from "./mappers";
 import { tenants } from "./tenants";
-import { users } from "./users";
+import { tenantMembers } from "./tenantMembers";
 import { workspaceMembers } from "./workspaceMembers";
 
 export const workspaces = pgTable(
@@ -21,35 +21,70 @@ export const workspaces = pgTable(
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    ownerId: uuid("owner_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
   },
   (t) => [
     index("workspaces_tenant_id_idx").on(t.tenantId),
-    index("workspaces_owner_id_idx").on(t.ownerId),
     uniqueIndex("workspaces_tenant_id_name_unique").on(t.tenantId, t.name),
   ],
 );
 
+function whereUserInTenant(tenantId: string, userId: string) {
+  return sql`exists (
+    select 1
+    from ${tenantMembers} tm
+    where tm.${tenantMembers.tenantId} = ${tenantId}
+      and tm.${tenantMembers.userId} = ${userId}
+  )`;
+}
+
+/**
+ * Create workspace (no ownerId column).
+ * Ensure caller belongs to tenant; add them as workspace admin in same operation.
+ * NOTE: This should ideally be transactional at the service layer if you also
+ * need to create other rows.
+ */
 export async function createWorkspace(input: {
   tenantId: string;
   name: string;
-  ownerId: string;
+  creatorUserId: string;
 }): Promise<WorkspaceRow> {
-  const inserted = (
-    await db
-      .insert(workspaces)
-      .values({
-        tenantId: input.tenantId,
-        name: input.name,
-        ownerId: input.ownerId,
-      })
-      .returning()
-  )[0];
+  return await db.transaction(async (tx) => {
+    // ensure creator is a tenant member
+    const ok = (
+      await tx
+        .select({ ok: sql<number>`1` })
+        .from(tenantMembers)
+        .where(
+          and(
+            eq(tenantMembers.tenantId, input.tenantId),
+            eq(tenantMembers.userId, input.creatorUserId),
+          ),
+        )
+        .limit(1)
+    )[0];
 
-  if (!inserted) throw new Error("Failed to create workspace");
-  return inserted;
+    if (!ok) throw new Error("User is not a member of tenant");
+
+    const inserted = (
+      await tx
+        .insert(workspaces)
+        .values({
+          tenantId: input.tenantId,
+          name: input.name,
+        })
+        .returning()
+    )[0];
+
+    if (!inserted) throw new Error("Failed to create workspace");
+
+    await tx.insert(workspaceMembers).values({
+      workspaceId: inserted.id,
+      userId: input.creatorUserId,
+      role: "admin",
+    });
+
+    return inserted;
+  });
 }
 
 export async function getWorkspaceByName(input: {
@@ -113,6 +148,7 @@ export async function getWorkspacesForUser(input: {
       and(
         eq(workspaceMembers.userId, input.userId),
         eq(workspaces.tenantId, input.tenantId),
+        whereUserInTenant(input.tenantId, input.userId),
       ),
     )
     .orderBy(asc(workspaces.name));
@@ -124,21 +160,6 @@ export async function getAnyWorkspaceIdForUser(input: {
   tenantId: string;
   userId: string;
 }): Promise<string | null> {
-  const owned = (
-    await db
-      .select({ id: workspaces.id })
-      .from(workspaces)
-      .where(
-        and(
-          eq(workspaces.tenantId, input.tenantId),
-          eq(workspaces.ownerId, input.userId),
-        ),
-      )
-      .limit(1)
-  )[0];
-
-  if (owned) return owned.id;
-
   const member = (
     await db
       .select({ workspaceId: workspaceMembers.workspaceId })

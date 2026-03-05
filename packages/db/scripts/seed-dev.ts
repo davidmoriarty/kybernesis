@@ -25,7 +25,23 @@ function slugify(input: string): string {
     .replace(/^-|-$/g, "");
 }
 
-async function getOrCreateTenant() {
+async function getOrCreateAdminUser() {
+  const existing = await Users.getUserByEmailGlobal({ email: ADMIN_EMAIL });
+  if (existing) return existing;
+
+  const passwordHash = await seedHashPassword(ADMIN_PASSWORD);
+
+  const created = await Users.createUser({
+    name: ADMIN_NAME,
+    email: ADMIN_EMAIL,
+    passwordHash,
+  });
+
+  if (!created) throw new Error("Failed to seed admin user");
+  return created;
+}
+
+async function getOrCreateTenant(input: { creatorUserId: string }) {
   const slug = slugify(TENANT_NAME);
 
   const existing = await Tenants.getTenantBySlug(slug);
@@ -34,26 +50,10 @@ async function getOrCreateTenant() {
   const created = await Tenants.createTenant({
     name: TENANT_NAME,
     slug,
+    creatorUserId: input.creatorUserId,
   });
 
   if (!created) throw new Error("Failed to seed tenant");
-  return created;
-}
-
-async function getOrCreateAdminUser(tenantId: string) {
-  const existing = await Users.getUserByEmail({ tenantId, email: ADMIN_EMAIL });
-  if (existing) return existing;
-
-  const passwordHash = await seedHashPassword(ADMIN_PASSWORD);
-
-  const created = await Users.createUser({
-    tenantId,
-    name: ADMIN_NAME,
-    email: ADMIN_EMAIL,
-    passwordHash,
-  });
-
-  if (!created) throw new Error("Failed to seed admin user");
   return created;
 }
 
@@ -68,7 +68,7 @@ async function ensureTenantMembership(input: {
       .values({
         tenantId: input.tenantId,
         userId: input.userId,
-        role: "tenant", // owner/superuser role
+        role: "owner", // owner/superuser role
       })
       .onConflictDoNothing()
       .returning({
@@ -82,7 +82,7 @@ async function ensureTenantMembership(input: {
 
 async function getOrCreateWorkspace(input: {
   tenantId: string;
-  user: { id: string; name: string };
+  creatorUserId: string;
 }) {
   const name = DEFAULT_WORKSPACE_NAME;
 
@@ -95,23 +95,29 @@ async function getOrCreateWorkspace(input: {
   const created = await Workspaces.createWorkspace({
     tenantId: input.tenantId,
     name,
-    ownerId: input.user.id,
+    creatorUserId: input.creatorUserId,
   });
 
   if (!created) throw new Error("Failed to seed workspace");
   return created;
 }
 
-async function ensureWorkspaceMembership(userId: string, workspaceId: string) {
-  const existing = await WorkspaceMembers.getWorkspaceMembership(
-    userId,
-    workspaceId,
-  );
+async function ensureWorkspaceMembership(input: {
+  tenantId: string;
+  userId: string;
+  workspaceId: string;
+}) {
+  const existing = await WorkspaceMembers.getWorkspaceMembershipForTenant({
+    tenantId: input.tenantId,
+    userId: input.userId,
+    workspaceId: input.workspaceId,
+  });
   if (existing) return existing;
 
-  const created = await WorkspaceMembers.createWorkspaceMembership({
-    userId,
-    workspaceId,
+  const created = await WorkspaceMembers.createWorkspaceMembershipForTenant({
+    tenantId: input.tenantId,
+    userId: input.userId,
+    workspaceId: input.workspaceId,
     role: "admin",
   });
 
@@ -120,17 +126,20 @@ async function ensureWorkspaceMembership(userId: string, workspaceId: string) {
 }
 
 async function seed() {
-  const tenant = await getOrCreateTenant();
-  const user = await getOrCreateAdminUser(tenant.id);
+  const user = await getOrCreateAdminUser();
+  const tenant = await getOrCreateTenant({ creatorUserId: user.id });
 
   await ensureTenantMembership({ tenantId: tenant.id, userId: user.id });
 
   const workspace = await getOrCreateWorkspace({
     tenantId: tenant.id,
-    user: { id: user.id, name: user.name },
+    creatorUserId: user.id,
   });
-
-  const membership = await ensureWorkspaceMembership(user.id, workspace.id);
+  const membership = await ensureWorkspaceMembership({
+    tenantId: tenant.id,
+    userId: user.id,
+    workspaceId: workspace.id,
+  });
 
   console.log("Seed complete");
   console.log("Tenant:", {
@@ -140,7 +149,6 @@ async function seed() {
   });
   console.log("User:", {
     id: user.id,
-    tenantId: user.tenantId,
     email: user.email,
   });
   console.log("Workspace:", {

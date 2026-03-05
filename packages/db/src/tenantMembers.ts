@@ -15,7 +15,7 @@ export const tenantMembers = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    role: text("role").$type<"tenant" | "admin" | "member">().notNull(),
+    role: text("role").$type<"owner" | "admin" | "member">().notNull(),
   },
   (t) => [
     primaryKey({ columns: [t.tenantId, t.userId] }),

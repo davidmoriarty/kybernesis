@@ -1,7 +1,7 @@
 // packages/db/src/users.ts
-import { eq, and, sql } from "drizzle-orm";
+import { and, eq, exists, isNull, lt, or, sql } from "drizzle-orm";
 import {
-  index,
+  alias,
   pgTable,
   text,
   timestamp,
@@ -11,7 +11,7 @@ import {
 import { db } from "./dbInstance";
 import type { UpdateUserProfileInput } from "./types/contracts";
 import type { Tx, UserRow } from "./types";
-import { tenants } from "./tenants";
+import { tenantMembers } from "./tenantMembers";
 
 type UserUpdateSet = UpdateUserProfileInput & { updatedAt: Date };
 
@@ -20,10 +20,6 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-
-    tenantId: uuid("tenant_id")
-      .notNull()
-      .references(() => tenants.id, { onDelete: "cascade" }),
 
     name: text("name").notNull(),
     email: text("email").notNull(),
@@ -42,16 +38,26 @@ export const users = pgTable(
     avatar: text("avatar"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
   },
-  (t) => [
-    uniqueIndex("users_tenant_id_email_unique").on(t.tenantId, t.email),
-    index("users_tenant_id_idx").on(t.tenantId),
-  ],
+  (t) => [uniqueIndex("users_email_unique").on(t.email)],
 );
 
-// ----- Create user (non-tx) -----
+/**
+ * Tenant scoping without users.tenantId:
+ * Enforce "user belongs to tenant" via tenant_members existence.
+ */
+function whereUserInTenant(tenantId: string) {
+  return sql`exists (
+    select 1
+    from ${tenantMembers} tm
+    where tm.${tenantMembers.tenantId} = ${tenantId}
+      and tm.${tenantMembers.userId} = ${users.id}
+  )`;
+}
 
+// ----- Create user (non-tx) -----
+// Note: creating a user no longer assigns them to a tenant.
+// Do tenant assignment separately by inserting into tenant_members.
 export async function createUser(input: {
-  tenantId: string;
   name: string;
   email: string;
   passwordHash: string;
@@ -64,7 +70,6 @@ export async function createUser(input: {
     await db
       .insert(users)
       .values({
-        tenantId: input.tenantId,
         name: input.name,
         email: input.email,
         passwordHash: input.passwordHash,
@@ -85,7 +90,6 @@ export async function createUser(input: {
 export async function createUserTx(
   tx: Tx,
   input: {
-    tenantId: string;
     name: string;
     email: string;
     passwordHash: string;
@@ -99,7 +103,6 @@ export async function createUserTx(
     await tx
       .insert(users)
       .values({
-        tenantId: input.tenantId,
         name: input.name,
         email: input.email,
         passwordHash: input.passwordHash,
@@ -116,11 +119,13 @@ export async function createUserTx(
 }
 
 // ----- Update profile -----
-
+// Scoped to tenant via tenant_members.
 export async function updateUserProfile(
   input: { tenantId: string; userId: string },
   profile: UpdateUserProfileInput,
 ): Promise<UserRow | undefined> {
+  const tm = alias(tenantMembers, "tm");
+
   const updateData: UserUpdateSet = { updatedAt: new Date() };
 
   if (profile.name !== undefined) updateData.name = profile.name;
@@ -135,7 +140,17 @@ export async function updateUserProfile(
       .update(users)
       .set(updateData)
       .where(
-        and(eq(users.tenantId, input.tenantId), eq(users.id, input.userId)),
+        and(
+          eq(users.id, input.userId),
+          exists(
+            db
+              .select({ ok: sql`1` })
+              .from(tm)
+              .where(
+                and(eq(tm.tenantId, input.tenantId), eq(tm.userId, users.id)),
+              ),
+          ),
+        ),
       )
       .returning()
   )[0];
@@ -147,33 +162,69 @@ export async function getUserById(input: {
   tenantId: string;
   userId: string;
 }): Promise<UserRow | undefined> {
+  const tm = alias(tenantMembers, "tm");
+
   return (
     await db
       .select()
       .from(users)
       .where(
-        and(eq(users.tenantId, input.tenantId), eq(users.id, input.userId)),
+        and(
+          eq(users.id, input.userId),
+          exists(
+            db
+              .select({ ok: sql`1` })
+              .from(tm)
+              .where(
+                and(eq(tm.tenantId, input.tenantId), eq(tm.userId, users.id)),
+              ),
+          ),
+        ),
       )
       .limit(1)
   )[0];
 }
 
-export async function getUserByEmail(input: {
-  tenantId: string;
+/**
+ * Global lookup (useful for login where email is unique globally).
+ * If your auth flow is tenant-first, use getUserByEmailInTenant instead.
+ */
+export async function getUserByEmailGlobal(input: {
   email: string;
 }): Promise<UserRow | undefined> {
   return (
+    await db.select().from(users).where(eq(users.email, input.email)).limit(1)
+  )[0];
+}
+
+export async function getUserByEmailInTenant(input: {
+  tenantId: string;
+  email: string;
+}): Promise<UserRow | undefined> {
+  const tm = alias(tenantMembers, "tm");
+
+  return (
     await db
       .select()
       .from(users)
       .where(
-        and(eq(users.tenantId, input.tenantId), eq(users.email, input.email)),
+        and(
+          eq(users.email, input.email),
+          exists(
+            db
+              .select({ ok: sql`1` })
+              .from(tm)
+              .where(
+                and(eq(tm.tenantId, input.tenantId), eq(tm.userId, users.id)),
+              ),
+          ),
+        ),
       )
       .limit(1)
   )[0];
 }
 
-export async function getUserByName(input: {
+export async function getUserByNameInTenant(input: {
   tenantId: string;
   name: string;
 }): Promise<UserRow | undefined> {
@@ -181,9 +232,7 @@ export async function getUserByName(input: {
     await db
       .select()
       .from(users)
-      .where(
-        and(eq(users.tenantId, input.tenantId), eq(users.name, input.name)),
-      )
+      .where(and(eq(users.name, input.name), whereUserInTenant(input.tenantId)))
       .limit(1)
   )[0];
 }
@@ -192,10 +241,25 @@ export async function touchLastSeenIfStale(input: {
   tenantId: string;
   userId: string;
 }): Promise<void> {
+  const tm = alias(tenantMembers, "tm");
+  const now = new Date();
+  const cutoff = new Date(Date.now() - 30_000);
+
   await db
     .update(users)
-    .set({ lastSeenAt: new Date() })
+    .set({ lastSeenAt: now })
     .where(
-      sql`${users.tenantId} = ${input.tenantId} AND ${users.id} = ${input.userId} AND (${users.lastSeenAt} IS NULL OR ${users.lastSeenAt} < now() - interval '30 seconds')`,
+      and(
+        eq(users.id, input.userId),
+        exists(
+          db
+            .select({ ok: sql`1` })
+            .from(tm)
+            .where(
+              and(eq(tm.tenantId, input.tenantId), eq(tm.userId, users.id)),
+            ),
+        ),
+        or(isNull(users.lastSeenAt), lt(users.lastSeenAt, cutoff)),
+      ),
     );
 }

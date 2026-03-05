@@ -12,15 +12,18 @@ import {
 
 function getTenantId(ctx: Context, bodyTenantId?: string) {
   // Prefer a tenant resolved by middleware (recommended)
-  const fromCtx =
-    (ctx.get?.("tenant") as { id?: string } | undefined)?.id ??
-    (ctx.get?.("tenantId") as string | undefined);
-
+  const fromCtx = ctx.get?.("tenantId") as string | null | undefined;
   return fromCtx ?? bodyTenantId ?? null;
 }
 
 export async function userSignupHandler(ctx: Context): Promise<Response> {
-  const body = (await ctx.req.json()) as Partial<UserSignupInput>;
+  let body: Partial<UserSignupInput>;
+
+  try {
+    body = (await ctx.req.json()) as Partial<UserSignupInput>;
+  } catch {
+    return ctx.json({ error: "Invalid JSON" }, 400);
+  }
 
   const tenantId = getTenantId(ctx, body.tenantId);
   const name = body.name?.trim();
@@ -32,8 +35,19 @@ export async function userSignupHandler(ctx: Context): Promise<Response> {
     return ctx.json({ error: "Name, email, and password are required" }, 400);
   }
 
-  const existingUser = await Users.getUserByEmail({ tenantId, email });
-  if (existingUser) return ctx.json({ error: "User already exists" }, 409);
+  const existingGlobal = await Users.getUserByEmailGlobal({ email });
+  if (existingGlobal) {
+    const existingTenant = await Users.getUserByEmailInTenant({
+      tenantId,
+      email,
+    });
+
+    if (existingTenant) {
+      return ctx.json({ error: "User already exists in this tenant" }, 409);
+    }
+
+    return ctx.json({ error: "User already exists. Use login instead." }, 409);
+  }
 
   const passwordHash = await hashPassword(password);
 
@@ -43,7 +57,6 @@ export async function userSignupHandler(ctx: Context): Promise<Response> {
     tenantRole: "member",
     sessionExpiresAt: new Date(Date.now() + SESSION_TTL_MS),
 
-    // Optional: if you're allowing workspace enrollment at signup
     workspaceId: body.workspaceId ?? null,
     addWorkspaceMembership: !!body.workspaceId,
   });

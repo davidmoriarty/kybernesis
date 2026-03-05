@@ -5,7 +5,6 @@ import type { UserRow } from "../types";
 export function mapUserRowToUser(row: UserRow): User {
   return {
     id: row.id,
-    tenantId: row.tenantId,
     email: row.email,
     name: row.name,
     createdAt: row.createdAt.toISOString(),

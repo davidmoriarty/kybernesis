@@ -1,6 +1,6 @@
 // packages/shared/src/hono.d.ts
 import "hono";
-import type { User } from "./index";
+import type { User, Workspace } from "./index";
 
 declare module "hono" {
   interface ContextVariableMap {
@@ -10,14 +10,9 @@ declare module "hono" {
 
     // --- auth/session ---
     user: User;
-    tenantRole: "tenant" | "admin" | "member" | undefined;
+    tenantRole: "owner" | "admin" | "member" | undefined;
 
-    workspace: {
-      id: string;
-      tenantId: string;
-      name: string;
-      role: "admin" | "member";
-    };
+    workspace: Workspace;
 
     session: {
       id: string;

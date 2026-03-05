@@ -59,7 +59,7 @@ export async function loginHandler(ctx: Context): Promise<Response> {
   const email = body.email.trim().toLowerCase();
   const { password } = body;
 
-  const user = await Users.getUserByEmail({ tenantId, email });
+  const user = await Users.getUserByEmailInTenant({ tenantId, email });
   if (!user) return ctx.json({ error: "Invalid email or password" }, 401);
 
   const isValid = await verifyPassword(password, user.passwordHash);

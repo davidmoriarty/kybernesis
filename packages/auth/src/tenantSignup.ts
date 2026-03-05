@@ -21,7 +21,13 @@ function slugifyTenant(input: string): string {
 }
 
 export async function tenantSignupHandler(ctx: Context): Promise<Response> {
-  const body = (await ctx.req.json()) as Partial<TenantSignupInput>;
+  let body: Partial<TenantSignupInput>;
+
+  try {
+    body = (await ctx.req.json()) as Partial<TenantSignupInput>;
+  } catch {
+    return ctx.json({ error: "Invalid JSON" }, 400);
+  }
 
   const tenantName = body.tenantName?.trim();
   const name = body.name?.trim();
@@ -43,7 +49,9 @@ export async function tenantSignupHandler(ctx: Context): Promise<Response> {
 
   // Prefer slug uniqueness over name uniqueness (name can be non-unique if you want)
   const existingBySlug = await Tenants.getTenantBySlug(tenantSlug);
-  if (existingBySlug) return ctx.json({ error: "Tenant already exists" }, 409);
+  if (existingBySlug) {
+    return ctx.json({ error: "Tenant already exists" }, 409);
+  }
 
   const passwordHash = await hashPassword(password);
 

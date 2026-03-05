@@ -7,6 +7,7 @@ import { users } from "./users";
 import { workspaceMembers } from "./workspaceMembers";
 import { workspaces } from "./workspaces";
 import { tenants } from "./tenants";
+import { tenantMembers } from "./tenantMembers";
 
 // Narrow Drizzle transaction type (enough for what we use here)
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -53,6 +54,21 @@ export async function createSession(input: {
   workspaceId: string | null;
   expiresAt: Date;
 }): Promise<SessionRow> {
+  const ok = (
+    await db
+      .select({ ok: sql`1` })
+      .from(tenantMembers)
+      .where(
+        and(
+          eq(tenantMembers.tenantId, input.tenantId),
+          eq(tenantMembers.userId, input.userId),
+        ),
+      )
+      .limit(1)
+  )[0];
+
+  if (!ok) throw new Error("User is not a member of tenant");
+
   const inserted = (
     await db
       .insert(sessions)
@@ -78,6 +94,21 @@ export async function createSessionTx(
     expiresAt: Date;
   },
 ): Promise<SessionRow> {
+  const ok = (
+    await db
+      .select({ ok: sql`1` })
+      .from(tenantMembers)
+      .where(
+        and(
+          eq(tenantMembers.tenantId, input.tenantId),
+          eq(tenantMembers.userId, input.userId),
+        ),
+      )
+      .limit(1)
+  )[0];
+
+  if (!ok) throw new Error("User is not a member of tenant");
+
   const inserted = (
     await tx
       .insert(sessions)
@@ -162,8 +193,10 @@ export async function setSessionWorkspaceForUser(input: {
     await db
       .select({ ok: sql`1` })
       .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaces.id, workspaceMembers.workspaceId))
       .where(
         and(
+          eq(workspaces.tenantId, input.tenantId),
           eq(workspaceMembers.userId, input.userId),
           eq(workspaceMembers.workspaceId, input.workspaceId),
         ),
