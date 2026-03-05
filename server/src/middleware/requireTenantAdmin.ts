@@ -3,10 +3,10 @@ import { TenantMembers } from "@db";
 import "@shared/hono";
 import type { Context, Next } from "hono";
 
-type AllowedTenantRole = "tenant" | "admin";
+type AllowedTenantRole = "owner" | "admin";
 
 export function requireTenantAdmin(
-  allowed: AllowedTenantRole[] = ["tenant", "admin"],
+  allowed: AllowedTenantRole[] = ["owner", "admin"],
 ) {
   return async (ctx: Context, next: Next) => {
     const session = ctx.get("session");
@@ -30,11 +30,12 @@ export function requireTenantAdmin(
         user.id,
       );
       if (!role) return ctx.json({ error: "Forbidden" }, 403);
+
       ctx.set("tenantRole", role);
     }
 
     // Only allow tenant/admin
-    if (role !== "tenant" && role !== "admin") {
+    if (role !== "owner" && role !== "admin") {
       return ctx.json({ error: "Forbidden" }, 403);
     }
 

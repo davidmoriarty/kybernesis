@@ -19,5 +19,5 @@ export const authRoutes = new Hono()
   .post("/signup", requireTenant, userSignupHandler)
 
   // Usually should only require session (not workspace)
-  .get("/me", requireSession, requireWorkspace, meHandler)
+  .get("/me", requireSession, meHandler)
   .put("/me", requireSession, requireWorkspace, updateProfileHandler);

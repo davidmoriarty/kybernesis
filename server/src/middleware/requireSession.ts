@@ -71,7 +71,7 @@ export async function requireSession(ctx: Context, next: Next) {
 
   if (session.workspaceId) {
     const workspaceWithRole = await Workspaces.getWorkspaceWithRoleForUser({
-      tenantId: session.tenantId,
+      tenantId,
       userId: session.userId,
       workspaceId: session.workspaceId,
     });
@@ -79,7 +79,7 @@ export async function requireSession(ctx: Context, next: Next) {
     if (workspaceWithRole) {
       ctx.set("workspace", {
         id: workspaceWithRole.id,
-        tenantId: session.tenantId,
+        tenantId,
         name: workspaceWithRole.name,
         role: workspaceWithRole.role,
       });
@@ -91,14 +91,14 @@ export async function requireSession(ctx: Context, next: Next) {
     } else {
       // user is no longer allowed in that workspace — clear it
       await Sessions.clearSessionWorkspace({
-        tenantId: session.tenantId,
+        tenantId,
         sessionId: session.id,
       });
 
       // also update ctx session view for the rest of this request
       ctx.set("session", {
         id: session.id,
-        tenantId: session.tenantId,
+        tenantId,
         userId: session.userId,
         workspaceId: null,
       });

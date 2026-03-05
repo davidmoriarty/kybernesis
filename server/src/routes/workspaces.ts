@@ -39,7 +39,10 @@ export const workspaceRoutes = new Hono()
 
     const workspaceId = workspace.id;
 
-    const members = await WorkspaceMembers.getMembersForWorkspace(workspaceId);
+    const members = await WorkspaceMembers.getMembersForWorkspaceForTenant({
+      tenantId: session.tenantId,
+      workspaceId,
+    });
 
     const recentProjects = await Projects.getRecentProjectsForTenantWorkspace(
       session.tenantId,
@@ -93,7 +96,14 @@ export const workspaceRoutes = new Hono()
       return ctx.json({ error: "Unauthorized" }, 401);
     }
 
-    const { workspaceId } = await ctx.req.json<{ workspaceId: string }>();
+    let body: unknown;
+    try {
+      body = await ctx.req.json();
+    } catch {
+      return ctx.json({ error: "Invalid JSON" }, 400);
+    }
+
+    const { workspaceId } = body as { workspaceId?: string };
     if (!workspaceId) return ctx.json({ error: "workspaceId required" }, 400);
 
     const ok = await Sessions.setSessionWorkspaceForUser({

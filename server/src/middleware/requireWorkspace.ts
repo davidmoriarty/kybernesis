@@ -26,10 +26,11 @@ export async function requireWorkspace(ctx: Context, next: Next) {
   if (!workspaceRow) return ctx.json({ error: "Workspace not found" }, 404);
 
   // Ensure membership (membership table is indirectly tenant-scoped via workspaceId)
-  const membership = await WorkspaceMembers.getWorkspaceMembership(
-    user.id,
+  const membership = await WorkspaceMembers.getWorkspaceMembershipForTenant({
+    tenantId,
+    userId: user.id,
     workspaceId,
-  );
+  });
   if (!membership) return ctx.json({ error: "Forbidden" }, 403);
 
   // Keep ctx workspace in sync (name from DB, role from membership)

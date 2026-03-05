@@ -7,11 +7,13 @@ export async function requireTenant(ctx: Context, next: Next) {
   const tenantSlug = ctx.get("tenantSlug");
   const tenantId = ctx.get("tenantId");
 
-  console.log("[requireTenant] before", {
-    tenantSlug,
-    tenantId,
-    path: ctx.req.path,
-  });
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[requireTenant] before", {
+      tenantSlug,
+      tenantId,
+      path: ctx.req.path,
+    });
+  }
 
   if (!tenantSlug) return ctx.json({ error: "Tenant required" }, 400);
 
@@ -21,10 +23,12 @@ export async function requireTenant(ctx: Context, next: Next) {
   // Fallback: resolve by slug
   const tenant = await Tenants.getTenantBySlug(tenantSlug);
 
-  console.log("[requireTenant] after lookup", {
-    tenantFound: Boolean(tenant),
-    tenantId: tenant?.id,
-  });
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[requireTenant] after lookup", {
+      tenantFound: Boolean(tenant),
+      tenantId: tenant?.id,
+    });
+  }
 
   if (!tenant) return ctx.json({ error: "Tenant not found" }, 404);
 

@@ -11,10 +11,13 @@ export const tenantApi = new Hono()
   // auth endpoints (login/logout/signup) must NOT require session
   .route("/auth", authRoutes)
 
-  // tenant required for everything under /api/*
+  // projects still enforced here
   .use("/projects/*", requireTenant, requireSession)
   .use("/projects", requireTenant, requireSession)
-  .use("/workspaces/*", requireTenant, requireSession)
-  .use("/workspaces", requireTenant, requireSession)
+
+  // only require tenant here
+  .use("/workspaces/*", requireTenant)
+  .use("/workspaces", requireTenant)
+
   .route("/projects", projectRoutes)
   .route("/workspaces", workspaceRoutes);
