@@ -2,7 +2,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Section } from "@/components/Section";
 import { Container } from "@/components/Container";
-import { PageCard } from "@/components/PageCard";
 import { WorkspaceDashboard } from "@/components/workspaces/WorkspaceDashboard";
 import { useWorkspaceSummary } from "@/hooks/workspaces";
 import { requireAuth } from "@/utils/requireAuth";

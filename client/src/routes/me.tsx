@@ -85,7 +85,14 @@ export default function MePage() {
 
   const handleSave = async () => {
     try {
-      await updateProfile.mutateAsync(form);
+      await updateProfile.mutateAsync({
+        name: form.name,
+        email: form.email,
+        nickname: form.nickname || undefined,
+        timezone: form.timezone || undefined,
+        location: form.location || undefined,
+        avatar: form.avatar || undefined,
+      });
       setEditing(false);
     } catch (err) {
       console.error(err);

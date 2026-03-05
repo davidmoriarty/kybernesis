@@ -25,7 +25,7 @@ function Index() {
             </p>
 
             <Button
-              onClick={() => navigate({ to: "/signup" })}
+              onClick={() => navigate({ to: "/projects" })}
               className="w-80 h-12"
             >
               Get Started

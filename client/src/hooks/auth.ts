@@ -1,5 +1,10 @@
 // client/src/hooks/auth.ts
-import type { User, Workspace } from "@shared";
+import type {
+  User,
+  Workspace,
+  MeResponse,
+  UpdateProfileResponse,
+} from "@shared";
 import {
   type UseQueryOptions,
   useMutation,
@@ -35,9 +40,30 @@ export const meQueryOptions = () => ({
   queryFn: async (): Promise<MeResult> => {
     try {
       const res = await rpc.$get("/auth/me", { credentials: "include" });
-      return parseOrThrow<MeResult>(res);
+
+      const data = await parseOrThrow<MeResponse>(res);
+
+      return {
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          createdAt: data.user.createdAt,
+          updatedAt: data.user.updatedAt,
+          nickname: data.user.nickname,
+          timezone: data.user.timezone,
+          location: data.user.location,
+          avatar: data.user.avatar,
+        },
+        workspace: data.workspace
+          ? {
+              id: data.workspace.id,
+              name: data.workspace.name,
+              role: data.workspace.role,
+            }
+          : undefined,
+      };
     } catch {
-      // Logged-out state is valid data
       return {};
     }
   },
@@ -61,7 +87,7 @@ export function useUpdateProfile() {
   const qc = useQueryClient();
 
   return useMutation<
-    { message: string },
+    UpdateProfileResponse,
     Error,
     {
       name: string;
@@ -75,7 +101,7 @@ export function useUpdateProfile() {
     retry: false,
     mutationFn: async (body) => {
       const res = await rpc.$put("/auth/me", { body, credentials: "include" });
-      return parseOrThrow(res);
+      return await parseOrThrow<UpdateProfileResponse>(res);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
