@@ -1,14 +1,9 @@
 // client/src/components/ProjectList.tsx
+import type { Project } from "@shared";
 import { ErrorState, LoadingState } from "@/components/PageCard";
 import { ProjectCard } from "@/components/ProjectCard";
 import { cn } from "@/lib/utils";
 import type { ProjectView } from "./ProjectsToolbar";
-
-interface Project {
-  id: string;
-  name: string;
-  description?: string;
-}
 
 interface ProjectListProps {
   projects?: Project[];

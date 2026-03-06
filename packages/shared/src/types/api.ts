@@ -10,10 +10,14 @@ export interface Project {
   id: string; // uuid
   workspaceId: string; // uuid
   name: string;
-  description?: string;
+  description: string | null;
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
 }
+
+export type ProjectValidation = {
+  errors: Partial<Record<"name" | "description" | "workspaceId", string>>;
+};
 
 export type MeResponse = {
   tenant: { id: string; slug: string | null };
@@ -26,3 +30,12 @@ export type UpdateProfileResponse = {
   success: true;
   user: User;
 };
+
+export type UpdateUserProfileInput = Partial<{
+  name: string;
+  email: string;
+  nickname: string | null;
+  timezone: string | null;
+  location: string | null;
+  avatar: string | null;
+}>;

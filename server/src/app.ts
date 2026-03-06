@@ -1,6 +1,7 @@
 // server/src/app.ts
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { httpErrorHandler } from "./errors";
 import "@shared/hono";
 
 // ---- route imports ----
@@ -16,4 +17,5 @@ export const app = new Hono()
   .use("*", resolveTenant)
   .use("*", corsMiddleware)
   .route("/", metaRoutes)
-  .route("/api", tenantApi);
+  .route("/api", tenantApi)
+  .onError(httpErrorHandler);

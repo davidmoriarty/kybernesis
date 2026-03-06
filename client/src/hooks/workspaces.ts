@@ -1,5 +1,6 @@
 // client/src/hooks/workspaces.ts
 import type { UseQueryOptions } from "@tanstack/react-query";
+import type { RpcError } from "@/lib/rpcError";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { rpc } from "@/lib/rpc";
@@ -26,14 +27,18 @@ export type WorkspaceSummary = {
 
 export function useWorkspaces(
   options?: Partial<
-    UseQueryOptions<{
-      workspaces: { id: string; name: string; description?: string }[];
-    }>
+    UseQueryOptions<
+      {
+        workspaces: { id: string; name: string; description?: string }[];
+      },
+      RpcError
+    >
   >,
 ) {
-  return useQuery<{
-    workspaces: { id: string; name: string; description?: string }[];
-  }>({
+  return useQuery<
+    { workspaces: { id: string; name: string; description?: string }[] },
+    RpcError
+  >({
     queryKey: ["workspaces"],
     queryFn: async () => {
       const res = await rpc.$get("/workspaces", { credentials: "include" });
@@ -50,7 +55,7 @@ export function useSelectWorkspace() {
 
   return useMutation<
     { message: string; success: boolean },
-    Error,
+    RpcError,
     { workspaceId: string }
   >({
     mutationFn: async (body) => {
@@ -69,7 +74,7 @@ export function useSelectWorkspace() {
 }
 
 export function useWorkspaceSummary(enabled = true) {
-  return useQuery({
+  return useQuery<WorkspaceSummary, RpcError>({
     queryKey: ["workspaceSummary"],
     enabled,
     queryFn: async () => {

@@ -1,5 +1,5 @@
 // packages/auth/src/userSignup.ts
-import { Flows, Users } from "@db";
+import { Flows, Users, Workspaces } from "@db";
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
 import { hashPassword } from "./crypto/password";
@@ -10,10 +10,18 @@ import {
   sessionCookieOptions,
 } from "./constants";
 
-function getTenantId(ctx: Context, bodyTenantId?: string) {
-  // Prefer a tenant resolved by middleware (recommended)
-  const fromCtx = ctx.get?.("tenantId") as string | null | undefined;
-  return fromCtx ?? bodyTenantId ?? null;
+function getTenantId(ctx: Context, bodyTenantId?: string): string | null {
+  const fromCtx = ctx.get?.("tenantId");
+
+  if (typeof fromCtx === "string" && fromCtx.length > 0) {
+    return fromCtx;
+  }
+
+  if (bodyTenantId && bodyTenantId.length > 0) {
+    return bodyTenantId;
+  }
+
+  return null;
 }
 
 export async function userSignupHandler(ctx: Context): Promise<Response> {
@@ -26,11 +34,14 @@ export async function userSignupHandler(ctx: Context): Promise<Response> {
   }
 
   const tenantId = getTenantId(ctx, body.tenantId);
+  if (!tenantId) {
+    return ctx.json({ error: "Tenant is required" }, 400);
+  }
+
   const name = body.name?.trim();
   const email = body.email?.trim().toLowerCase();
   const password = body.password;
 
-  if (!tenantId) return ctx.json({ error: "Tenant is required" }, 400);
   if (!name || !email || !password) {
     return ctx.json({ error: "Name, email, and password are required" }, 400);
   }
@@ -51,14 +62,25 @@ export async function userSignupHandler(ctx: Context): Promise<Response> {
 
   const passwordHash = await hashPassword(password);
 
+  const workspaceIdFromBody =
+    typeof body.workspaceId === "string" ? body.workspaceId : null;
+
+  const defaultWorkspaceId =
+    workspaceIdFromBody ??
+    (await Workspaces.getDefaultWorkspaceIdForTenant({ tenantId }));
+
+  if (!defaultWorkspaceId) {
+    return ctx.json({ error: "No workspace available in tenant" }, 400);
+  }
+
   const { session } = await Flows.createUserInTenantWithSession({
     tenantId,
     user: { name, email, passwordHash },
     tenantRole: "member",
     sessionExpiresAt: new Date(Date.now() + SESSION_TTL_MS),
 
-    workspaceId: body.workspaceId ?? null,
-    addWorkspaceMembership: !!body.workspaceId,
+    workspaceId: defaultWorkspaceId,
+    addWorkspaceMembership: true,
   });
 
   setCookie(ctx, SESSION_COOKIE_NAME, session.id, sessionCookieOptions);

@@ -76,3 +76,100 @@ export async function getMembersForProject(projectId: string) {
     .innerJoin(users, eq(users.id, projectMembers.userId))
     .where(eq(projectMembers.projectId, projectId));
 }
+
+export async function getProjectWorkspaceId(args: {
+  projectId: string;
+}): Promise<string | null> {
+  const row = (
+    await db
+      .select({ workspaceId: projects.workspaceId })
+      .from(projects)
+      .where(eq(projects.id, args.projectId))
+      .limit(1)
+  )[0];
+
+  return row?.workspaceId ?? null;
+}
+
+export async function getProjectRoleForUser(args: {
+  userId: string;
+  projectId: string;
+}): Promise<"admin" | "member" | null> {
+  const row = (
+    await db
+      .select({ role: projectMembers.role })
+      .from(projectMembers)
+      .where(
+        and(
+          eq(projectMembers.projectId, args.projectId),
+          eq(projectMembers.userId, args.userId),
+        ),
+      )
+      .limit(1)
+  )[0];
+
+  return row?.role ?? null;
+}
+
+export async function listProjectIdsForUserInWorkspace(args: {
+  userId: string;
+  workspaceId: string;
+}): Promise<string[]> {
+  const rows = await db
+    .select({ projectId: projectMembers.projectId })
+    .from(projectMembers)
+    .innerJoin(projects, eq(projects.id, projectMembers.projectId))
+    .where(
+      and(
+        eq(projectMembers.userId, args.userId),
+        eq(projects.workspaceId, args.workspaceId),
+      ),
+    );
+
+  return rows.map((r) => r.projectId);
+}
+
+export async function addProjectMember(args: {
+  projectId: string;
+  userId: string;
+  role: "member" | "admin";
+}): Promise<void> {
+  await db
+    .insert(projectMembers)
+    .values({
+      projectId: args.projectId,
+      userId: args.userId,
+      role: args.role,
+    })
+    .onConflictDoNothing();
+}
+
+export async function removeProjectMember(args: {
+  projectId: string;
+  userId: string;
+}): Promise<void> {
+  await db
+    .delete(projectMembers)
+    .where(
+      and(
+        eq(projectMembers.projectId, args.projectId),
+        eq(projectMembers.userId, args.userId),
+      ),
+    );
+}
+
+export async function setProjectMemberRole(args: {
+  projectId: string;
+  userId: string;
+  role: "member";
+}) {
+  await db
+    .update(projectMembers)
+    .set({ role: args.role })
+    .where(
+      and(
+        eq(projectMembers.projectId, args.projectId),
+        eq(projectMembers.userId, args.userId),
+      ),
+    );
+}

@@ -7,36 +7,53 @@ export type RpcErrorKind =
   | "server"
   | "unknown";
 
-export type RpcError = {
+export class RpcError extends Error {
   kind: RpcErrorKind;
   status: number;
   message: string;
   details?: unknown;
-};
+
+  constructor(
+    kind: RpcErrorKind,
+    status: number,
+    message: string,
+    details?: unknown,
+  ) {
+    super(message);
+    this.kind = kind;
+    this.status = status;
+    this.message = message;
+    this.details = details;
+  }
+}
 
 export function rpcErrorFromResponse(res: Response, body?: unknown): RpcError {
   switch (res.status) {
     case 401:
-      return { kind: "unauthorized", status: 401, message: "Unauthorized" };
+      return new RpcError("unauthorized", 401, "Unauthorized", body);
+
     case 403:
-      return { kind: "forbidden", status: 403, message: "Forbidden" };
+      return new RpcError("forbidden", 403, "Forbidden", body);
+
     case 404:
-      return { kind: "not_found", status: 404, message: "Not Found" };
+      return new RpcError("not_found", 404, "Not Found", body);
+
     case 422:
-      return {
-        kind: "validation",
-        status: 422,
-        message: "Validation Error",
-        details: body,
-      };
+      return new RpcError("validation", 422, "Validation Error", body);
+
     case 500:
-      return { kind: "server", status: 500, message: "Server Error" };
+      return new RpcError("server", 500, "Server Error", body);
+
     default:
-      return {
-        kind: "unknown",
-        status: res.status,
-        message: "Unexpected error",
-        details: body,
-      };
+      return new RpcError("unknown", res.status, "Unexpected error", body);
   }
+}
+
+export function isRpcError(err: unknown): err is RpcError {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "status" in err &&
+    typeof (err as { status?: unknown }).status === "number"
+  );
 }

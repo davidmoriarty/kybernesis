@@ -5,29 +5,12 @@ import { Container } from "@/components/Container";
 import { WorkspaceDashboard } from "@/components/workspaces/WorkspaceDashboard";
 import { useWorkspaceSummary } from "@/hooks/workspaces";
 import { requireAuth } from "@/utils/requireAuth";
+import { LoadingState, ErrorState } from "@/components/PageCard";
 
 export const Route = createFileRoute("/workspaces")({
   beforeLoad: requireAuth,
   component: WorkspacesPage,
 });
-
-// Reusable small components for loading / error states
-function LoadingState({ message = "Loading..." }: { message?: string }) {
-  return (
-    <p className="text-center text-lg">
-      <span className="animate-spin inline-block mr-2">⏳</span>
-      {message}
-    </p>
-  );
-}
-
-function ErrorState({
-  message = "Something went wrong.",
-}: {
-  message?: string;
-}) {
-  return <p className="text-center text-lg text-destructive">{message}</p>;
-}
 
 function WorkspacesPage() {
   const {

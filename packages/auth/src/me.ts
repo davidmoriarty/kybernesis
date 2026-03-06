@@ -1,7 +1,8 @@
+// packages/auth/src/me.ts
 import { Users } from "@db";
 import { mapUserRowToUser } from "@db/mappers";
-import type { UpdateUserProfileInput } from "@db/types";
-import type { MeResponse, UpdateProfileResponse } from "shared";
+import { isUpdateUserProfileInput } from "./validators/updateProfile";
+import type { MeResponse, UpdateProfileResponse } from "@shared";
 import "@shared/hono";
 import type { Context } from "hono";
 
@@ -43,8 +44,11 @@ export async function updateProfileHandler(ctx: Context): Promise<Response> {
     return ctx.json({ error: "Invalid JSON" }, 400);
   }
 
-  const { name, email, nickname, timezone, location, avatar } =
-    body as UpdateUserProfileInput;
+  if (!isUpdateUserProfileInput(body)) {
+    return ctx.json({ error: "Invalid request body" }, 400);
+  }
+
+  const { name, email, nickname, timezone, location, avatar } = body;
 
   const updatedRow = await Users.updateUserProfile(
     { tenantId, userId: user.id },

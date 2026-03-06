@@ -19,6 +19,8 @@ export const Route = createFileRoute("/projects")({
 const VIEW_STORAGE_KEY = "projects:view";
 
 function ProjectsPage() {
+  const { workspace } = Route.useRouteContext();
+
   const matchRoute = useMatchRoute();
   const isProjectRoute = Boolean(matchRoute({ to: "/projects/$projectId" }));
 
@@ -45,7 +47,11 @@ function ProjectsPage() {
 
   return (
     <>
-      <ProjectsToolbar view={view} onViewChange={setView} />
+      <ProjectsToolbar
+        view={view}
+        onViewChange={setView}
+        canCreate={workspace?.role === "admin"}
+      />
 
       <Section>
         <Container>

@@ -1,5 +1,5 @@
 // packages/db/src/projects.ts
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, sql, inArray } from "drizzle-orm";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import { mapProjectRowToProject } from "./mappers";
@@ -183,4 +183,26 @@ export async function getRecentProjectsForTenantWorkspace(
       updatedAt: p.updatedAt,
     };
   });
+}
+
+export async function getProjectsByIdsForTenantWorkspace(input: {
+  tenantId: string;
+  workspaceId: string;
+  projectIds: string[];
+}): Promise<Project[]> {
+  if (input.projectIds.length === 0) return [];
+
+  const rows = await db
+    .select({ p: projects })
+    .from(projects)
+    .innerJoin(workspaces, eq(projects.workspaceId, workspaces.id))
+    .where(
+      and(
+        eq(projects.workspaceId, input.workspaceId),
+        eq(workspaces.tenantId, input.tenantId),
+        inArray(projects.id, input.projectIds),
+      ),
+    );
+
+  return rows.map((r) => mapProjectRowToProject(r.p));
 }

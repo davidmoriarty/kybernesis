@@ -127,3 +127,12 @@ export async function getMembersForWorkspaceForTenant(input: {
     )
     .orderBy(users.name);
 }
+
+export async function getWorkspaceRoleForUser(input: {
+  tenantId: string;
+  userId: string;
+  workspaceId: string;
+}): Promise<WorkspaceMemberRow["role"] | null> {
+  const membership = await getWorkspaceMembershipForTenant(input);
+  return membership?.role ?? null;
+}

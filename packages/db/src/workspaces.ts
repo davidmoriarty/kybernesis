@@ -204,3 +204,33 @@ export async function getWorkspaceWithRoleForUser(input: {
 
   return row ? mapWorkspaceSummaryWithRoleToWorkspace(row) : undefined;
 }
+
+// Returns the "Default Workspace" if present; otherwise first workspace for tenant.
+export async function getDefaultWorkspaceIdForTenant(input: {
+  tenantId: string;
+}): Promise<string | null> {
+  const byName = (
+    await db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(
+        and(
+          eq(workspaces.tenantId, input.tenantId),
+          eq(workspaces.name, "Default Workspace"),
+        ),
+      )
+      .limit(1)
+  )[0];
+
+  if (byName?.id) return byName.id;
+
+  const anyWorkspace = (
+    await db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(eq(workspaces.tenantId, input.tenantId))
+      .limit(1)
+  )[0];
+
+  return anyWorkspace?.id ?? null;
+}

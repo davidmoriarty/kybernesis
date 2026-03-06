@@ -16,7 +16,7 @@ export type ProjectView = "panel" | "grid" | "list";
 interface ProjectCardProps {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   view?: ProjectView;
 }
 
@@ -120,7 +120,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
             <>
               <h3 className="text-xl font-bold">{fullProject?.name}</h3>
               <p className="text-base text-background">
-                {fullProject?.description || "No description"}
+                {fullProject?.description ?? "No description"}
               </p>
 
               <div className="mt-4 flex gap-2">
@@ -193,7 +193,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
               {name}
             </h3>
             <p className="mt-1 line-clamp-2 text-sm text-background">
-              {description || "No description"}
+              {description ?? "No description"}
             </p>
           </div>
 
@@ -225,7 +225,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
     <div className="grid grid-cols-[2fr_3fr_auto] items-center gap-4 px-4 py-5 border-b hover:bg-muted/10">
       <div className="truncate text-background font-medium">{name}</div>
       <div className="max-w-[40ch] truncate text-sm text-background">
-        {description || "—"}
+        {description ?? "—"}
       </div>
       <ButtonGroup>
         <Button

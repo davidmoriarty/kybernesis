@@ -12,7 +12,6 @@ import {
   Settings,
 } from "lucide-react";
 import { useState } from "react";
-import { ErrorState, LoadingState } from "@/components/PageCard";
 import {
   FilesSection,
   OverviewSection,
@@ -33,12 +32,28 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { useProject } from "@/hooks/projects";
 import { cn } from "@/lib/utils";
+import { rpc } from "@/lib/rpc";
+import { parseOrThrow } from "@/lib/parseOrThrow";
 import { requireAuth } from "@/utils/requireAuth";
 
 export const Route = createFileRoute("/projects/$projectId")({
   beforeLoad: requireAuth,
+  loader: async ({ params }) => {
+    const res = await rpc.$get(`/projects/${params.projectId}`, {
+      credentials: "include",
+    });
+
+    return parseOrThrow<{
+      id: string;
+      name: string;
+      description?: string;
+      workspaceId: string;
+      owner: string;
+      createdAt: string;
+      updatedAt: string;
+    }>(res);
+  },
   component: ProjectPage,
 });
 
@@ -53,19 +68,8 @@ const SECTIONS: { label: ProjectSection; icon: LucideIcon }[] = [
 ];
 
 function ProjectPage() {
-  const { projectId } = Route.useParams();
-  const id = projectId;
-
-  const { data: project, isLoading, error } = useProject(id);
+  const project = Route.useLoaderData();
   const [section, setSection] = useState<ProjectSection>("Overview");
-
-  if (isLoading) {
-    return <LoadingState message="Loading project…" />;
-  }
-
-  if (error || !project) {
-    return <ErrorState message="Project not found." />;
-  }
 
   return (
     <SidebarProvider>

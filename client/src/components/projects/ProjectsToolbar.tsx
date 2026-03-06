@@ -1,5 +1,4 @@
 // client/src/components/ProjectsToolbar.tsx
-
 import { LayoutGrid, LayoutList, StretchHorizontal } from "lucide-react";
 import { Container } from "@/components/Container";
 import { FormDialog } from "@/components/FormDialog";
@@ -10,18 +9,27 @@ export type ProjectView = "panel" | "grid" | "list";
 interface ProjectsToolbarProps {
   view: ProjectView;
   onViewChange: (view: ProjectView) => void;
+  canCreate?: boolean;
 }
 
-export function ProjectsToolbar({ view, onViewChange }: ProjectsToolbarProps) {
+export function ProjectsToolbar({
+  view,
+  onViewChange,
+  canCreate = false,
+}: ProjectsToolbarProps) {
   return (
     <div className="sticky top-(--navbar-height) z-30 border-b border-gray-300 dark:border-gray-500 supports-backdrop-filter:backdrop-blur">
       <Container className="py-5">
         <div className="grid gap-3 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-          <FormDialog
-            cta="Create a new project"
-            heading="Create a new project"
-            subheading="Start a new project in your workspace"
-          />
+          {canCreate ? (
+            <FormDialog
+              cta="Create a new project"
+              heading="Create a new project"
+              subheading="Start a new project in your workspace"
+            />
+          ) : (
+            <div />
+          )}
 
           <h1 className="text-center text-2xl font-black">Project List</h1>
 

@@ -1,38 +1,38 @@
 // client/src/hooks/projects.ts
-import type { Project } from "@shared";
+import type { Project, ProjectValidation } from "@shared";
+import { isProjectValidation } from "@/lib/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { rpc } from "@/lib/rpc";
+import type { RpcError } from "@/lib/rpcError";
 import { appToast } from "@/lib/toast";
 
+type ProjectCreateBody = {
+  name: string;
+  description?: string;
+  workspaceId: string;
+};
+
 export function useProjects() {
-  return useQuery({
+  return useQuery<{ projects: Project[] }, RpcError>({
     queryKey: ["projects"],
+    retry: false,
     queryFn: async () => {
       const res = await rpc.$get("/projects", { credentials: "include" });
-      return parseOrThrow<{
-        projects: { id: string; name: string; description?: string }[];
-      }>(res, { projects: [] });
+      return parseOrThrow(res, { projects: [] });
     },
   });
 }
 
 export function useProject(projectId: string) {
-  return useQuery({
+  return useQuery<Project, RpcError>({
     queryKey: ["projects", projectId],
+    retry: false,
     queryFn: async () => {
       const res = await rpc.$get(`/projects/${projectId}`, {
         credentials: "include",
       });
-      return parseOrThrow<{
-        id: string;
-        name: string;
-        description?: string;
-        workspaceId: string;
-        owner: string;
-        createdAt: string;
-        updatedAt: string;
-      }>(res);
+      return parseOrThrow(res);
     },
   });
 }
@@ -41,13 +41,9 @@ export function useCreateProject() {
   const qc = useQueryClient();
 
   return useMutation<
-    { project: Project },
-    Error,
-    {
-      name: string;
-      description?: string;
-      workspaceId: string;
-    }
+    { project: Project } | ProjectValidation,
+    RpcError,
+    ProjectCreateBody
   >({
     retry: false,
     mutationFn: async (body) => {
@@ -55,18 +51,13 @@ export function useCreateProject() {
         body,
         credentials: "include",
       });
-      return parseOrThrow<{ project: Project }>(res, {
-        project: {
-          id: "",
-          workspaceId: "",
-          name: "",
-          description: "",
-          createdAt: "",
-          updatedAt: "",
-        },
-      });
+
+      // 201 -> { project }, 422 -> { errors }
+      return parseOrThrow<{ project: Project } | ProjectValidation>(res);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (isProjectValidation(data)) return;
+
       qc.invalidateQueries({ queryKey: ["projects"] });
       appToast.projects.createSuccess();
     },
@@ -81,7 +72,7 @@ export function useUpdateProject() {
 
   return useMutation<
     { message: string },
-    Error,
+    RpcError,
     { projectId: string; name: string; description?: string }
   >({
     retry: false,
@@ -105,7 +96,7 @@ export function useUpdateProject() {
 export function useDeleteProject() {
   const qc = useQueryClient();
 
-  return useMutation<{ message: string }, Error, { projectId: string }>({
+  return useMutation<{ message: string }, RpcError, { projectId: string }>({
     retry: false,
     mutationFn: async ({ projectId }) => {
       const res = await rpc.$delete(`/projects/${projectId}`, {

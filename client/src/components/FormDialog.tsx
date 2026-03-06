@@ -2,7 +2,7 @@
 import type { Project } from "@shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type SyntheticEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useMe } from "@/hooks/auth";
 import { useCreateProject } from "@/hooks/projects";
+import { isProjectValidation } from "@/lib/validation";
 
 interface FormDialogProps {
   cta?: string;
@@ -41,11 +42,17 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
+
   const isSubmitDisabled =
     createProject.isPending || !me?.workspace || !name.trim();
 
-  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreate = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    setNameError("");
+    setDescriptionError("");
 
     if (!me?.workspace) {
       toast.error("No active workspace selected.");
@@ -53,13 +60,12 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
     }
 
     if (!name.trim()) {
-      toast.error("Project name is required.");
+      setNameError("Project name is required.");
       return;
     }
 
     const workspaceId = me.workspace.id;
 
-    // Temporary project ID for optimistic update
     const tempId = crypto.randomUUID();
     const nowIso = new Date().toISOString();
 
@@ -89,9 +95,25 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
         workspaceId,
       });
 
+      if (isProjectValidation(result)) {
+        qc.setQueryData<ProjectsData>(["projects"], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            projects: oldData.projects.filter((p) => p.id !== tempId),
+          };
+        });
+
+        setNameError(result.errors.name ?? "");
+        setDescriptionError(result.errors.description ?? "");
+        return;
+      }
+
       // Close form and reset fields
       setName("");
       setDescription("");
+      setNameError("");
+      setDescriptionError("");
       setOpen(false);
 
       // Replace temp project with real project in the cache
@@ -151,10 +173,16 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
               className="border p-2 rounded w-full"
               placeholder="Project name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (nameError) setNameError("");
+              }}
               autoComplete="off"
               autoFocus={true}
             />
+            {nameError ? (
+              <p className="text-sm text-destructive">{nameError}</p>
+            ) : null}
 
             <Label htmlFor="description">Project Description</Label>
             <Textarea
@@ -162,9 +190,15 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
               className="border p-2 rounded w-full"
               placeholder="Description (optional)"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (descriptionError) setDescriptionError("");
+              }}
               autoComplete="off"
             />
+            {descriptionError ? (
+              <p className="text-sm text-destructive">{descriptionError}</p>
+            ) : null}
           </div>
 
           <DialogFooter>

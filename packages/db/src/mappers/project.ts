@@ -7,7 +7,7 @@ export function mapProjectRowToProject(row: ProjectRow): Project {
     id: row.id,
     workspaceId: row.workspaceId,
     name: row.name,
-    description: row.description ?? undefined,
+    description: row.description ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

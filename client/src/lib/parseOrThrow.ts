@@ -2,13 +2,16 @@
 import { rpcErrorFromResponse } from "./rpcError";
 
 export async function parseOrThrow<T>(res: Response, fallback?: T): Promise<T> {
-  let body: unknown;
-  try {
-    body = await res.clone().json();
-  } catch {
-    body = undefined;
+  const text = await res.text();
+  const body = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    if (res.status === 422) {
+      return body as T;
+    }
+
+    throw rpcErrorFromResponse(res, body);
   }
 
-  if (!res.ok) throw rpcErrorFromResponse(res, body);
   return (body ?? fallback) as T;
 }

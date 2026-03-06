@@ -9,7 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
-import type { UpdateUserProfileInput } from "./types/contracts";
+import type { UpdateUserProfileInput } from "shared";
 import type { Tx, UserRow } from "./types";
 import { tenantMembers } from "./tenantMembers";
 
