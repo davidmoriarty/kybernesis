@@ -8,6 +8,9 @@ export function mapProjectRowToProject(row: ProjectRow): Project {
     workspaceId: row.workspaceId,
     name: row.name,
     description: row.description ?? null,
+    status: row.status,
+    notificationsEnabled: row.notificationsEnabled,
+    isPublic: row.isPublic,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

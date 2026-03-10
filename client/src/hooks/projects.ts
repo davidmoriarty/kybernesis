@@ -73,7 +73,14 @@ export function useUpdateProject() {
   return useMutation<
     { message: string },
     RpcError,
-    { projectId: string; name: string; description?: string }
+    {
+      projectId: string;
+      name?: string;
+      description?: string;
+      status?: "development" | "live";
+      notificationsEnabled?: boolean;
+      isPublic?: boolean;
+    }
   >({
     retry: false,
     mutationFn: async ({ projectId, ...body }) => {
@@ -85,7 +92,6 @@ export function useUpdateProject() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["projects"] });
-      appToast.projects.updateSuccess();
     },
     onError: () => {
       appToast.projects.updateError();

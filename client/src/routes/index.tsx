@@ -1,8 +1,8 @@
 // client/src/routes/index.tsx
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Container } from "@/components/Container";
-import { Footer } from "@/components/Footer";
-import { Section } from "@/components/Section";
+import { Section } from "@/components/app/Section";
+import { Container } from "@/components/app/Container";
+import { Footer } from "@/components/app/Footer";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({

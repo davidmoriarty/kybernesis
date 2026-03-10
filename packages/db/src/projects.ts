@@ -1,10 +1,17 @@
 // packages/db/src/projects.ts
 import { and, eq, desc, sql, inArray } from "drizzle-orm";
-import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import { mapProjectRowToProject } from "./mappers";
 import { workspaces } from "./workspaces";
-import type { Project } from "@shared";
+import type { ProjectStatus, Project } from "@shared";
 
 // Table definition (source of truth)
 export const projects = pgTable(
@@ -16,6 +23,14 @@ export const projects = pgTable(
       .references(() => workspaces.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
+    status: text("status")
+      .$type<ProjectStatus>()
+      .notNull()
+      .default("development"),
+    notificationsEnabled: boolean("notifications_enabled")
+      .default(false)
+      .notNull(),
+    isPublic: boolean("is_public").default(false).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -54,16 +69,32 @@ export async function createProject(input: {
 export async function updateProjectForWorkspace(
   projectId: string,
   workspaceId: string,
-  input: { name?: string; description?: string | null },
+  input: {
+    name?: string;
+    description?: string | null;
+    status?: "development" | "live";
+    notificationsEnabled?: boolean;
+    isPublic?: boolean;
+  },
 ): Promise<Project | undefined> {
   const set: Partial<{
     name: string;
     description: string | null;
+    notificationsEnabled: boolean;
+    status: "development" | "live";
+    isPublic: boolean;
     updatedAt: Date;
   }> = { updatedAt: new Date() };
 
   if (input.name !== undefined) set.name = input.name;
   if (input.description !== undefined) set.description = input.description;
+  if (input.status !== undefined) set.status = input.status;
+  if (input.notificationsEnabled !== undefined) {
+    set.notificationsEnabled = input.notificationsEnabled;
+  }
+  if (input.isPublic !== undefined) {
+    set.isPublic = input.isPublic;
+  }
 
   // If nothing besides updatedAt is being changed, you can decide to still touch updatedAt.
   const updated = (
@@ -161,7 +192,7 @@ export async function getRecentProjectsForTenantWorkspace(
   tenantId: string,
   workspaceId: string,
   limit = 5,
-): Promise<Pick<Project, "id" | "name" | "updatedAt">[]> {
+): Promise<Pick<Project, "id" | "name" | "status" | "updatedAt">[]> {
   const rows = await db
     .select({ p: projects })
     .from(projects)
@@ -180,6 +211,7 @@ export async function getRecentProjectsForTenantWorkspace(
     return {
       id: p.id,
       name: p.name,
+      status: p.status,
       updatedAt: p.updatedAt,
     };
   });

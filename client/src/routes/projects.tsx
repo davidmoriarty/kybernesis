@@ -1,13 +1,13 @@
 // client/src/routes/projects.tsx
 import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Section } from "@/components/Section";
-import { Container } from "@/components/Container";
-import { ProjectList } from "@/components/projects/ProjectList";
+import { Section } from "@/components/app/Section";
+import { Container } from "@/components/app/Container";
+import { ProjectList } from "@/components/projects/overview/ProjectList";
 import {
   ProjectsToolbar,
   type ProjectView,
-} from "@/components/projects/ProjectsToolbar";
+} from "@/components/projects/overview";
 import { useProjects } from "@/hooks/projects";
 import { requireAuth } from "@/utils/requireAuth";
 

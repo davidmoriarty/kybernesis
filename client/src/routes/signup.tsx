@@ -2,9 +2,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
 import { useState } from "react";
-import { FormLayout } from "@/components/FormLayout";
-import { PageCard } from "@/components/PageCard";
-import { Button } from "@/components/ui/button";
+import { FormLayout } from "@/components/shared/FormLayout";
+import { PageCard } from "@/components/shared/PageCard";
+import { Button } from "../components/ui/button";
 import { useSignup } from "@/hooks/auth";
 
 export const Route = createFileRoute("/signup")({
@@ -39,7 +39,7 @@ function SignupPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoComplete="name"
-          className="w-full border p-2 rounded bg-background"
+          className="w-full border p-2 rounded-sm"
           required
         />
 
@@ -51,7 +51,7 @@ function SignupPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
-          className="w-full border p-2 rounded bg-background"
+          className="w-full border p-2 rounded-sm"
           required
         />
 
@@ -63,7 +63,7 @@ function SignupPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
-          className="w-full border p-2 rounded bg-background"
+          className="w-full border p-2 rounded-sm"
           required
         />
 

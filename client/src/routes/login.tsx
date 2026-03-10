@@ -2,8 +2,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Rocket } from "lucide-react";
 import { useState } from "react";
-import { FormLayout } from "@/components/FormLayout";
-import { PageCard } from "@/components/PageCard";
+import { FormLayout } from "@/components/shared/FormLayout";
+import { PageCard } from "@/components/shared/PageCard";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/auth";
 
@@ -17,7 +17,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     login.mutate(
       { email, password },
@@ -44,7 +44,7 @@ function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
-          className="w-full border p-2 rounded bg-background"
+          className="w-full border p-2 rounded-sm"
           required
         />
 
@@ -56,7 +56,7 @@ function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
-          className="w-full border p-2 rounded bg-background"
+          className="w-full border p-2 rounded-sm"
           required
         />
 

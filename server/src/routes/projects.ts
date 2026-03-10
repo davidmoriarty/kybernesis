@@ -210,10 +210,14 @@ export const projectRoutes = new Hono()
     if (!workspace?.id) return ctx.json({ error: "Forbidden" }, 403);
 
     const projectId = ctx.req.param("projectId");
-    const { name, description } = await ctx.req.json<{
-      name?: string;
-      description?: string;
-    }>();
+    const { name, description, status, notificationsEnabled, isPublic } =
+      await ctx.req.json<{
+        name?: string;
+        description?: string;
+        status?: "development" | "live";
+        notificationsEnabled?: boolean;
+        isPublic?: boolean;
+      }>();
 
     const updated = await Projects.updateProjectForWorkspace(
       projectId,
@@ -222,6 +226,9 @@ export const projectRoutes = new Hono()
         name,
         description:
           description === undefined ? undefined : (description ?? null),
+        status,
+        notificationsEnabled,
+        isPublic,
       },
     );
 
@@ -265,6 +272,23 @@ export const projectRoutes = new Hono()
       if (!project) return ctx.json({ error: "Project not found" }, 404);
 
       const userId = ctx.req.param("userId");
+
+      const members = await getMembersForProject(projectId);
+
+      const memberToRemove = members.find((m) => m.userId === userId);
+      if (!memberToRemove) {
+        return ctx.json({ error: "Member not found" }, 404);
+      }
+
+      const adminCount = members.filter((m) => m.role === "admin").length;
+
+      if (memberToRemove.role === "admin" && adminCount <= 1) {
+        return ctx.json(
+          { error: "Count remove the last admin from a project" },
+          400,
+        );
+      }
+
       await removeProjectMember({ projectId, userId });
 
       return ctx.json({ success: true }, 200);

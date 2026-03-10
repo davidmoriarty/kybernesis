@@ -1,7 +1,7 @@
 import { createRootRoute, isNotFound, Outlet } from "@tanstack/react-router";
-import { ErrorPage } from "@/components/error/ErrorPage";
+import { ErrorPage } from "@/components/errors/ErrorPage";
 import { isRpcError } from "@/lib/rpcError";
-import { Navbar } from "@/components/Navbar";
+import { Navbar } from "@/components/app/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 

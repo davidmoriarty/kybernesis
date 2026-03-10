@@ -1,9 +1,9 @@
 // client/src/routes/me.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Section } from "@/components/Section";
-import { Container } from "@/components/Container";
-import { PageCard } from "@/components/PageCard";
+import { PageHero, Container, Section } from "@/components/app";
+import { PageCard } from "@/components/shared";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -145,122 +145,125 @@ export default function MePage() {
 
   return (
     <>
-      <Section padding="py-32">
-        <Container>
-          <header className="mb-8">
-            <h2 className="font-black text-4xl text-center">Your Profile</h2>
-          </header>
+      <PageHero
+        title="Your Profile"
+        subtitle="View and manage your account information and preferences."
+      />
 
-          <div className="max-w-7xl mx-auto p-4 border rounded-lg grid gap-3 md:grid-cols-[220px_1fr]">
-            {/* Left column: avatar */}
-            <figure className="flex flex-col items-center justify-center gap-3">
-              {form.avatar && !avatarError ? (
-                <img
-                  src={form.avatar}
-                  alt="Avatar"
-                  className="h-24 w-24 mx-auto rounded-full object-cover"
-                  onError={() => setAvatarError(true)}
-                />
-              ) : (
-                <AvatarFallback size={96} />
-              )}
-
-              {editing && (
-                <Input
-                  placeholder="Avatar URL"
-                  value={form.avatar}
-                  onChange={(e) => handleChange("avatar", e.target.value)}
-                />
-              )}
-
-              {me?.user?.createdAt && !editing && (
-                <figcaption className="py-2 text-sm text-center">
-                  Member since{" "}
-                  {new Intl.DateTimeFormat("en-CA", {
-                    year: "numeric",
-                    month: "long",
-                  }).format(new Date(me.user.createdAt))}
-                </figcaption>
-              )}
-            </figure>
-
-            {/* Right column: fields + buttons */}
-            <div className="grid gap-6 ml-0 md:grid-cols-2 md:ml-20">
-              {PROFILE_FIELDS.map((field) => (
-                <div key={field} className="flex flex-col gap-1">
-                  <Label className="font-bold text-base">
-                    {formatLabel(field)}
-                  </Label>
-                  {editing ? (
-                    <Input
-                      value={form[field]}
-                      onChange={(e) => handleChange(field, e.target.value)}
-                    />
-                  ) : (
-                    <p className="text-base">{form[field] || "-"}</p>
-                  )}
-                </div>
-              ))}
-
-              <div className="col-span-full flex flex-wrap gap-4 pt-4">
-                {editing ? (
-                  <>
-                    <Button
-                      variant="default"
-                      size="default"
-                      onClick={handleSave}
-                      disabled={updateProfile.isPending || isUnchanged()}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="default"
-                      onClick={handleCancel}
-                    >
-                      Cancel
-                    </Button>
-                  </>
+      <Section padding="py-4">
+        <Container className="space-y-8">
+          <Card>
+            <div className="grid md:grid-cols-[220px_1fr] gap-3 p-4">
+              {/* Left column: avatar */}
+              <figure className="flex flex-col items-center justify-center gap-3">
+                {form.avatar && !avatarError ? (
+                  <img
+                    src={form.avatar}
+                    alt="Avatar"
+                    className="h-24 w-24 mx-auto rounded-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
                 ) : (
-                  <Button
-                    variant="default"
-                    size="default"
-                    onClick={() => setEditing(true)}
-                  >
-                    Edit Profile
-                  </Button>
+                  <AvatarFallback size={96} />
                 )}
-                <Button
-                  variant="destructive"
-                  size="default"
-                  onClick={() => logout.mutate()}
-                >
-                  Log Out
-                </Button>
+
+                {editing && (
+                  <Input
+                    placeholder="Avatar URL"
+                    value={form.avatar}
+                    onChange={(e) => handleChange("avatar", e.target.value)}
+                  />
+                )}
+
+                {me?.user?.createdAt && !editing && (
+                  <figcaption className="py-2 text-sm text-center">
+                    Member since{" "}
+                    {new Intl.DateTimeFormat("en-CA", {
+                      year: "numeric",
+                      month: "long",
+                    }).format(new Date(me.user.createdAt))}
+                  </figcaption>
+                )}
+              </figure>
+
+              {/* Right column: fields + buttons */}
+              <div className="grid gap-6 ml-0 md:grid-cols-2 md:ml-20">
+                {PROFILE_FIELDS.map((field) => (
+                  <div key={field} className="flex flex-col gap-1">
+                    <Label className="font-bold text-base">
+                      {formatLabel(field)}
+                    </Label>
+                    {editing ? (
+                      <Input
+                        value={form[field]}
+                        onChange={(e) => handleChange(field, e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-base">{form[field] || "-"}</p>
+                    )}
+                  </div>
+                ))}
+
+                <div className="col-span-full flex flex-wrap gap-4 pt-4">
+                  {editing ? (
+                    <>
+                      <Button
+                        variant="default"
+                        size="default"
+                        onClick={handleSave}
+                        disabled={updateProfile.isPending || isUnchanged()}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="default"
+                        onClick={handleCancel}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="default"
+                      onClick={() => setEditing(true)}
+                    >
+                      Edit Profile
+                    </Button>
+                  )}
+                  <Button
+                    variant="destructive"
+                    size="default"
+                    onClick={() => logout.mutate()}
+                  >
+                    Log Out
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          </Card>
+
+          {me?.workspace && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-black text-2xl text-center">
+                  Workspace
+                </CardTitle>
+
+                <CardContent>
+                  <p>
+                    <strong>Name:</strong> {me.workspace.name}
+                  </p>
+                  <p>
+                    <strong>Role:</strong> {me.workspace.role}
+                  </p>
+                </CardContent>
+              </CardHeader>
+            </Card>
+          )}
         </Container>
       </Section>
-
-      {me?.workspace && (
-        <Section>
-          <Container>
-            <div className="flex flex-col gap-3 text-center">
-              <header>
-                <h2 className="font-black text-2xl text-center">Workspace</h2>
-              </header>
-
-              <p>
-                <strong>Name:</strong> {me.workspace.name}
-              </p>
-              <p>
-                <strong>Role:</strong> {me.workspace.role}
-              </p>
-            </div>
-          </Container>
-        </Section>
-      )}
     </>
   );
 }

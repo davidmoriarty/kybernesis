@@ -6,11 +6,16 @@ export type ApiResponse = {
   success: true;
 };
 
+export type ProjectStatus = "development" | "live";
+
 export interface Project {
   id: string; // uuid
   workspaceId: string; // uuid
   name: string;
   description: string | null;
+  status: ProjectStatus;
+  notificationsEnabled: boolean;
+  isPublic: boolean;
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
 }

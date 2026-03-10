@@ -20,7 +20,12 @@ export type WorkspaceSummary = {
     status: "online" | "offline";
     lastSeenAt: string | null;
   }[];
-  recentProjects: { id: string; name: string; updatedAt: string }[];
+  recentProjects: {
+    id: string;
+    name: string;
+    status: "development" | "live";
+    updatedAt: string;
+  }[];
 };
 
 // --- Workspaces hooks ---
