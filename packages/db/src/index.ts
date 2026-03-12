@@ -10,6 +10,7 @@ export * as Events from "./events";
 export * as ProjectMembers from "./projectMembers";
 export * as Projects from "./projects";
 export * as Sessions from "./sessions";
+export * as Tasks from "./tasks";
 export * as TenantMembers from "./tenantMembers";
 export * as Tenants from "./tenants";
 export * as Users from "./users";
