@@ -3,9 +3,10 @@ import { and, eq } from "drizzle-orm";
 import { index, pgTable, primaryKey, text, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import type { WorkspaceMemberRow } from "./types";
+import { events } from "./events";
+import { tenantMembers } from "./tenantMembers";
 import { users } from "./users";
 import { workspaces } from "./workspaces";
-import { tenantMembers } from "./tenantMembers";
 
 // Workspace Members Table
 export const workspaceMembers = pgTable(
@@ -72,6 +73,19 @@ export async function createWorkspaceMembershipForTenant(input: {
   )[0];
 
   if (!inserted) throw new Error("Failed to create workspace membership");
+
+  await db.insert(events).values({
+    workspace_id: input.workspaceId,
+    actor_id: null,
+    entityType: "member",
+    entityId: input.userId,
+    eventType: "member.added",
+    payload: {
+      userId: input.userId,
+      role: input.role,
+    },
+  });
+
   return inserted;
 }
 

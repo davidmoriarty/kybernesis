@@ -1,7 +1,7 @@
 // server/src/routes/workspaces.ts
 import { Hono } from "hono";
 import "@shared/hono";
-import { Sessions, Workspaces, WorkspaceMembers, Projects } from "@db";
+import { Events, Projects, Sessions, Workspaces, WorkspaceMembers } from "@db";
 import { requireSession } from "../middleware/requireSession";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 
@@ -26,6 +26,21 @@ export const workspaceRoutes = new Hono()
       { workspaces: rows ?? [] },
       { status: 200, headers: { "Cache-Control": "no-store" } },
     );
+  })
+
+  .get("/:workspaceId/events", requireWorkspace, async (ctx) => {
+    const workspace = ctx.get("workspace");
+
+    if (!workspace?.id) {
+      return ctx.json({ error: "Forbidden" }, 403);
+    }
+
+    const events = await Events.getWorkspaceEvents(workspace.id);
+
+    return ctx.json(events, {
+      status: 200,
+      headers: { "Cache-Control": "no-store" },
+    });
   })
 
   // Workspace dashboard summary (requires active workspace)
@@ -85,6 +100,36 @@ export const workspaceRoutes = new Hono()
       },
       { status: 200, headers: { "Cache-Control": "no-store" } },
     );
+  })
+
+  .post("/", async (ctx) => {
+    const session = ctx.get("session");
+    const user = ctx.get("user");
+
+    if (!session?.tenantId || !user?.id) {
+      return ctx.json({ error: "Unauthorized" }, 401);
+    }
+
+    let body: unknown;
+    try {
+      body = await ctx.req.json();
+    } catch {
+      return ctx.json({ error: "Invalid JSON" }, 400);
+    }
+
+    const { name } = body as { name?: string };
+
+    if (!name || name.trim().length === 0) {
+      return ctx.json({ error: "Workspace name required" }, 400);
+    }
+
+    const workspace = await Workspaces.createWorkspace({
+      tenantId: session.tenantId,
+      name: name.trim(),
+      creatorUserId: user.id,
+    });
+
+    return ctx.json(workspace, { status: 201 });
   })
 
   // Select active workspace for the current session

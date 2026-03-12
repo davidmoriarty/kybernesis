@@ -12,8 +12,8 @@ export async function requireWorkspace(ctx: Context, next: Next) {
   }
 
   const tenantId = session.tenantId;
-  const workspaceId = session.workspaceId;
 
+  const workspaceId = ctx.req.param("workspaceId") || session.workspaceId;
   if (!workspaceId) {
     return ctx.json({ error: "Workspace not selected" }, 409);
   }

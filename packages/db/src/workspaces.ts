@@ -9,6 +9,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { index, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import { mapWorkspaceSummaryWithRoleToWorkspace } from "./mappers";
+import { events } from "./events";
 import { tenants } from "./tenants";
 import { tenantMembers } from "./tenantMembers";
 import { workspaceMembers } from "./workspaceMembers";
@@ -81,6 +82,17 @@ export async function createWorkspace(input: {
       workspaceId: inserted.id,
       userId: input.creatorUserId,
       role: "admin",
+    });
+
+    await tx.insert(events).values({
+      workspace_id: inserted.id,
+      actor_id: input.creatorUserId,
+      entityType: "workspace",
+      entityId: inserted.id,
+      eventType: "workspace.created",
+      payload: {
+        name: inserted.name,
+      },
     });
 
     return inserted;

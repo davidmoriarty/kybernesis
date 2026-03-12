@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";
 import { mapProjectRowToProject } from "./mappers";
+import { events } from "./events";
 import { workspaces } from "./workspaces";
 import type { ProjectStatus, Project } from "@shared";
 
@@ -50,6 +51,7 @@ export async function createProject(input: {
   workspaceId: string;
   name: string;
   description: string | null;
+  actorId: string;
 }): Promise<Project> {
   const inserted = (
     await db
@@ -63,12 +65,25 @@ export async function createProject(input: {
   )[0];
 
   if (!inserted) throw new Error("Failed to create project");
+
+  await db.insert(events).values({
+    workspace_id: input.workspaceId,
+    actor_id: input.actorId,
+    entityType: "project",
+    entityId: inserted.id,
+    eventType: "project.created",
+    payload: {
+      name: inserted.name,
+    },
+  });
+
   return mapProjectRowToProject(inserted);
 }
 
 export async function updateProjectForWorkspace(
   projectId: string,
   workspaceId: string,
+  actorId: string,
   input: {
     name?: string;
     description?: string | null;
@@ -107,12 +122,27 @@ export async function updateProjectForWorkspace(
       .returning()
   )[0];
 
-  return updated ? mapProjectRowToProject(updated) : undefined;
+  if (!updated) return undefined;
+
+  await db.insert(events).values({
+    workspace_id: workspaceId,
+    actor_id: actorId,
+    entityType: "project",
+    entityId: projectId,
+    eventType: "project.updated",
+    payload: {
+      name: updated.name,
+      status: updated.status,
+    },
+  });
+
+  return mapProjectRowToProject(updated);
 }
 
 export async function deleteProjectForWorkspace(
   projectId: string,
   workspaceId: string,
+  actorId: string,
 ): Promise<boolean> {
   const deleted = (
     await db
@@ -120,10 +150,23 @@ export async function deleteProjectForWorkspace(
       .where(
         and(eq(projects.id, projectId), eq(projects.workspaceId, workspaceId)),
       )
-      .returning({ id: projects.id })
+      .returning({ id: projects.id, name: projects.name })
   )[0];
 
-  return Boolean(deleted);
+  if (!deleted) return false;
+
+  await db.insert(events).values({
+    workspace_id: workspaceId,
+    actor_id: actorId,
+    entityType: "project",
+    entityId: deleted.id,
+    eventType: "project.deleted",
+    payload: {
+      name: deleted.name,
+    },
+  });
+
+  return true;
 }
 
 export async function getProjectsForTenantWorkspace(input: {

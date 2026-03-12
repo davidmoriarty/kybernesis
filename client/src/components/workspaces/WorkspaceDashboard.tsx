@@ -4,6 +4,7 @@ import { DashboardRowLink } from "../shared/DashboardRowLink";
 import { Badge } from "@/components/ui/badge";
 import { Container, Section } from "@/components/app";
 import { WorkspaceDashboardCard } from "./index";
+import { ActivityFeed } from "@/components/activity";
 
 export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
   return (
@@ -120,6 +121,14 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
                 </Badge>
               </div>
             </div>
+          </WorkspaceDashboardCard>
+
+          <WorkspaceDashboardCard
+            title="Activity Feed"
+            description="Recent workspace activity and events."
+            colHeaders={["Actor", "Event", "When"]}
+          >
+            <ActivityFeed workspaceId={summary.workspace.id} />
           </WorkspaceDashboardCard>
         </div>
       </Container>

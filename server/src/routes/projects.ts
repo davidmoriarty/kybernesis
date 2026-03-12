@@ -93,6 +93,7 @@ export const projectRoutes = new Hono()
       workspaceId: workspace.id,
       name,
       description: description ?? null,
+      actorId: user.id,
     });
 
     await createProjectMembership({
@@ -133,6 +134,11 @@ export const projectRoutes = new Hono()
       return ctx.json({ error: "Forbidden" }, 403);
     }
 
+    const currentUser = ctx.get("user");
+    if (!currentUser?.id) {
+      return ctx.json({ error: "Unauthorized" }, 401);
+    }
+
     const projectId = ctx.req.param("projectId");
 
     // Ensure project belongs to active workspace (prevents cross-workspace add)
@@ -154,6 +160,7 @@ export const projectRoutes = new Hono()
       projectId,
       userId,
       role: role ?? "member",
+      actorId: currentUser.id,
     });
 
     return ctx.json({ success: true }, 200);
@@ -167,6 +174,11 @@ export const projectRoutes = new Hono()
       const session = ctx.get("session");
       if (!workspace?.id || !session?.tenantId) {
         return ctx.json({ error: "Forbidden" }, 403);
+      }
+
+      const currentUser = ctx.get("user");
+      if (!currentUser?.id) {
+        return ctx.json({ error: "Unauthorized" }, 401);
       }
 
       const projectId = ctx.req.param("projectId");
@@ -198,6 +210,7 @@ export const projectRoutes = new Hono()
         projectId,
         userId: user.id,
         role: role ?? "member",
+        actorId: currentUser.id,
       });
 
       return ctx.json({ success: true }, 200);
@@ -208,6 +221,9 @@ export const projectRoutes = new Hono()
   .put("/:projectId", requireProjectAdmin("projectId"), async (ctx) => {
     const workspace = ctx.get("workspace");
     if (!workspace?.id) return ctx.json({ error: "Forbidden" }, 403);
+
+    const user = ctx.get("user");
+    if (!user?.id) return ctx.json({ error: "Unauthorized" }, 401);
 
     const projectId = ctx.req.param("projectId");
     const { name, description, status, notificationsEnabled, isPublic } =
@@ -222,6 +238,7 @@ export const projectRoutes = new Hono()
     const updated = await Projects.updateProjectForWorkspace(
       projectId,
       workspace.id,
+      user.id,
       {
         name,
         description:
@@ -241,10 +258,14 @@ export const projectRoutes = new Hono()
     const workspace = ctx.get("workspace");
     if (!workspace?.id) return ctx.json({ error: "Forbidden" }, 403);
 
+    const user = ctx.get("user");
+    if (!user?.id) return ctx.json({ error: "Unauthorized" }, 401);
+
     const projectId = ctx.req.param("projectId");
     const ok = await Projects.deleteProjectForWorkspace(
       projectId,
       workspace.id,
+      user.id,
     );
 
     if (!ok) return ctx.json({ error: "Project not found" }, 404);
@@ -260,6 +281,9 @@ export const projectRoutes = new Hono()
       if (!workspace?.id || !session?.tenantId) {
         return ctx.json({ error: "Forbidden" }, 403);
       }
+
+      const user = ctx.get("user");
+      if (!user?.id) return ctx.json({ error: "Unauthorized" }, 401);
 
       const projectId = ctx.req.param("projectId");
 
@@ -289,7 +313,11 @@ export const projectRoutes = new Hono()
         );
       }
 
-      await removeProjectMember({ projectId, userId });
+      await removeProjectMember({
+        projectId,
+        userId,
+        actorId: user.id,
+      });
 
       return ctx.json({ success: true }, 200);
     },
@@ -303,6 +331,11 @@ export const projectRoutes = new Hono()
       const session = ctx.get("session");
       if (!workspace?.id || !session?.tenantId) {
         return ctx.json({ error: "Forbidden" }, 403);
+      }
+
+      const currentUser = ctx.get("user");
+      if (!currentUser?.id) {
+        return ctx.json({ error: "Unauthorized" }, 401);
       }
 
       const projectId = ctx.req.param("projectId");
@@ -324,7 +357,11 @@ export const projectRoutes = new Hono()
       });
       if (!user) return ctx.json({ error: "User not found" }, 404);
 
-      await removeProjectMember({ projectId, userId: user.id });
+      await removeProjectMember({
+        projectId,
+        userId: user.id,
+        actorId: currentUser.id,
+      });
       return ctx.json({ success: true }, 200);
     },
   );

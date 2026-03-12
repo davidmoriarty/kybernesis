@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { and, eq } from "drizzle-orm";
 import { db } from "@db";
+import { events } from "./events";
 import { projects } from "./projects";
 import { users } from "./users";
 
@@ -133,6 +134,7 @@ export async function addProjectMember(args: {
   projectId: string;
   userId: string;
   role: "member" | "admin";
+  actorId: string;
 }): Promise<void> {
   await db
     .insert(projectMembers)
@@ -142,11 +144,38 @@ export async function addProjectMember(args: {
       role: args.role,
     })
     .onConflictDoNothing();
+
+  const workspaceId = await getProjectWorkspaceId({
+    projectId: args.projectId,
+  });
+  if (!workspaceId) return;
+
+  const user = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+  const email = user[0]?.email ?? args.userId;
+
+  await db.insert(events).values({
+    workspace_id: workspaceId,
+    actor_id: args.actorId,
+    entityType: "member",
+    entityId: args.userId,
+    eventType: "member.added",
+    payload: {
+      email,
+      userId: args.userId,
+      role: args.role,
+      projectId: args.projectId,
+    },
+  });
 }
 
 export async function removeProjectMember(args: {
   projectId: string;
   userId: string;
+  actorId: string;
 }): Promise<void> {
   await db
     .delete(projectMembers)
@@ -156,12 +185,38 @@ export async function removeProjectMember(args: {
         eq(projectMembers.userId, args.userId),
       ),
     );
+
+  const workspaceId = await getProjectWorkspaceId({
+    projectId: args.projectId,
+  });
+  if (!workspaceId) return;
+
+  const user = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+  const email = user[0]?.email ?? args.userId;
+
+  await db.insert(events).values({
+    workspace_id: workspaceId,
+    actor_id: args.actorId,
+    entityType: "member",
+    entityId: args.userId,
+    eventType: "member.removed",
+    payload: {
+      projectId: args.projectId,
+      userId: args.userId,
+      email,
+    },
+  });
 }
 
 export async function setProjectMemberRole(args: {
   projectId: string;
   userId: string;
   role: "member";
+  actorId: string;
 }) {
   await db
     .update(projectMembers)
@@ -172,4 +227,30 @@ export async function setProjectMemberRole(args: {
         eq(projectMembers.userId, args.userId),
       ),
     );
+
+  const workspaceId = await getProjectWorkspaceId({
+    projectId: args.projectId,
+  });
+  if (!workspaceId) return;
+
+  const user = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, args.userId))
+    .limit(1);
+  const email = user[0]?.email ?? args.userId;
+
+  await db.insert(events).values({
+    workspace_id: workspaceId,
+    actor_id: args.actorId,
+    entityType: "member",
+    entityId: args.userId,
+    eventType: "member.role_updated",
+    payload: {
+      projectId: args.projectId,
+      userId: args.userId,
+      role: args.role,
+      email,
+    },
+  });
 }
