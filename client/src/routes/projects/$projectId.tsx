@@ -3,13 +3,10 @@ import type { Project } from "@shared";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import {
-  Calendar,
-  Columns2,
-  Folder,
+  Activity,
   FolderOpen,
   Home,
-  Inbox,
-  List,
+  ListTodo,
   type LucideIcon,
   Settings,
 } from "lucide-react";
@@ -32,11 +29,10 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { cn } from "@/lib/utils";
 import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { requireAuth } from "@/utils/requireAuth";
+import { useProjectTasks } from "@/hooks/tasks";
 
 type ProjectSection = "Overview" | "Files" | "Tasks" | "Timeline" | "Settings";
 
@@ -70,9 +66,9 @@ export const Route = createFileRoute("/projects/$projectId")({
 
 const SECTIONS: { label: ProjectSection; icon: LucideIcon }[] = [
   { label: "Overview", icon: Home },
-  { label: "Files", icon: Inbox },
-  { label: "Tasks", icon: List },
-  { label: "Timeline", icon: Calendar },
+  { label: "Files", icon: FolderOpen },
+  { label: "Tasks", icon: ListTodo },
+  { label: "Timeline", icon: Activity },
   { label: "Settings", icon: Settings },
 ];
 
@@ -82,6 +78,8 @@ function ProjectPage() {
   const { projectId } = Route.useParams();
   const project = Route.useLoaderData();
   const { section } = Route.useSearch();
+  const { data: tasksData, isLoading: tasksLoading } =
+    useProjectTasks(projectId);
 
   const isWorkspaceAdmin = workspace?.role === "admin";
 
@@ -106,7 +104,7 @@ function ProjectPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex flex-1 w-full h-full relative">
+      <div className="flex h-full min-h-0 w-full relative overflow-hidden">
         <ProjectSidebar
           projectName={project.name}
           selected={section}
@@ -121,36 +119,32 @@ function ProjectPage() {
           }}
         />
 
-        <SidebarInset className="flex flex-col flex-1">
+        <SidebarInset>
           {/* Top bar */}
-          <div className="bg-secondary text-foreground flex items-center justify-between py-2 px-4">
+          <div className="flex items-center justify-between py-3 px-8">
             <SidebarTrigger className="text-foreground" />
-            <h1 className="font-bold text-lg text-foreground">{section}</h1>
-            <ToggleGroup type="multiple">
-              <ToggleGroupItem value="files" className="border border-border">
-                <FolderOpen className="h-4 w-4 text-foreground" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="list" className="border border-border">
-                <List className="h-4 w-4 text-foreground" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="columns" className="border border-border">
-                <Columns2 className="h-4 w-4 text-foreground" />
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <h1 className="font-bold text-2xl tracking-tight text-foreground">
+              {section}
+            </h1>
+            <div className="min-w-30 flex justify-end" />
           </div>
 
           {/* Content */}
-          <div className="min-h-screen bg-secondary text-foreground p-4 flex-1 overflow-auto">
+          <div className="min-h-0 bg-secondary text-foreground p-4 flex-1 overflow-auto">
             {section === "Overview" && (
               <OverviewSection
                 projectName={project.name}
-                description={project.description ?? "No description provided"}
-                owner={project?.owner}
+                description={project.description ?? "No description provided."}
                 createdAt={project?.createdAt}
               />
             )}
             {section === "Files" && <FilesSection files={[]} />}
-            {section === "Tasks" && <TasksSection tasks={[]} />}
+            {section === "Tasks" && (
+              <TasksSection
+                projectId={projectId}
+                tasks={tasksLoading ? undefined : tasksData?.tasks}
+              />
+            )}
             {section === "Timeline" && <TimelineSection events={[]} />}
             {section === "Settings" && (
               <SettingsSection
@@ -180,17 +174,14 @@ function ProjectSidebar({
   onSelect: (s: ProjectSection) => void;
 }) {
   return (
-    <Sidebar
-      className={cn(
-        "fixed top-15 sm:top-15 left-0 w-64",
-        "h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)]",
-      )}
-    >
+    <Sidebar>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="inline-flex items-center gap-2">
-            <Folder className="size-4 text-foreground" />
-            <span className="font-bold text-lg text-foreground">
+        <SidebarGroup className="sticky top-0 z-10 bg-sidebar mb-4">
+          <SidebarGroupLabel className="flex flex-col items-start px-2 py-2">
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">
+              Project Name
+            </span>
+            <span className="font-bold text-base text-foreground">
               {projectName}
             </span>
           </SidebarGroupLabel>

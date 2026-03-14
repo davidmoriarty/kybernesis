@@ -1,28 +1,28 @@
 // client/src/components/projects/detail/sections/OverviewSection.tsx
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/formatDate";
 
 interface OverviewSectionProps {
   projectName: string;
   description?: string;
-  owner?: string;
   createdAt?: string;
 }
 
 export function OverviewSection({
   projectName,
   description,
-  owner,
   createdAt,
 }: OverviewSectionProps) {
+  const formattedCreatedAt = createdAt ? formatDate(createdAt) : undefined;
+
   const info = [
     { label: "Project Name", value: projectName },
     { label: "Description", value: description },
-    { label: "Owner", value: owner },
-    { label: "Created At", value: createdAt },
+    { label: "Created", value: formattedCreatedAt },
   ];
 
-  if (!projectName && !description && !owner && !createdAt) {
+  if (!projectName && !description && !createdAt) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
@@ -40,10 +40,12 @@ export function OverviewSection({
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {info.map((item) => (
         <Card key={item.label} className="p-4 flex flex-col gap-2">
-          <p className="font-bold text-base text-muted-foreground">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
             {item.label}
           </p>
-          <p className="font-base text-foreground">{item.value || "-"}</p>
+          <p className="font-medium text-base text-foreground">
+            {item.value || "—"}
+          </p>
         </Card>
       ))}
     </div>

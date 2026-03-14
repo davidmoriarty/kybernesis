@@ -16,9 +16,9 @@ export const Route = createRootRoute({
 
   component: () => {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="h-svh overflow-hidden flex flex-col">
         <Navbar />
-        <main className="flex-1 flex flex-col">
+        <main className="relative flex flex-1 flex-col min-h-0 overflow-hidden pt-(--navbar-height)">
           <Outlet />
         </main>
         <Toaster />

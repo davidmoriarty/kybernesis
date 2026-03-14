@@ -19,6 +19,10 @@ export type RpcClient = {
     path: string,
     options?: Omit<RequestInit, "body"> & { body?: unknown },
   ) => Promise<Response>;
+  $patch: (
+    path: string,
+    options?: Omit<RequestInit, "body"> & { body?: unknown },
+  ) => Promise<Response>;
   $delete: (
     path: string,
     options?: Omit<RequestInit, "body"> & { body?: unknown },
@@ -52,6 +56,20 @@ export function createRpcClient(baseUrl: string): RpcClient {
       const { body, ...init } = options ?? {};
       return fetch(`${baseUrl}${path}`, {
         method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(init.headers ?? {}),
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        ...init,
+      });
+    },
+
+    $patch: (path, options) => {
+      const { body, ...init } = options ?? {};
+      return fetch(`${baseUrl}${path}`, {
+        method: "PATCH",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",

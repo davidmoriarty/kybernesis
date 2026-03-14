@@ -126,7 +126,7 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-40",
+        "sticky top-0 inset-x-0 z-40",
         "supports-backdrop-filter:backdrop-blur",
         "border-b border-gray-300 dark:border-gray-500",
       )}

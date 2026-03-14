@@ -36,14 +36,15 @@ function Index() {
 
       {/* Content section */}
       <Section padding="py-40">
-        <Container>
+        <Container className="max-w-5xl">
           <article>
-            <header className="pb-8">
-              <h2 className="font-black text-4xl tracking-tight">
+            <header className="pb-8 text-center">
+              <h2 className="font-bold text-4xl tracking-tight">
                 Manage Your Projects and Workspaces Seamlessly
               </h2>
             </header>
-            <section className="flex flex-col items-center justify-center gap-4">
+
+            <section className="flex flex-col items-center justify-center gap-4 text-center">
               <p className="font-medium text-base leading-relaxed">
                 Kybernesis is a multi-tenant SaaS platform designed for
                 developers and teams to organize projects, collaborate across
