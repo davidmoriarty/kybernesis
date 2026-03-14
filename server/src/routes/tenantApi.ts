@@ -21,8 +21,8 @@ export const tenantApi = new Hono()
   .use("/tasks", requireTenant, requireSession)
 
   // only require tenant here
-  .use("/workspaces/*", requireTenant)
-  .use("/workspaces", requireTenant)
+  .use("/workspaces/*", requireTenant, requireSession)
+  .use("/workspaces", requireTenant, requireSession)
 
   .route("/projects", projectRoutes)
   .route("/", taskRoutes)

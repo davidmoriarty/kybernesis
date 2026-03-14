@@ -1,5 +1,5 @@
 // packages/db/src/events.ts
-import { desc, eq, relations } from "drizzle-orm";
+import { desc, eq, relations, sql } from "drizzle-orm";
 import {
   index,
   jsonb,
@@ -148,4 +148,25 @@ export async function emitEvent({
       err,
     });
   }
+}
+
+export async function getProjectEvents(projectId: string, limit = 20) {
+  return db
+    .select({
+      id: events.id,
+      workspace_id: events.workspace_id,
+      actor_id: events.actor_id,
+      actorName: users.name,
+      actorEmail: users.email,
+      entityType: events.entityType,
+      entityId: events.entityId,
+      eventType: events.eventType,
+      payload: events.payload,
+      created_at: events.created_at,
+    })
+    .from(events)
+    .leftJoin(users, eq(users.id, events.actor_id))
+    .where(sql`${events.payload} ->> 'projectId' = ${projectId}`)
+    .orderBy(desc(events.created_at))
+    .limit(limit);
 }

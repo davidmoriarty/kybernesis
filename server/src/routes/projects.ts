@@ -15,6 +15,7 @@ import {
   listProjectIdsForUserInWorkspace,
   getMembersForProject,
 } from "@db/projectMembers";
+import { getProjectEvents } from "@db/events";
 
 export const projectRoutes = new Hono()
   .use("*", requireWorkspace)
@@ -124,6 +125,31 @@ export const projectRoutes = new Hono()
 
     const members = await getMembersForProject(projectId);
     return ctx.json({ members }, 200);
+  })
+
+  .get("/:projectId/events", requireProjectMember("projectId"), async (ctx) => {
+    const workspace = ctx.get("workspace");
+    const session = ctx.get("session");
+
+    if (!workspace?.id || !session?.tenantId) {
+      return ctx.json({ error: "Forbidden" }, 403);
+    }
+
+    const projectId = ctx.req.param("projectId");
+
+    const project = await Projects.getProjectByIdForTenantWorkspace({
+      tenantId: session.tenantId,
+      workspaceId: workspace.id,
+      projectId,
+    });
+
+    if (!project) {
+      return ctx.json({ error: "Project not found" }, 404);
+    }
+
+    const events = await getProjectEvents(projectId);
+
+    return ctx.json({ events }, 200);
   })
 
   // POST Add a user to project (Admin only)

@@ -99,6 +99,30 @@ export function useUpdateProject() {
   });
 }
 
+export function useProjectEvents(projectId: string) {
+  return useQuery({
+    queryKey: ["project-events", projectId],
+    queryFn: async () => {
+      const res = await rpc.$get(`/projects/${projectId}/events`);
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch project events");
+      }
+
+      return res.json() as Promise<{
+        events: {
+          id: string;
+          actorName: string | null;
+          actorEmail: string | null;
+          eventType: string;
+          payload: Record<string, unknown>;
+          created_at: string;
+        }[];
+      }>;
+    },
+  });
+}
+
 export function useDeleteProject() {
   const qc = useQueryClient();
 

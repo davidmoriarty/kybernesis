@@ -48,6 +48,11 @@ export const workspaceRoutes = new Hono()
     const session = ctx.get("session");
     const workspace = ctx.get("workspace");
 
+    console.log("workspaces/summary ctx", {
+      session,
+      workspace,
+    });
+
     if (!session?.tenantId || !workspace?.id) {
       return ctx.json({ error: "Forbidden" }, 403);
     }

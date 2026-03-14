@@ -7,8 +7,21 @@ export async function requireWorkspace(ctx: Context, next: Next) {
   const session = ctx.get("session");
   const user = ctx.get("user");
 
+  console.log("requireWorkspace entered", {
+    session: ctx.get("session"),
+    user: ctx.get("user"),
+    workspace: ctx.get("workspace"),
+    workspaceParam: ctx.req.param("workspaceId"),
+  });
+
   if (!session?.tenantId || !user?.id) {
     return ctx.json({ error: "Forbidden" }, 403);
+  }
+
+  const existingWorkspace = ctx.get("workspace");
+  if (existingWorkspace?.id) {
+    await next();
+    return;
   }
 
   const tenantId = session.tenantId;
@@ -25,12 +38,22 @@ export async function requireWorkspace(ctx: Context, next: Next) {
   });
   if (!workspaceRow) return ctx.json({ error: "Workspace not found" }, 404);
 
+  console.log("requireWorkspace", {
+    tenantId,
+    userId: user.id,
+    workspaceId,
+    sessionWorkspaceId: session.workspaceId,
+  });
+
   // Ensure membership (membership table is indirectly tenant-scoped via workspaceId)
   const membership = await WorkspaceMembers.getWorkspaceMembershipForTenant({
     tenantId,
     userId: user.id,
     workspaceId,
   });
+
+  console.log("workspace membership", membership);
+
   if (!membership) return ctx.json({ error: "Forbidden" }, 403);
 
   // Keep ctx workspace in sync (name from DB, role from membership)

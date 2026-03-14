@@ -33,6 +33,7 @@ import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { requireAuth } from "@/utils/requireAuth";
 import { useProjectTasks } from "@/hooks/tasks";
+import { useProjectEvents } from "@/hooks/projects";
 
 type ProjectSection = "Overview" | "Files" | "Tasks" | "Timeline" | "Settings";
 
@@ -78,6 +79,8 @@ function ProjectPage() {
   const { projectId } = Route.useParams();
   const project = Route.useLoaderData();
   const { section } = Route.useSearch();
+  const { data: timelineData, isLoading: timelineLoading } =
+    useProjectEvents(projectId);
   const { data: tasksData, isLoading: tasksLoading } =
     useProjectTasks(projectId);
 
@@ -145,7 +148,11 @@ function ProjectPage() {
                 tasks={tasksLoading ? undefined : tasksData?.tasks}
               />
             )}
-            {section === "Timeline" && <TimelineSection events={[]} />}
+            {section === "Timeline" && (
+              <TimelineSection
+                events={timelineLoading ? undefined : timelineData?.events}
+              />
+            )}
             {section === "Settings" && (
               <SettingsSection
                 projectId={project.id}

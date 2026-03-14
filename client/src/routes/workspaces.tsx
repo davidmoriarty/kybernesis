@@ -1,7 +1,7 @@
 // client/src/routes/workspaces.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { LoadingState, ErrorState } from "@/components/shared/PageCard";
-import { PageHero } from "@/components/app";
+import { Container, PageHero, Section } from "@/components/app";
 import { WorkspaceDashboard } from "@/components/workspaces/WorkspaceDashboard";
 import { useWorkspaceSummary } from "@/hooks/workspaces";
 import { requireAuth } from "@/utils/requireAuth";
@@ -25,15 +25,19 @@ function WorkspacesPage() {
         subtitle="Workspace overview + stats (MVP)"
       />
 
-      {summaryLoading ? (
-        <LoadingState message="Loading workspace context..." />
-      ) : summaryError ? (
-        <ErrorState message="Failed to load workspace dashboard." />
-      ) : summary ? (
-        <WorkspaceDashboard summary={summary} />
-      ) : (
-        <ErrorState message="No workspace dashboard data found." />
-      )}
+      <Section className="min-h-0 flex-1 overflow-auto pb-8">
+        <Container>
+          {summaryLoading ? (
+            <LoadingState message="Loading workspace context..." />
+          ) : summaryError ? (
+            <ErrorState message="Failed to load workspace dashboard." />
+          ) : summary ? (
+            <WorkspaceDashboard summary={summary} />
+          ) : (
+            <ErrorState message="No workspace dashboard data found." />
+          )}
+        </Container>
+      </Section>
     </>
   );
 }
