@@ -7,7 +7,7 @@ export const workspaceEventsRoute = new Hono();
 workspaceEventsRoute.get("/:workspaceId/events", async (c) => {
   const workspaceId = c.req.param("workspaceId");
 
-  const events = await Events.getWorkspaceEvents(workspaceId);
+  const events = await Events.getWorkspaceFeedEvents(workspaceId);
 
   return c.json(events);
 });

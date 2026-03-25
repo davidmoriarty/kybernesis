@@ -59,9 +59,14 @@ export function useCreateTask(projectId: string) {
       return parseOrThrow<{ task: ProjectTask }>(res);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["project-tasks", projectId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["project-tasks", projectId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["project-events", projectId],
+        }),
+      ]);
     },
   });
 }
@@ -82,9 +87,14 @@ export function useUpdateTaskStatus(projectId: string) {
       return parseOrThrow(res);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["project-tasks", projectId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["project-tasks", projectId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["project-events", projectId],
+        }),
+      ]);
     },
   });
 }

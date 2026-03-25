@@ -130,6 +130,20 @@ export async function listProjectIdsForUserInWorkspace(args: {
   return rows.map((r) => r.projectId);
 }
 
+export async function getProjectName(args: {
+  projectId: string;
+}): Promise<string | null> {
+  const row = (
+    await db
+      .select({ name: projects.name })
+      .from(projects)
+      .where(eq(projects.id, args.projectId))
+      .limit(1)
+  )[0];
+
+  return row?.name ?? null;
+}
+
 export async function addProjectMember(args: {
   projectId: string;
   userId: string;
@@ -157,6 +171,10 @@ export async function addProjectMember(args: {
     .limit(1);
   const email = user[0]?.email ?? args.userId;
 
+  const projectName = await getProjectName({
+    projectId: args.projectId,
+  });
+
   await db.insert(events).values({
     workspace_id: workspaceId,
     actor_id: args.actorId,
@@ -164,10 +182,11 @@ export async function addProjectMember(args: {
     entityId: args.userId,
     eventType: "member.added",
     payload: {
-      email,
-      userId: args.userId,
-      role: args.role,
       projectId: args.projectId,
+      projectName,
+      userId: args.userId,
+      email,
+      role: args.role,
     },
   });
 }
@@ -198,6 +217,10 @@ export async function removeProjectMember(args: {
     .limit(1);
   const email = user[0]?.email ?? args.userId;
 
+  const projectName = await getProjectName({
+    projectId: args.projectId,
+  });
+
   await db.insert(events).values({
     workspace_id: workspaceId,
     actor_id: args.actorId,
@@ -206,6 +229,7 @@ export async function removeProjectMember(args: {
     eventType: "member.removed",
     payload: {
       projectId: args.projectId,
+      projectName,
       userId: args.userId,
       email,
     },
@@ -240,6 +264,10 @@ export async function setProjectMemberRole(args: {
     .limit(1);
   const email = user[0]?.email ?? args.userId;
 
+  const projectName = await getProjectName({
+    projectId: args.projectId,
+  });
+
   await db.insert(events).values({
     workspace_id: workspaceId,
     actor_id: args.actorId,
@@ -248,6 +276,7 @@ export async function setProjectMemberRole(args: {
     eventType: "member.role_updated",
     payload: {
       projectId: args.projectId,
+      projectName,
       userId: args.userId,
       role: args.role,
       email,

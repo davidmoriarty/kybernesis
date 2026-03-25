@@ -2,6 +2,7 @@
 import { Hono } from "hono";
 import "@shared/hono";
 import { Projects, Tasks } from "@db";
+import { emitEvent } from "@db/events";
 import { getProjectMembership } from "@db/projectMembers";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 import { requireProjectMember } from "../middleware/rbac";
@@ -171,6 +172,20 @@ export const taskRoutes = new Hono()
     if (!task) {
       return ctx.json({ error: "Task not found" }, 404);
     }
+
+    await emitEvent({
+      workspaceId: workspace.id,
+      actorId: user.id,
+      entityType: "task",
+      entityId: taskId,
+      eventType: status === "done" ? "task.completed" : "task.updated",
+      payload: {
+        projectId: scope.projectId,
+        taskId,
+        title: task.title,
+        status: task.status,
+      },
+    });
 
     return ctx.json({ task }, 200);
   })

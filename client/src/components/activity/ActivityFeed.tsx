@@ -25,7 +25,12 @@ export function ActivityFeed({ workspaceId }: ActivityFeedProps) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground">No activity yet.</div>
+      <div className="rounded-md border border-dashed px-4 py-6 text-center">
+        <p className="text-sm font-medium">No activity yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Project updates and member changes will appear here.
+        </p>
+      </div>
     );
   }
 

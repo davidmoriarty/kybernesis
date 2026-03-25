@@ -1,5 +1,5 @@
 // packages/db/src/events.ts
-import { desc, eq, relations, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, relations, sql } from "drizzle-orm";
 import {
   index,
   jsonb,
@@ -88,32 +88,13 @@ export const eventTypes = [
   "project.created",
   "project.updated",
   "project.archived",
+  "project.deleted",
   "task.created",
   "task.updated",
   "task.completed",
 ] as const;
 
 export type EventType = (typeof eventTypes)[number];
-
-export async function getWorkspaceEvents(workspaceId: string, limit = 20) {
-  return db
-    .select({
-      id: events.id,
-      workspace_id: events.workspace_id,
-      actor_id: events.actor_id,
-      actorName: users.name,
-      entityType: events.entityType,
-      entityId: events.entityId,
-      eventType: events.eventType,
-      payload: events.payload,
-      created_at: events.created_at,
-    })
-    .from(events)
-    .leftJoin(users, eq(users.id, events.actor_id))
-    .where(eq(events.workspace_id, workspaceId))
-    .orderBy(desc(events.created_at))
-    .limit(limit);
-}
 
 type EmitEventInput = {
   workspaceId: string;
@@ -150,7 +131,66 @@ export async function emitEvent({
   }
 }
 
-export async function getProjectEvents(projectId: string, limit = 20) {
+const WORKSPACE_MEMBER_EVENT_TYPES: EventType[] = [
+  "member.added",
+  "member.removed",
+  "member.role_updated",
+] as const;
+
+const WORKSPACE_FEED_NON_MEMBER_EVENT_TYPES: EventType[] = [
+  "workspace.created",
+  "workspace.updated",
+  "project.created",
+  "project.updated",
+  "project.archived",
+  "project.deleted",
+] as const;
+
+export async function getWorkspaceFeedEvents(workspaceId: string, limit = 20) {
+  return db
+    .select({
+      id: events.id,
+      workspace_id: events.workspace_id,
+      actor_id: events.actor_id,
+      actorName: users.name,
+      entityType: events.entityType,
+      entityId: events.entityId,
+      eventType: events.eventType,
+      payload: events.payload,
+      created_at: events.created_at,
+    })
+    .from(events)
+    .leftJoin(users, eq(users.id, events.actor_id))
+    .where(
+      and(
+        eq(events.workspace_id, workspaceId),
+        or(
+          inArray(events.eventType, WORKSPACE_FEED_NON_MEMBER_EVENT_TYPES),
+          and(
+            inArray(events.eventType, WORKSPACE_MEMBER_EVENT_TYPES),
+            sql`${events.payload} ->> 'projectId' IS NULL`,
+          ),
+        ),
+      ),
+    )
+    .orderBy(desc(events.created_at))
+    .limit(limit);
+}
+
+const PROJECT_TIMELINE_EVENT_TYPES: EventType[] = [
+  "project.created",
+  "project.updated",
+  "project.archived",
+  "project.deleted",
+  "task.created",
+  "task.updated",
+  "task.completed",
+  "member.added",
+  "member.removed",
+  "member.role_updated",
+] as const;
+
+export async function getProjectTimelineEvents(projectId: string, limit = 20) {
   return db
     .select({
       id: events.id,
@@ -166,7 +206,12 @@ export async function getProjectEvents(projectId: string, limit = 20) {
     })
     .from(events)
     .leftJoin(users, eq(users.id, events.actor_id))
-    .where(sql`${events.payload} ->> 'projectId' = ${projectId}`)
+    .where(
+      and(
+        sql`${events.payload} ->> 'projectId' = ${projectId}`,
+        inArray(events.eventType, PROJECT_TIMELINE_EVENT_TYPES),
+      ),
+    )
     .orderBy(desc(events.created_at))
     .limit(limit);
 }

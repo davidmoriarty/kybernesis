@@ -38,16 +38,34 @@ function formatEventParts(event: TimelineEvent): TimelineEventParts {
         action: "updated this project",
       };
 
+    case "project.archived":
+      return {
+        actor,
+        action: "archived this project",
+      };
+
+    case "project.deleted":
+      return {
+        actor,
+        action: "deleted this project",
+      };
+
     case "member.added": {
       const email =
         typeof event.payload.email === "string"
           ? event.payload.email
           : "a member";
 
+      const projectName =
+        typeof event.payload.projectName === "string"
+          ? event.payload.projectName
+          : null;
+
       return {
         actor,
-        action: "added member",
-        subject: email,
+        action: projectName
+          ? `added ${email} to "${projectName}"`
+          : `added ${email}`,
       };
     }
 
@@ -57,10 +75,38 @@ function formatEventParts(event: TimelineEvent): TimelineEventParts {
           ? event.payload.email
           : "a member";
 
+      const projectName =
+        typeof event.payload.projectName === "string"
+          ? event.payload.projectName
+          : null;
+
       return {
         actor,
-        action: "removed member",
-        subject: email,
+        action: projectName
+          ? `removed ${email} from "${projectName}"`
+          : `removed ${email}`,
+      };
+    }
+
+    case "member.role_updated": {
+      const email =
+        typeof event.payload.email === "string"
+          ? event.payload.email
+          : "a member";
+
+      const role =
+        typeof event.payload.role === "string" ? event.payload.role : "member";
+
+      const projectName =
+        typeof event.payload.projectName === "string"
+          ? event.payload.projectName
+          : null;
+
+      return {
+        actor,
+        action: projectName
+          ? `changed ${email} role to ${role} in "${projectName}"`
+          : `changed ${email} role to ${role}`,
       };
     }
 

@@ -1,13 +1,7 @@
 // server/src/routes/projects.ts
 import { Hono } from "hono";
 import "@shared/hono";
-import { Users, Projects } from "@db";
-import { requireWorkspace } from "../middleware/requireWorkspace";
-import {
-  requireProjectMember,
-  requireProjectAdmin,
-  requireWorkspaceAdmin,
-} from "../middleware/rbac";
+import { Projects, Users } from "@db";
 import {
   addProjectMember,
   removeProjectMember,
@@ -15,7 +9,13 @@ import {
   listProjectIdsForUserInWorkspace,
   getMembersForProject,
 } from "@db/projectMembers";
-import { getProjectEvents } from "@db/events";
+import { getProjectTimelineEvents } from "@db/events";
+import { requireWorkspace } from "../middleware/requireWorkspace";
+import {
+  requireProjectMember,
+  requireProjectAdmin,
+  requireWorkspaceAdmin,
+} from "../middleware/rbac";
 
 export const projectRoutes = new Hono()
   .use("*", requireWorkspace)
@@ -147,7 +147,7 @@ export const projectRoutes = new Hono()
       return ctx.json({ error: "Project not found" }, 404);
     }
 
-    const events = await getProjectEvents(projectId);
+    const events = await getProjectTimelineEvents(projectId);
 
     return ctx.json({ events }, 200);
   })

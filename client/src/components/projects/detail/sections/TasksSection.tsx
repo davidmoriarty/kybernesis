@@ -9,6 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -124,7 +133,7 @@ function TaskCardBody({
   updateStatus: ReturnType<typeof useUpdateTaskStatus>;
 }) {
   return (
-    <Card className="p-4 space-y-2">
+    <Card className="space-y-2 p-4">
       <CardHeader>
         <span className="text-xs font-medium uppercase text-muted-foreground">
           {columnLabel}
@@ -178,6 +187,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
   const createTask = useCreateTask(projectId);
   const updateStatus = useUpdateTaskStatus(projectId);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -217,6 +227,21 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
     setActiveTaskId(null);
   }
 
+  function handleCreateTask() {
+    const title = newTaskTitle.trim();
+    if (!title) return;
+
+    createTask.mutate(
+      { title },
+      {
+        onSuccess: () => {
+          setNewTaskTitle("");
+          setIsCreateDialogOpen(false);
+        },
+      },
+    );
+  }
+
   if (!tasks) {
     return (
       <div className="grid gap-4 lg:grid-cols-3">
@@ -248,113 +273,150 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
     done: tasks.filter((task) => task.status === "done"),
   };
 
+  const hasTasks = tasks.length > 0;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 pb-8 lg:h-full lg:overflow-hidden lg:pb-0">
-      <Card className="flex flex-row items-center justify-between gap-4 px-4">
-        <Input
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              const title = newTaskTitle.trim();
-              if (!title) return;
+      <Card className="px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Tasks</p>
+            <p className="text-sm text-muted-foreground">
+              Track work across todo, in progress, and done.
+            </p>
+          </div>
 
-              createTask.mutate(
-                { title },
-                { onSuccess: () => setNewTaskTitle("") },
-              );
-            }
-          }}
-          placeholder="New task title"
-        />
-        <Button
-          variant="default"
-          size="default"
-          disabled={createTask.isPending || !newTaskTitle.trim()}
-          onClick={() => {
-            const title = newTaskTitle.trim();
-            if (!title) return;
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={setIsCreateDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button>New Task</Button>
+            </DialogTrigger>
 
-            createTask.mutate(
-              { title },
-              {
-                onSuccess: () => {
-                  setNewTaskTitle("");
-                },
-              },
-            );
-          }}
-        >
-          Add
-        </Button>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create task</DialogTitle>
+                <DialogDescription>
+                  Add a new task to this project.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-2">
+                <Input
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const title = newTaskTitle.trim();
+                      if (!title) return;
+
+                      createTask.mutate(
+                        { title },
+                        { onSuccess: () => setNewTaskTitle("") },
+                      );
+                    }
+                  }}
+                  placeholder="Task title"
+                  autoFocus
+                />
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCreateDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={createTask.isPending || !newTaskTitle.trim()}
+                  onClick={handleCreateTask}
+                >
+                  {createTask.isPending ? "Creating..." : "Create Task"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </Card>
 
-      <DndContext
-        sensors={sensors}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-3 pb-3 md:pb-8 mb-6">
-          {COLUMNS.map((column) => {
-            const columnTasks = tasksByStatus[column.key];
+      {!hasTasks ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center px-6 py-10 text-center">
+            <p className="text-sm font-medium">No tasks yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Create your first task to start tracking work in this project.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="grid min-h-0 flex-1 gap-4 pb-3 mb-6 md:pb-8 lg:grid-cols-3">
+            {COLUMNS.map((column) => {
+              const columnTasks = tasksByStatus[column.key];
 
-            return (
-              <TaskColumn
-                key={column.key}
-                id={column.key}
-                className="flex min-h-0 flex-col rounded-lg border bg-card pb-0 md:pb-8"
-              >
-                <div className="flex items-center justify-between border-b px-4 py-3">
-                  <h2 className="text-base font-bold">{column.label}</h2>
-                  <span className="text-base font-black text-muted-foreground">
-                    {columnTasks.length}
-                  </span>
-                </div>
+              return (
+                <TaskColumn
+                  key={column.key}
+                  id={column.key}
+                  className="flex min-h-0 flex-col rounded-lg border bg-card pb-0 md:pb-8"
+                >
+                  <div className="flex items-center justify-between border-b px-4 py-3">
+                    <h2 className="text-base font-bold">{column.label}</h2>
+                    <span className="text-base font-black text-muted-foreground">
+                      {columnTasks.length}
+                    </span>
+                  </div>
 
-                {/* Tasks Section */}
-                <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3">
-                  {columnTasks.length === 0 ? (
-                    <Card className="p-4">
-                      <p className="text-sm text-muted-foreground">
-                        No tasks in {column.label.toLowerCase()}.
-                      </p>
-                    </Card>
-                  ) : (
-                    columnTasks.map((task) => (
-                      <DraggableTaskCard
-                        key={task.id}
-                        taskId={task.id}
-                        className="relative z-0 cursor-pointer transition hover:shadow-md data-[dragging=true]:z-50 data-[dragging=true]:scale-[1.02] data-[dragging=true]:opacity-50"
-                      >
-                        <TaskCardBody
-                          task={task}
-                          columnLabel={column.label}
-                          updateStatus={updateStatus}
-                        />
-                      </DraggableTaskCard>
-                    ))
-                  )}
-                </div>
-              </TaskColumn>
-            );
-          })}
-        </div>
+                  <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3">
+                    {columnTasks.length === 0 ? (
+                      <Card className="p-4">
+                        <p className="text-sm text-muted-foreground">
+                          No tasks in {column.label.toLowerCase()}.
+                        </p>
+                      </Card>
+                    ) : (
+                      columnTasks.map((task) => (
+                        <DraggableTaskCard
+                          key={task.id}
+                          taskId={task.id}
+                          className="relative z-0 cursor-pointer transition hover:shadow-md data-[dragging=true]:z-50 data-[dragging=true]:scale-[1.02] data-[dragging=true]:opacity-50"
+                        >
+                          <TaskCardBody
+                            task={task}
+                            columnLabel={column.label}
+                            updateStatus={updateStatus}
+                          />
+                        </DraggableTaskCard>
+                      ))
+                    )}
+                  </div>
+                </TaskColumn>
+              );
+            })}
+          </div>
 
-        <DragOverlay>
-          {activeTask ? (
-            <div className="w-[320px] rotate-1 opacity-95 shadow-xl">
-              <TaskCardBody
-                task={activeTask}
-                columnLabel={
-                  COLUMNS.find((column) => column.key === activeTask.status)
-                    ?.label ?? "Task"
-                }
-                updateStatus={updateStatus}
-              />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+          <DragOverlay>
+            {activeTask ? (
+              <div className="w-[320px] rotate-1 opacity-95 shadow-xl">
+                <TaskCardBody
+                  task={activeTask}
+                  columnLabel={
+                    COLUMNS.find((column) => column.key === activeTask.status)
+                      ?.label ?? "Task"
+                  }
+                  updateStatus={updateStatus}
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
     </div>
   );
 }

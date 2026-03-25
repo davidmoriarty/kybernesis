@@ -27,7 +27,12 @@ export function ProjectList({
 
   if (!projects?.length) {
     return (
-      <div className="border rounded-md p-6 text-center">No projects yet</div>
+      <div className="rounded-md border border-dashed px-6 py-10 text-center">
+        <p className="text-sm font-medium">No projects yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Create your first project to start organizing work in this workspace.
+        </p>
+      </div>
     );
   }
 

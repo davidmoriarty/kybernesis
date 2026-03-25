@@ -90,8 +90,16 @@ export function useUpdateProject() {
       });
       return parseOrThrow(res);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["projects"] }),
+        qc.invalidateQueries({
+          queryKey: ["projects", variables.projectId],
+        }),
+        qc.invalidateQueries({
+          queryKey: ["project-events", variables.projectId],
+        }),
+      ]);
     },
     onError: () => {
       appToast.projects.updateError();
@@ -134,8 +142,13 @@ export function useDeleteProject() {
       });
       return parseOrThrow(res);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["projects"] }),
+        qc.invalidateQueries({
+          queryKey: ["project-events", variables.projectId],
+        }),
+      ]);
       appToast.projects.deleteSuccess();
     },
     onError: () => {

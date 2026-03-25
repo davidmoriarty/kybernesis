@@ -3,10 +3,14 @@ import type { WorkspaceEvent } from "@/hooks/useWorkspaceEvents";
 
 export function ActivityFeedItem({ event }: { event: WorkspaceEvent }) {
   return (
-    <div className="grid grid-cols-3 gap-4 rounded-md border px-3 py-2 text-sm">
-      <div className="font-medium">{event.actorName ?? "System"}</div>
-      <div className="text-muted-foreground">{formatEventLabel(event)}</div>
-      <div className="text-muted-foreground">
+    <div className="grid grid-cols-[140px_minmax(0,1fr)_88px] items-center gap-4 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted/30">
+      <div className="truncate font-medium">{event.actorName ?? "System"}</div>
+
+      <div className="min-w-0 text-muted-foreground">
+        {formatEventLabel(event)}
+      </div>
+
+      <div className="text-right text-muted-foreground">
         {formatTime(event.created_at)}
       </div>
     </div>
@@ -14,30 +18,17 @@ export function ActivityFeedItem({ event }: { event: WorkspaceEvent }) {
 }
 
 function formatEventLabel(event: WorkspaceEvent) {
-  const name =
-    typeof event.payload.name === "string" ? event.payload.name : null;
-
-  const email =
-    typeof event.payload.email === "string" ? event.payload.email : null;
-
-  const userId =
-    typeof event.payload.userId === "string" ? event.payload.userId : null;
-
-  const role =
-    typeof event.payload.role === "string" ? event.payload.role : null;
+  const name = getPayloadString(event, "name");
+  const email = getPayloadString(event, "email");
+  const userId = getPayloadString(event, "userId");
+  const role = getPayloadString(event, "role");
 
   switch (event.eventType) {
     case "workspace.created":
-      return name ? `Created workspace "${name}"` : "Created workspace";
+      return quoteLabel("Created workspace", name);
 
-    case "project.created":
-      return name ? `Created project "${name}"` : "Created project";
-
-    case "project.updated":
-      return name ? `Updated project "${name}"` : "Updated project";
-
-    case "project.deleted":
-      return name ? `Deleted project "${name}"` : "Deleted project";
+    case "workspace.updated":
+      return quoteLabel("Updated workspace", name);
 
     case "member.added":
       return email
@@ -60,9 +51,30 @@ function formatEventLabel(event: WorkspaceEvent) {
           ? `Changed member ${userId} to ${role ?? "member"}`
           : "Updated member role";
 
+    case "project.created":
+      return quoteLabel("Created project", name);
+
+    case "project.updated":
+      return quoteLabel("Updated project", name);
+
+    case "project.archived":
+      return quoteLabel("Archived project", name);
+
+    case "project.deleted":
+      return quoteLabel("Deleted project", name);
+
     default:
       return event.eventType;
   }
+}
+
+function getPayloadString(event: WorkspaceEvent, key: string): string | null {
+  const value = event.payload[key];
+  return typeof value === "string" ? value : null;
+}
+
+function quoteLabel(prefix: string, value: string | null) {
+  return value ? `${prefix} "${value}"` : prefix;
 }
 
 function formatTime(iso: string): string {

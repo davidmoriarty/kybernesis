@@ -43,10 +43,15 @@ export function useAddProjectMember(projectId: string) {
       return parseOrThrow(res);
     },
 
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["projectMembers", projectId],
-      });
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({
+          queryKey: ["projectMembers", projectId],
+        }),
+        qc.invalidateQueries({
+          queryKey: ["project-events", projectId],
+        }),
+      ]);
     },
   });
 }
@@ -64,10 +69,15 @@ export function useRemoveProjectMember(projectId: string) {
       );
       return parseOrThrow(res);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["projectMembers", projectId],
-      });
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({
+          queryKey: ["projectMembers", projectId],
+        }),
+        qc.invalidateQueries({
+          queryKey: ["project-events", projectId],
+        }),
+      ]);
     },
   });
 }

@@ -35,7 +35,7 @@ export const workspaceRoutes = new Hono()
       return ctx.json({ error: "Forbidden" }, 403);
     }
 
-    const events = await Events.getWorkspaceEvents(workspace.id);
+    const events = await Events.getWorkspaceFeedEvents(workspace.id);
 
     return ctx.json(events, {
       status: 200,
