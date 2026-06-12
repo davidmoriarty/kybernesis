@@ -1,6 +1,7 @@
 // server/src/routes/projects.ts
 import { Hono } from "hono";
 import "@shared/hono";
+import { fileRoutes } from "./files";
 import { Projects, Users } from "@db";
 import {
   addProjectMember,
@@ -19,6 +20,7 @@ import {
 
 export const projectRoutes = new Hono()
   .use("*", requireWorkspace)
+  .route("/", fileRoutes)
 
   // GET all projects for active workspace
   .get("/", async (ctx) => {

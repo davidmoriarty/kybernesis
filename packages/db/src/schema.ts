@@ -1,5 +1,6 @@
 // packages/db/src/schema.ts
 export { events, eventsRelations } from "./events";
+export { files, filesRelations } from "./files";
 export { projectMembers } from "./projectMembers";
 export { projects } from "./projects";
 export { sessions } from "./sessions";

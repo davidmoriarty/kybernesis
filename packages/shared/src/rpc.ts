@@ -40,14 +40,24 @@ export function createRpcClient(baseUrl: string): RpcClient {
 
     $post: (path, options) => {
       const { body, ...init } = options ?? {};
+
+      const isFormData = body instanceof FormData;
+
       return fetch(`${baseUrl}${path}`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...(init.headers ?? {}),
-        },
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        headers: isFormData
+          ? init.headers
+          : {
+              "Content-Type": "application/json",
+              ...(init.headers ?? {}),
+            },
+        body:
+          body === undefined
+            ? undefined
+            : isFormData
+              ? body
+              : JSON.stringify(body),
         ...init,
       });
     },

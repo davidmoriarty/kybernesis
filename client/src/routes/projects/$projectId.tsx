@@ -141,7 +141,7 @@ function ProjectPage() {
                 createdAt={project?.createdAt}
               />
             )}
-            {section === "Files" && <FilesSection files={[]} />}
+            {section === "Files" && <FilesSection projectId={projectId} />}
             {section === "Tasks" && (
               <TasksSection
                 projectId={projectId}

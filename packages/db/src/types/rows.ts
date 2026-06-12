@@ -1,4 +1,5 @@
 // packages/db/src/types/rows.ts
+import type { files } from "../files";
 import type { projects } from "../projects";
 import type { projectMembers } from "../projectMembers";
 import type { sessions } from "../sessions";
@@ -41,6 +42,9 @@ export type ProjectRowSummaryWithRole = ProjectRowSummary & {
 
 export type ProjectMemberRow = typeof projectMembers.$inferSelect;
 export type NewProjectMemberRow = typeof projectMembers.$inferInsert;
+
+export type FileRow = typeof files.$inferSelect;
+export type NewFileRow = typeof files.$inferInsert;
 
 export type SessionRow = typeof sessions.$inferSelect;
 export type NewSessionRow = typeof sessions.$inferInsert;
