@@ -1,7 +1,8 @@
 // server/src/routes/files.ts
 import { Hono } from "hono";
 import "@shared/hono";
-import { Files, Projects } from "@db";
+import { Events, Files, Projects } from "@db";
+import { saveProjectFile } from "../lib/storage";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 import { requireProjectMember } from "../middleware/rbac";
 
@@ -61,8 +62,10 @@ export const fileRoutes = new Hono()
       return ctx.json({ error: "File is required" }, 400);
     }
 
-    // Temporary: no actual disk storage yet
-    const storageKey = `${projectId}/${crypto.randomUUID()}-${file.name}`;
+    const storageKey = await saveProjectFile({
+      projectId,
+      file,
+    });
 
     const created = await Files.createFile({
       projectId,
@@ -71,6 +74,21 @@ export const fileRoutes = new Hono()
       size: file.size,
       mimeType: file.type || "application/octet-stream",
       storageKey,
+    });
+
+    await Events.emitEvent({
+      workspaceId: workspace.id,
+      actorId: user.id,
+      entityType: "file",
+      entityId: created.id,
+      eventType: "file.uploaded",
+      payload: {
+        projectId,
+        fileId: created.id,
+        name: created.name,
+        size: created.size,
+        mimeType: created.mimeType,
+      },
     });
 
     return ctx.json({ file: created }, 201);

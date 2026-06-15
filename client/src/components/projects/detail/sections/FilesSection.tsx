@@ -12,6 +12,15 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function getFileExtension(filename: string) {
+  const parts = filename.split(".");
+  return parts.length > 1 ? (parts.pop()?.toUpperCase() ?? "FILE") : "FILE";
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString();
+}
+
 interface FilesSectionProps {
   projectId: string;
 }
@@ -128,15 +137,18 @@ export function FilesSection({ projectId }: FilesSectionProps) {
 
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium">{projectFile.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {projectFile.mimeType || "Unknown file type"}
+
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span className="rounded-md border px-2 py-0.5 text-[10px] font-medium">
+                      {getFileExtension(projectFile.name)}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
                 <span>{formatBytes(projectFile.size)}</span>
-                <span>Uploaded</span>
+                <span>{formatDate(projectFile.created_at)}</span>
               </div>
             </Card>
           ))}

@@ -73,6 +73,7 @@ export const eventEntityTypes = [
   "member",
   "project",
   "task",
+  "file",
   "timeline",
   "notification",
 ] as const;
@@ -92,6 +93,7 @@ export const eventTypes = [
   "task.created",
   "task.updated",
   "task.completed",
+  "file.uploaded",
 ] as const;
 
 export type EventType = (typeof eventTypes)[number];
@@ -185,6 +187,7 @@ const PROJECT_TIMELINE_EVENT_TYPES: EventType[] = [
   "task.created",
   "task.updated",
   "task.completed",
+  "file.uploaded",
   "member.added",
   "member.removed",
   "member.role_updated",

@@ -149,6 +149,17 @@ function formatEventParts(event: TimelineEvent): TimelineEventParts {
       };
     }
 
+    case "file.uploaded": {
+      const name =
+        typeof event.payload.name === "string" ? event.payload.name : "a file";
+
+      return {
+        actor,
+        action: "uploaded file",
+        subject: name,
+      };
+    }
+
     default:
       return {
         actor,

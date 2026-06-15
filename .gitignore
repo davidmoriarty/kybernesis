@@ -31,6 +31,9 @@ coverage/
 # Database
 *.db
 
+# File uploads
+server/data/uploads/
+
 # Drizzle
 packages/db/drizzle/
 

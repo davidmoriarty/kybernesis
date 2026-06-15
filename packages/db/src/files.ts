@@ -54,6 +54,11 @@ export type NewFile = typeof files.$inferInsert;
 
 export async function createFile(data: NewFile) {
   const [file] = await db.insert(files).values(data).returning();
+
+  if (!file) {
+    throw new Error("Failed to create file");
+  }
+
   return file;
 }
 
