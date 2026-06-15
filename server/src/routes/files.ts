@@ -1,8 +1,13 @@
 // server/src/routes/files.ts
+import { readFile } from "node:fs/promises";
+import { Events, Files, Projects } from "@db";
 import { Hono } from "hono";
 import "@shared/hono";
-import { Events, Files, Projects } from "@db";
-import { saveProjectFile } from "../lib/storage";
+import {
+  getStoredFilePath,
+  saveProjectFile,
+  storedFileExists,
+} from "../lib/storage";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 import { requireProjectMember } from "../middleware/rbac";
 
@@ -33,6 +38,55 @@ export const fileRoutes = new Hono()
 
     return ctx.json({ files }, 200);
   })
+
+  .get(
+    "/:projectId/files/:fileId/download",
+    requireProjectMember("projectId"),
+    async (ctx) => {
+      const workspace = ctx.get("workspace");
+      const session = ctx.get("session");
+
+      if (!workspace?.id || !session?.tenantId) {
+        return ctx.json({ error: "Forbidden" }, 403);
+      }
+
+      const projectId = ctx.req.param("projectId");
+      const fileId = ctx.req.param("fileId");
+
+      const project = await Projects.getProjectByIdForTenantWorkspace({
+        tenantId: session.tenantId,
+        workspaceId: workspace.id,
+        projectId,
+      });
+
+      if (!project) {
+        return ctx.json({ error: "Project not found" }, 404);
+      }
+
+      const file = await Files.getFileById(fileId);
+
+      if (!file || file.projectId !== projectId) {
+        return ctx.json({ error: "File not found" }, 404);
+      }
+
+      const exists = await storedFileExists(file.storageKey);
+
+      if (!exists) {
+        return ctx.json({ error: "Stored file not found" }, 404);
+      }
+
+      const filePath = getStoredFilePath(file.storageKey);
+      const buffer = await readFile(filePath);
+
+      ctx.header("Content-Type", file.mimeType || "application/octet-stream");
+      ctx.header(
+        "Content-Disposition",
+        `attachment; filename="${file.name.replaceAll('"', "")}"`,
+      );
+
+      return ctx.body(buffer);
+    },
+  )
 
   .post("/:projectId/files", requireProjectMember("projectId"), async (ctx) => {
     const workspace = ctx.get("workspace");

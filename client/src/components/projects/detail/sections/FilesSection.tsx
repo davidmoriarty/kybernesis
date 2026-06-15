@@ -44,6 +44,18 @@ export function FilesSection({ projectId }: FilesSectionProps) {
     }
   }
 
+  function getApiBaseUrl() {
+    if (import.meta.env.MODE !== "development") {
+      return import.meta.env.VITE_API_URL;
+    }
+
+    return `${window.location.protocol}//${window.location.hostname}:3000/api`;
+  }
+
+  function handleDownload(fileId: string) {
+    window.location.href = `${getApiBaseUrl()}/projects/${projectId}/files/${fileId}/download`;
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       <header className="space-y-1">
@@ -147,8 +159,19 @@ export function FilesSection({ projectId }: FilesSectionProps) {
               </div>
 
               <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-                <span>{formatBytes(projectFile.size)}</span>
-                <span>{formatDate(projectFile.created_at)}</span>
+                <div className="flex flex-col gap-1">
+                  <span>{formatBytes(projectFile.size)}</span>
+                  <span>{formatDate(projectFile.created_at)}</span>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(projectFile.id)}
+                >
+                  Download
+                </Button>
               </div>
             </Card>
           ))}
