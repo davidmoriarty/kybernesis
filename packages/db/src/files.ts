@@ -74,3 +74,8 @@ export async function getFileById(id: string) {
   const [file] = await db.select().from(files).where(eq(files.id, id)).limit(1);
   return file ?? null;
 }
+
+export async function deleteFileById(id: string) {
+  const [file] = await db.delete(files).where(eq(files.id, id)).returning();
+  return file ?? null;
+}

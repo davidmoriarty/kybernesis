@@ -55,3 +55,32 @@ export function useUploadProjectFile(projectId: string) {
     },
   });
 }
+
+type DeleteProjectFileBody = {
+  fileId: string;
+};
+
+export function useDeleteProjectFile(projectId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<{ success: boolean }, RpcError, DeleteProjectFileBody>({
+    mutationFn: async ({ fileId }) => {
+      const res = await rpc.$delete(`/projects/${projectId}/files/${fileId}`, {
+        credentials: "include",
+      });
+
+      return parseOrThrow(res);
+    },
+
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({
+          queryKey: ["projectFiles", projectId],
+        }),
+        qc.invalidateQueries({
+          queryKey: ["project-events", projectId],
+        }),
+      ]);
+    },
+  });
+}

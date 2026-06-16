@@ -160,6 +160,17 @@ function formatEventParts(event: TimelineEvent): TimelineEventParts {
       };
     }
 
+    case "file.deleted": {
+      const name =
+        typeof event.payload.name === "string" ? event.payload.name : "a file";
+
+      return {
+        actor,
+        action: "deleted file",
+        subject: name,
+      };
+    }
+
     default:
       return {
         actor,

@@ -4,7 +4,11 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProjectFiles, useUploadProjectFile } from "@/hooks/useProjectFiles";
+import {
+  useDeleteProjectFile,
+  useProjectFiles,
+  useUploadProjectFile,
+} from "@/hooks/useProjectFiles";
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -29,6 +33,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { data, isPending, isError } = useProjectFiles(projectId);
   const uploadMutation = useUploadProjectFile(projectId);
+  const deleteMutation = useDeleteProjectFile(projectId);
 
   async function handleFileChange(file: File | null) {
     if (!file) return;
@@ -54,6 +59,14 @@ export function FilesSection({ projectId }: FilesSectionProps) {
 
   function handleDownload(fileId: string) {
     window.location.href = `${getApiBaseUrl()}/projects/${projectId}/files/${fileId}/download`;
+  }
+
+  async function handleDelete(fileId: string) {
+    const confirmed = window.confirm("Delete this file?");
+
+    if (!confirmed) return;
+
+    await deleteMutation.mutateAsync({ fileId });
   }
 
   return (
@@ -164,14 +177,26 @@ export function FilesSection({ projectId }: FilesSectionProps) {
                   <span>{formatDate(projectFile.created_at)}</span>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(projectFile.id)}
-                >
-                  Download
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownload(projectFile.id)}
+                  >
+                    Download
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    disabled={deleteMutation.isPending}
+                    onClick={() => void handleDelete(projectFile.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}

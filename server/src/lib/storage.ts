@@ -1,5 +1,5 @@
 // server/src/lib/storage.ts
-import { mkdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const UPLOAD_ROOT = path.resolve(process.cwd(), "data", "uploads");
@@ -54,5 +54,24 @@ export async function storedFileExists(storageKey: string) {
     return fileStat.isFile();
   } catch {
     return false;
+  }
+}
+
+export async function deleteStoredFile(storageKey: string) {
+  try {
+    const filePath = getStoredFilePath(storageKey);
+    await unlink(filePath);
+    return true;
+  } catch (err) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      err.code === "ENOENT"
+    ) {
+      return false;
+    }
+
+    throw err;
   }
 }

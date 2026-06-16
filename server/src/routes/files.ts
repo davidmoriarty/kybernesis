@@ -4,6 +4,7 @@ import { Events, Files, Projects } from "@db";
 import { Hono } from "hono";
 import "@shared/hono";
 import {
+  deleteStoredFile,
   getStoredFilePath,
   saveProjectFile,
   storedFileExists,
@@ -85,6 +86,64 @@ export const fileRoutes = new Hono()
       );
 
       return ctx.body(buffer);
+    },
+  )
+
+  .delete(
+    "/:projectId/files/:fileId",
+    requireProjectMember("projectId"),
+    async (ctx) => {
+      const workspace = ctx.get("workspace");
+      const session = ctx.get("session");
+      const user = ctx.get("user");
+
+      if (!workspace?.id || !session?.tenantId || !user?.id) {
+        return ctx.json({ error: "Forbidden" }, 403);
+      }
+
+      const projectId = ctx.req.param("projectId");
+      const fileId = ctx.req.param("fileId");
+
+      const project = await Projects.getProjectByIdForTenantWorkspace({
+        tenantId: session.tenantId,
+        workspaceId: workspace.id,
+        projectId,
+      });
+
+      if (!project) {
+        return ctx.json({ error: "Project not found" }, 404);
+      }
+
+      const file = await Files.getFileById(fileId);
+
+      if (!file || file.projectId !== projectId) {
+        return ctx.json({ error: "File not found" }, 404);
+      }
+
+      await deleteStoredFile(file.storageKey);
+
+      const deleted = await Files.deleteFileById(file.id);
+
+      if (!deleted) {
+        return ctx.json({ error: "File not found" }, 404);
+      }
+
+      await Events.emitEvent({
+        workspaceId: workspace.id,
+        actorId: user.id,
+        entityType: "file",
+        entityId: file.id,
+        eventType: "file.deleted",
+        payload: {
+          projectId,
+          fileId: file.id,
+          name: file.name,
+          size: file.size,
+          mimeType: file.mimeType,
+        },
+      });
+
+      return ctx.json({ success: true }, 200);
     },
   )
 
