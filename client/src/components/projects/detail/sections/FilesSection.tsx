@@ -73,24 +73,14 @@ export function FilesSection({ projectId }: FilesSectionProps) {
       return;
     }
 
-    if (viewerKind === "text") {
-      await navigate({
-        to: "/projects/$projectId",
-        params: { projectId },
-        search: {
-          section: "Files",
-          fileId: projectFile.id,
-        },
-      });
-
-      return;
-    }
-
-    window.open(
-      `${getApiBaseUrl()}/projects/${projectId}/files/${projectFile.id}/open`,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    await navigate({
+      to: "/projects/$projectId",
+      params: { projectId },
+      search: {
+        section: "Files",
+        fileId: projectFile.id,
+      },
+    });
   }
 
   async function handleDelete(fileId: string) {

@@ -90,11 +90,15 @@ export type ProjectFileContent = {
   content: string;
 };
 
-export function useProjectFileContent(projectId: string, fileId?: string) {
+export function useProjectFileContent(
+  projectId: string,
+  fileId?: string,
+  enabled = true,
+) {
   return useQuery<ProjectFileContent, RpcError>({
     queryKey: ["projectFileContent", projectId, fileId],
     retry: false,
-    enabled: Boolean(fileId),
+    enabled: Boolean(fileId) && enabled,
     queryFn: async () => {
       const res = await rpc.$get(
         `/projects/${projectId}/files/${fileId}/content`,
@@ -106,4 +110,13 @@ export function useProjectFileContent(projectId: string, fileId?: string) {
       return parseOrThrow(res);
     },
   });
+}
+
+export function useProjectFile(projectId: string, fileId?: string) {
+  const query = useProjectFiles(projectId);
+
+  return {
+    ...query,
+    data: query.data?.files.find((file) => file.id === fileId),
+  };
 }
