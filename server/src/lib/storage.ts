@@ -75,3 +75,26 @@ export async function deleteStoredFile(storageKey: string) {
     throw err;
   }
 }
+
+const TEXT_FILE_EXTENSIONS = new Set([
+  "css",
+  "html",
+  "js",
+  "jsx",
+  "json",
+  "md",
+  "php",
+  "ts",
+  "tsx",
+  "txt",
+  "yaml",
+  "yml",
+]);
+
+export function isTextEditableFile(filename: string) {
+  const extension = filename.split(".").pop()?.toLowerCase();
+
+  if (!extension) return false;
+
+  return TEXT_FILE_EXTENSIONS.has(extension);
+}

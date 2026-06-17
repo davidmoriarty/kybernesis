@@ -84,3 +84,26 @@ export function useDeleteProjectFile(projectId: string) {
     },
   });
 }
+
+export type ProjectFileContent = {
+  file: Pick<ProjectFile, "id" | "name" | "mimeType" | "size" | "created_at">;
+  content: string;
+};
+
+export function useProjectFileContent(projectId: string, fileId?: string) {
+  return useQuery<ProjectFileContent, RpcError>({
+    queryKey: ["projectFileContent", projectId, fileId],
+    retry: false,
+    enabled: Boolean(fileId),
+    queryFn: async () => {
+      const res = await rpc.$get(
+        `/projects/${projectId}/files/${fileId}/content`,
+        {
+          credentials: "include",
+        },
+      );
+
+      return parseOrThrow(res);
+    },
+  });
+}

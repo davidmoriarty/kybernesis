@@ -1,6 +1,7 @@
 // client/src/components/projects/detail/sections/FilesSection.tsx
 import { File, FolderOpen, Upload } from "lucide-react";
 import { useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +35,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
   const { data, isPending, isError } = useProjectFiles(projectId);
   const uploadMutation = useUploadProjectFile(projectId);
   const deleteMutation = useDeleteProjectFile(projectId);
+  const navigate = useNavigate();
 
   async function handleFileChange(file: File | null) {
     if (!file) return;
@@ -59,6 +61,17 @@ export function FilesSection({ projectId }: FilesSectionProps) {
 
   function handleDownload(fileId: string) {
     window.location.href = `${getApiBaseUrl()}/projects/${projectId}/files/${fileId}/download`;
+  }
+
+  async function handleOpen(fileId: string) {
+    await navigate({
+      to: "/projects/$projectId",
+      params: { projectId },
+      search: {
+        section: "Files",
+        fileId,
+      },
+    });
   }
 
   async function handleDelete(fileId: string) {
@@ -178,6 +191,15 @@ export function FilesSection({ projectId }: FilesSectionProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void handleOpen(projectFile.id)}
+                  >
+                    Open
+                  </Button>
+
                   <Button
                     type="button"
                     variant="outline"

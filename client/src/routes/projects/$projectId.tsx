@@ -29,6 +29,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { FileViewerPanel } from "@/components/projects/detail/sections/FileViewerPanel";
 import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { requireAuth } from "@/utils/requireAuth";
@@ -52,7 +53,7 @@ export const Route = createFileRoute("/projects/$projectId")({
   },
   validateSearch: (
     search: Record<string, unknown>,
-  ): { section: ProjectSection } => ({
+  ): { section: ProjectSection; fileId?: string } => ({
     section:
       search.section === "Overview" ||
       search.section === "Files" ||
@@ -61,6 +62,7 @@ export const Route = createFileRoute("/projects/$projectId")({
       search.section === "Settings"
         ? search.section
         : "Overview",
+    fileId: typeof search.fileId === "string" ? search.fileId : undefined,
   }),
   component: ProjectPage,
 });
@@ -78,7 +80,7 @@ function ProjectPage() {
   const { workspace } = Route.useRouteContext();
   const { projectId } = Route.useParams();
   const project = Route.useLoaderData();
-  const { section } = Route.useSearch();
+  const { section, fileId } = Route.useSearch();
   const { data: timelineData, isLoading: timelineLoading } =
     useProjectEvents(projectId);
   const { data: tasksData, isLoading: tasksLoading } =
@@ -116,7 +118,7 @@ function ProjectPage() {
             navigate({
               to: "/projects/$projectId",
               params: { projectId },
-              search: { section: nextSection },
+              search: { section: nextSection, fileId: undefined },
               replace: true,
             });
           }}
@@ -141,7 +143,12 @@ function ProjectPage() {
                 createdAt={project?.createdAt}
               />
             )}
-            {section === "Files" && <FilesSection projectId={projectId} />}
+            {section === "Files" &&
+              (fileId ? (
+                <FileViewerPanel projectId={projectId} fileId={fileId} />
+              ) : (
+                <FilesSection projectId={projectId} />
+              ))}
             {section === "Tasks" && (
               <TasksSection
                 projectId={projectId}
