@@ -5,7 +5,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFileViewerKind } from "@shared";
 import {
   type ProjectFile,
   useDeleteProjectFile,
@@ -66,13 +65,6 @@ export function FilesSection({ projectId }: FilesSectionProps) {
   }
 
   async function handleOpen(projectFile: ProjectFile) {
-    const viewerKind = getFileViewerKind(projectFile);
-
-    if (viewerKind === "blocked") {
-      window.alert("This file type cannot be opened.");
-      return;
-    }
-
     await navigate({
       to: "/projects/$projectId",
       params: { projectId },

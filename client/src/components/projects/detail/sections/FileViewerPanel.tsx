@@ -105,6 +105,17 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
           title={projectFile.name}
           className="h-[70vh] w-full"
         />
+      ) : viewerKind === "blocked" ? (
+        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+          <p className="font-medium">File type blocked</p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            This file type cannot be previewed in Kybernesis for security
+            reasons.
+          </p>
+          <Button type="button" variant="outline" onClick={handleBack}>
+            Back to Files
+          </Button>
+        </div>
       ) : (
         <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
           <p className="font-medium">Preview unavailable</p>
