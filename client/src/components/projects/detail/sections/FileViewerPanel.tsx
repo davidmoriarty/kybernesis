@@ -1,6 +1,7 @@
 // FileViewerPanel.tsx
 import { getFileViewerKind } from "@shared";
 import { useNavigate } from "@tanstack/react-router";
+import { CodeViewer } from "./CodeViewer";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -87,9 +88,10 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
             Failed to load file content.
           </div>
         ) : (
-          <pre className="max-h-[70vh] overflow-auto p-4 text-sm">
-            <code>{contentQuery.data.content}</code>
-          </pre>
+          <CodeViewer
+            filename={projectFile.name}
+            content={contentQuery.data.content}
+          />
         )
       ) : viewerKind === "image" ? (
         <div className="flex max-h-[70vh] items-center justify-center overflow-auto bg-background p-4">
