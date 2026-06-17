@@ -5,7 +5,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getFileViewerKind } from "@shared";
 import {
+  type ProjectFile,
   useDeleteProjectFile,
   useProjectFiles,
   useUploadProjectFile,
@@ -63,15 +65,32 @@ export function FilesSection({ projectId }: FilesSectionProps) {
     window.location.href = `${getApiBaseUrl()}/projects/${projectId}/files/${fileId}/download`;
   }
 
-  async function handleOpen(fileId: string) {
-    await navigate({
-      to: "/projects/$projectId",
-      params: { projectId },
-      search: {
-        section: "Files",
-        fileId,
-      },
-    });
+  async function handleOpen(projectFile: ProjectFile) {
+    const viewerKind = getFileViewerKind(projectFile);
+
+    if (viewerKind === "blocked") {
+      window.alert("This file type cannot be opened.");
+      return;
+    }
+
+    if (viewerKind === "text") {
+      await navigate({
+        to: "/projects/$projectId",
+        params: { projectId },
+        search: {
+          section: "Files",
+          fileId: projectFile.id,
+        },
+      });
+
+      return;
+    }
+
+    window.open(
+      `${getApiBaseUrl()}/projects/${projectId}/files/${projectFile.id}/open`,
+      "_blank",
+      "noopener,noreferrer",
+    );
   }
 
   async function handleDelete(fileId: string) {
@@ -195,7 +214,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => void handleOpen(projectFile.id)}
+                    onClick={() => void handleOpen(projectFile)}
                   >
                     Open
                   </Button>

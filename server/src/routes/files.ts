@@ -3,10 +3,10 @@ import { readFile } from "node:fs/promises";
 import { Events, Files, Projects } from "@db";
 import { Hono } from "hono";
 import "@shared/hono";
+import { getFileViewerKind } from "@shared";
 import {
   deleteStoredFile,
   getStoredFilePath,
-  isTextEditableFile,
   saveProjectFile,
   storedFileExists,
 } from "../lib/storage";
@@ -169,7 +169,7 @@ export const fileRoutes = new Hono()
         return ctx.json({ error: "File not found" }, 404);
       }
 
-      if (!isTextEditableFile(file.name)) {
+      if (getFileViewerKind(file) !== "text") {
         return ctx.json({ error: "File is not text-editable" }, 415);
       }
 
