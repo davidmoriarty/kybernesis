@@ -9,6 +9,7 @@ import {
   getStoredFilePath,
   saveProjectFile,
   storedFileExists,
+  writeStoredTextFile,
 } from "../lib/storage";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 import { requireProjectMember } from "../middleware/rbac";
@@ -195,6 +196,68 @@ export const fileRoutes = new Hono()
         },
         200,
       );
+    },
+  )
+
+  .put(
+    "/:projectId/files/:fileId/content",
+    requireProjectMember("projectId"),
+    async (ctx) => {
+      const workspace = ctx.get("workspace");
+      const session = ctx.get("session");
+      const user = ctx.get("user");
+
+      if (!workspace?.id || !session?.tenantId || !user?.id) {
+        return ctx.json({ error: "Forbidden" }, 403);
+      }
+
+      const projectId = ctx.req.param("projectId");
+      const fileId = ctx.req.param("fileId");
+
+      const project = await Projects.getProjectByIdForTenantWorkspace({
+        tenantId: session.tenantId,
+        workspaceId: workspace.id,
+        projectId,
+      });
+
+      if (!project) {
+        return ctx.json({ error: "Project not found" }, 404);
+      }
+
+      const file = await Files.getFileById(fileId);
+
+      if (!file || file.projectId !== projectId) {
+        return ctx.json({ error: "File not found" }, 404);
+      }
+
+      if (getFileViewerKind(file) !== "text") {
+        return ctx.json({ error: "File is not text-editable" }, 415);
+      }
+
+      const { content } = await ctx.req.json<{ content: string }>();
+
+      if (typeof content !== "string") {
+        return ctx.json({ error: "Content is required" }, 400);
+      }
+
+      await writeStoredTextFile(file.storageKey, content);
+
+      await Events.emitEvent({
+        workspaceId: workspace.id,
+        actorId: user.id,
+        entityType: "file",
+        entityId: file.id,
+        eventType: "file.updated",
+        payload: {
+          projectId,
+          fileId: file.id,
+          name: file.name,
+          size: content.length,
+          mimeType: file.mimeType,
+        },
+      });
+
+      return ctx.json({ success: true }, 200);
     },
   )
 

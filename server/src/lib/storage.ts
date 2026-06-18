@@ -57,6 +57,11 @@ export async function storedFileExists(storageKey: string) {
   }
 }
 
+export async function writeStoredTextFile(storageKey: string, content: string) {
+  const filePath = getStoredFilePath(storageKey);
+  await writeFile(filePath, content, "utf8");
+}
+
 export async function deleteStoredFile(storageKey: string) {
   try {
     const filePath = getStoredFilePath(storageKey);

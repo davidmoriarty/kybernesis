@@ -95,6 +95,7 @@ export const eventTypes = [
   "task.completed",
   "file.uploaded",
   "file.deleted",
+  "file.updated",
 ] as const;
 
 export type EventType = (typeof eventTypes)[number];
@@ -190,6 +191,7 @@ const PROJECT_TIMELINE_EVENT_TYPES: EventType[] = [
   "task.completed",
   "file.uploaded",
   "file.deleted",
+  "file.updated",
   "member.added",
   "member.removed",
   "member.role_updated",

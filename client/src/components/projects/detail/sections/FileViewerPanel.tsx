@@ -1,12 +1,16 @@
 // FileViewerPanel.tsx
 import { getFileViewerKind } from "@shared";
 import { useNavigate } from "@tanstack/react-router";
-import { CodeViewer } from "./CodeViewer";
 import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProjectFile, useProjectFileContent } from "@/hooks/useProjectFiles";
+import {
+  useProjectFile,
+  useProjectFileContent,
+  useUpdateProjectFileContent,
+} from "@/hooks/useProjectFiles";
 
 interface FileViewerPanelProps {
   projectId: string;
@@ -31,6 +35,19 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
     fileId,
     viewerKind === "text",
   );
+  const updateMutation = useUpdateProjectFileContent(projectId);
+  const [content, setContent] = useState("");
+
+  useEffect(() => {
+    if (viewerKind === "text" && contentQuery.data) {
+      setContent(contentQuery.data.content);
+    }
+  }, [contentQuery.data, viewerKind]);
+
+  const isDirty =
+    viewerKind === "text" && contentQuery.data
+      ? content !== contentQuery.data.content
+      : false;
 
   function handleBack() {
     void navigate({
@@ -40,6 +57,13 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
         section: "Files",
         fileId: undefined,
       },
+    });
+  }
+
+  async function handleSave() {
+    await updateMutation.mutateAsync({
+      fileId,
+      content,
     });
   }
 
@@ -88,10 +112,30 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
             Failed to load file content.
           </div>
         ) : (
-          <CodeViewer
-            filename={projectFile.name}
-            content={contentQuery.data.content}
-          />
+          <>
+            <div className="flex items-center gap-2 border-b p-3">
+              <Button
+                type="button"
+                size="sm"
+                disabled={!isDirty || updateMutation.isPending}
+                onClick={() => void handleSave()}
+              >
+                {updateMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+
+              {isDirty ? (
+                <span className="text-xs text-muted-foreground">
+                  Unsaved changes
+                </span>
+              ) : null}
+            </div>
+
+            <textarea
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              className="min-h-[70vh] w-full resize-none border-0 bg-background p-4 font-mono text-sm outline-none"
+            />
+          </>
         )
       ) : viewerKind === "image" ? (
         <div className="flex max-h-[70vh] items-center justify-center overflow-auto bg-background p-4">

@@ -120,3 +120,44 @@ export function useProjectFile(projectId: string, fileId?: string) {
     data: query.data?.files.find((file) => file.id === fileId),
   };
 }
+
+type UpdateProjectFileContentBody = {
+  fileId: string;
+  content: string;
+};
+
+export function useUpdateProjectFileContent(projectId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<
+    { success: boolean },
+    RpcError,
+    UpdateProjectFileContentBody
+  >({
+    mutationFn: async ({ fileId, content }) => {
+      const res = await rpc.$put(
+        `/projects/${projectId}/files/${fileId}/content`,
+        {
+          body: { content },
+          credentials: "include",
+        },
+      );
+
+      return parseOrThrow(res);
+    },
+
+    onSuccess: async (_data, { fileId }) => {
+      await Promise.all([
+        qc.invalidateQueries({
+          queryKey: ["projectFileContent", projectId, fileId],
+        }),
+        qc.invalidateQueries({
+          queryKey: ["projectFiles", projectId],
+        }),
+        qc.invalidateQueries({
+          queryKey: ["project-events", projectId],
+        }),
+      ]);
+    },
+  });
+}
