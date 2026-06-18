@@ -2,7 +2,7 @@
 import { getFileViewerKind } from "@shared";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +49,27 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
       ? content !== contentQuery.data.content
       : false;
 
+  const showEditorActions = viewerKind === "text" && contentQuery.data;
+
+  const modeStatus = viewerKind === "text" ? "Editing" : "Viewing";
+
+  const saveStatus = updateMutation.isPending
+    ? "Saving..."
+    : isDirty
+      ? "Unsaved changes"
+      : showEditorActions
+        ? "Saved"
+        : null;
+
   function handleBack() {
+    if (isDirty) {
+      const confirmed = window.confirm(
+        "You have unsaved changes. Leave without saving?",
+      );
+
+      if (!confirmed) return;
+    }
+
     void navigate({
       to: "/projects/$projectId",
       params: { projectId },
@@ -60,12 +80,35 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
     });
   }
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     await updateMutation.mutateAsync({
       fileId,
       content,
     });
-  }
+  }, [content, fileId, updateMutation]);
+
+  useEffect(() => {
+    if (viewerKind !== "text") return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      const isSaveShortcut =
+        (event.metaKey || event.ctrlKey) && event.key === "s";
+
+      if (!isSaveShortcut) return;
+
+      event.preventDefault();
+
+      if (!isDirty || updateMutation.isPending) return;
+
+      void handleSave();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [viewerKind, isDirty, updateMutation.isPending, handleSave]);
 
   if (fileQuery.isPending) {
     return (
@@ -91,15 +134,40 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between border-b p-4">
-        <Button type="button" variant="ghost" size="sm" onClick={handleBack}>
-          <ArrowLeft className="mr-2 size-4" />
-          Back to Files
-        </Button>
+      <div className="flex items-center gap-3 border-b p-4">
+        <div>
+          <Button type="button" variant="ghost" size="sm" onClick={handleBack}>
+            <ArrowLeft className="mr-2 size-4" />
+            Back to Files
+          </Button>
+        </div>
 
-        <h3 className="min-w-0 flex-1 truncate text-right font-medium">
-          {projectFile.name}
-        </h3>
+        <div className="min-w-0 flex-1 text-center">
+          <h3 className="truncate font-medium">{projectFile.name}</h3>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-3">
+          <span className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground">
+            {modeStatus}
+          </span>
+
+          {saveStatus ? (
+            <span className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground">
+              {saveStatus}
+            </span>
+          ) : null}
+
+          {showEditorActions ? (
+            <Button
+              type="button"
+              size="sm"
+              disabled={!isDirty || updateMutation.isPending}
+              onClick={() => void handleSave()}
+            >
+              {updateMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {viewerKind === "text" ? (
@@ -112,30 +180,11 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
             Failed to load file content.
           </div>
         ) : (
-          <>
-            <div className="flex items-center gap-2 border-b p-3">
-              <Button
-                type="button"
-                size="sm"
-                disabled={!isDirty || updateMutation.isPending}
-                onClick={() => void handleSave()}
-              >
-                {updateMutation.isPending ? "Saving..." : "Save"}
-              </Button>
-
-              {isDirty ? (
-                <span className="text-xs text-muted-foreground">
-                  Unsaved changes
-                </span>
-              ) : null}
-            </div>
-
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              className="min-h-[70vh] w-full resize-none border-0 bg-background p-4 font-mono text-sm outline-none"
-            />
-          </>
+          <textarea
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            className="min-h-[70vh] w-full resize-none border-0 bg-background p-4 font-mono text-sm outline-none"
+          />
         )
       ) : viewerKind === "image" ? (
         <div className="flex max-h-[70vh] items-center justify-center overflow-auto bg-background p-4">
