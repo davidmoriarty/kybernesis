@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import type { RpcError } from "@/lib/rpcError";
+import { appToast } from "@/lib/toast";
 
 export type ProjectFile = {
   id: string;
@@ -52,6 +53,11 @@ export function useUploadProjectFile(projectId: string) {
       await qc.invalidateQueries({
         queryKey: ["projectFiles", projectId],
       });
+      appToast.files.uploadSuccess();
+    },
+
+    onError: () => {
+      appToast.files.uploadError();
     },
   });
 }
@@ -81,6 +87,12 @@ export function useDeleteProjectFile(projectId: string) {
           queryKey: ["project-events", projectId],
         }),
       ]);
+
+      appToast.files.deleteSuccess();
+    },
+
+    onError: () => {
+      appToast.files.deleteError();
     },
   });
 }
@@ -158,6 +170,12 @@ export function useUpdateProjectFileContent(projectId: string) {
           queryKey: ["project-events", projectId],
         }),
       ]);
+
+      appToast.files.saveSuccess();
+    },
+
+    onError: () => {
+      appToast.files.saveError();
     },
   });
 }

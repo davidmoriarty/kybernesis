@@ -26,4 +26,15 @@ export const appToast = {
     deleteSuccess: () => toast.success("Project deleted"),
     deleteError: () => toast.error("Failed to delete project"),
   },
+
+  files: {
+    uploadSuccess: () => toast.success("File uploaded"),
+    uploadError: () => toast.error("Failed to upload file"),
+
+    deleteSuccess: () => toast.success("File deleted"),
+    deleteError: () => toast.error("Failed to delete file"),
+
+    saveSuccess: () => toast.success("File saved"),
+    saveError: () => toast.error("Failed to save file"),
+  },
 };

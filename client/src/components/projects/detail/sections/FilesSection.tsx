@@ -1,9 +1,10 @@
 // client/src/components/projects/detail/sections/FilesSection.tsx
 import { File, FolderOpen, Upload } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   type ProjectFile,
@@ -37,6 +38,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
   const uploadMutation = useUploadProjectFile(projectId);
   const deleteMutation = useDeleteProjectFile(projectId);
   const navigate = useNavigate();
+  const [deleteFileId, setDeleteFileId] = useState<string | null>(null);
 
   async function handleFileChange(file: File | null) {
     if (!file) return;
@@ -76,10 +78,6 @@ export function FilesSection({ projectId }: FilesSectionProps) {
   }
 
   async function handleDelete(fileId: string) {
-    const confirmed = window.confirm("Delete this file?");
-
-    if (!confirmed) return;
-
     await deleteMutation.mutateAsync({ fileId });
   }
 
@@ -215,7 +213,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
                     variant="destructive"
                     size="sm"
                     disabled={deleteMutation.isPending}
-                    onClick={() => void handleDelete(projectFile.id)}
+                    onClick={() => setDeleteFileId(projectFile.id)}
                   >
                     Delete
                   </Button>
@@ -225,6 +223,25 @@ export function FilesSection({ projectId }: FilesSectionProps) {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteFileId)}
+        title="Delete file?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        tone="danger"
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteFileId(null);
+          }
+        }}
+        onConfirm={async () => {
+          if (!deleteFileId) return;
+
+          await handleDelete(deleteFileId);
+          setDeleteFileId(null);
+        }}
+      />
     </div>
   );
 }

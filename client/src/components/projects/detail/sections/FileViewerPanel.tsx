@@ -3,6 +3,8 @@ import { getFileViewerKind } from "@shared";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,6 +39,7 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
   );
   const updateMutation = useUpdateProjectFileContent(projectId);
   const [content, setContent] = useState("");
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 
   useEffect(() => {
     if (viewerKind === "text" && contentQuery.data) {
@@ -51,7 +54,8 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
 
   const showEditorActions = viewerKind === "text" && contentQuery.data;
 
-  const modeStatus = viewerKind === "text" ? "Editing" : "Viewing";
+  const modeStatus = viewerKind === "text" && isDirty ? "Editing" : "Viewing";
+  const modeTone = modeStatus === "Editing" ? "info" : "neutral";
 
   const saveStatus = updateMutation.isPending
     ? "Saving..."
@@ -61,15 +65,13 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
         ? "Saved"
         : null;
 
-  function handleBack() {
-    if (isDirty) {
-      const confirmed = window.confirm(
-        "You have unsaved changes. Leave without saving?",
-      );
+  const saveTone = updateMutation.isPending
+    ? "neutral"
+    : isDirty
+      ? "warning"
+      : "success";
 
-      if (!confirmed) return;
-    }
-
+  function navigateBackToFiles() {
     void navigate({
       to: "/projects/$projectId",
       params: { projectId },
@@ -78,6 +80,15 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
         fileId: undefined,
       },
     });
+  }
+
+  function handleBack() {
+    if (isDirty) {
+      setLeaveDialogOpen(true);
+      return;
+    }
+
+    navigateBackToFiles();
   }
 
   const handleSave = useCallback(async () => {
@@ -147,14 +158,10 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
-          <span className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground">
-            {modeStatus}
-          </span>
+          <StatusBadge tone={modeTone}>{modeStatus}</StatusBadge>
 
           {saveStatus ? (
-            <span className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground">
-              {saveStatus}
-            </span>
+            <StatusBadge tone={saveTone}>{saveStatus}</StatusBadge>
           ) : null}
 
           {showEditorActions ? (
@@ -207,9 +214,6 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
             This file type cannot be previewed in Kybernesis for security
             reasons.
           </p>
-          <Button type="button" variant="outline" onClick={handleBack}>
-            Back to Files
-          </Button>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
@@ -223,6 +227,20 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={leaveDialogOpen}
+        title="Leave without saving?"
+        description="You have unsaved changes. If you leave now, your changes will be lost."
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        tone="danger"
+        onOpenChange={setLeaveDialogOpen}
+        onConfirm={() => {
+          setLeaveDialogOpen(false);
+          navigateBackToFiles();
+        }}
+      />
     </Card>
   );
 }
