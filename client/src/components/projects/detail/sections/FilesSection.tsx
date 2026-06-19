@@ -1,5 +1,5 @@
 // client/src/components/projects/detail/sections/FilesSection.tsx
-import { File, FolderOpen, MoreHorizontal, Upload } from "lucide-react";
+import { EllipsisVertical, File, FolderOpen, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -238,7 +238,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
                       size="icon"
                       className="shrink-0"
                     >
-                      <MoreHorizontal className="size-4" />
+                      <EllipsisVertical className="size-4" />
                     </Button>
                   </DropdownMenuTrigger>
 
