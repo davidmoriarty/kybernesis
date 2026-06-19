@@ -182,6 +182,22 @@ function formatEventParts(event: TimelineEvent): TimelineEventParts {
       };
     }
 
+    case "file.renamed": {
+      const previousName =
+        typeof event.payload.previousName === "string"
+          ? event.payload.previousName
+          : "a file";
+
+      const name =
+        typeof event.payload.name === "string" ? event.payload.name : "a file";
+
+      return {
+        actor,
+        action: `renamed file "${previousName}" to`,
+        subject: name,
+      };
+    }
+
     default:
       return {
         actor,

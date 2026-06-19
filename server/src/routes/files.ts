@@ -261,6 +261,70 @@ export const fileRoutes = new Hono()
     },
   )
 
+  .put(
+    "/:projectId/files/:fileId/name",
+    requireProjectMember("projectId"),
+    async (ctx) => {
+      const workspace = ctx.get("workspace");
+      const session = ctx.get("session");
+      const user = ctx.get("user");
+
+      if (!workspace?.id || !session?.tenantId || !user?.id) {
+        return ctx.json({ error: "Forbidden" }, 403);
+      }
+
+      const projectId = ctx.req.param("projectId");
+      const fileId = ctx.req.param("fileId");
+
+      const project = await Projects.getProjectByIdForTenantWorkspace({
+        tenantId: session.tenantId,
+        workspaceId: workspace.id,
+        projectId,
+      });
+
+      if (!project) {
+        return ctx.json({ error: "Project not found" }, 404);
+      }
+
+      const file = await Files.getFileById(fileId);
+
+      if (!file || file.projectId !== projectId) {
+        return ctx.json({ error: "File not found" }, 404);
+      }
+
+      const { name } = await ctx.req.json<{ name: string }>();
+
+      if (typeof name !== "string" || name.trim().length === 0) {
+        return ctx.json({ error: "Name is required" }, 400);
+      }
+
+      const previousName = file.name;
+
+      const updatedFile = await Files.updateFileNameById(fileId, name.trim());
+
+      await Events.emitEvent({
+        workspaceId: workspace.id,
+        actorId: user.id,
+        entityType: "file",
+        entityId: file.id,
+        eventType: "file.renamed",
+        payload: {
+          projectId,
+          fileId: file.id,
+          previousName,
+          name: updatedFile?.name,
+        },
+      });
+
+      return ctx.json(
+        {
+          file: updatedFile,
+        },
+        200,
+      );
+    },
+  )
+
   .delete(
     "/:projectId/files/:fileId",
     requireProjectMember("projectId"),

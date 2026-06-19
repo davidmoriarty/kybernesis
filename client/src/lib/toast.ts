@@ -36,5 +36,8 @@ export const appToast = {
 
     saveSuccess: () => toast.success("File saved"),
     saveError: () => toast.error("Failed to save file"),
+
+    renameSuccess: () => toast.success("File renamed"),
+    renameError: () => toast.error("Failed to rename file"),
   },
 };

@@ -79,3 +79,13 @@ export async function deleteFileById(id: string) {
   const [file] = await db.delete(files).where(eq(files.id, id)).returning();
   return file ?? null;
 }
+
+export async function updateFileNameById(id: string, name: string) {
+  const [file] = await db
+    .update(files)
+    .set({ name })
+    .where(eq(files.id, id))
+    .returning();
+
+  return file ?? null;
+}

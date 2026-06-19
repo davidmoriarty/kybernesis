@@ -1,16 +1,33 @@
 // client/src/components/projects/detail/sections/FilesSection.tsx
-import { File, FolderOpen, Upload } from "lucide-react";
+import { File, FolderOpen, MoreHorizontal, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   type ProjectFile,
   useDeleteProjectFile,
   useProjectFiles,
   useUploadProjectFile,
+  useRenameProjectFile,
 } from "@/hooks/useProjectFiles";
 
 function formatBytes(bytes: number) {
@@ -39,6 +56,9 @@ export function FilesSection({ projectId }: FilesSectionProps) {
   const deleteMutation = useDeleteProjectFile(projectId);
   const navigate = useNavigate();
   const [deleteFileId, setDeleteFileId] = useState<string | null>(null);
+  const renameMutation = useRenameProjectFile(projectId);
+  const [renameFile, setRenameFile] = useState<ProjectFile | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   async function handleFileChange(file: File | null) {
     if (!file) return;
@@ -75,6 +95,34 @@ export function FilesSection({ projectId }: FilesSectionProps) {
         fileId: projectFile.id,
       },
     });
+  }
+
+  function openRenameDialog(projectFile: ProjectFile) {
+    setRenameFile(projectFile);
+    setRenameValue(projectFile.name);
+  }
+
+  function closeRenameDialog() {
+    setRenameFile(null);
+    setRenameValue("");
+  }
+
+  async function handleRename() {
+    if (!renameFile) return;
+
+    const name = renameValue.trim();
+
+    if (!name || name === renameFile.name) {
+      closeRenameDialog();
+      return;
+    }
+
+    await renameMutation.mutateAsync({
+      fileId: renameFile.id,
+      name,
+    });
+
+    closeRenameDialog();
   }
 
   async function handleDelete(fileId: string) {
@@ -181,48 +229,100 @@ export function FilesSection({ projectId }: FilesSectionProps) {
                     </span>
                   </div>
                 </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => void handleOpen(projectFile)}
+                    >
+                      Open
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => handleDownload(projectFile.id)}
+                    >
+                      Download
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => openRenameDialog(projectFile)}
+                    >
+                      Rename
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem
+                      onClick={() => setDeleteFileId(projectFile.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-                <div className="flex flex-col gap-1">
-                  <span>{formatBytes(projectFile.size)}</span>
-                  <span>{formatDate(projectFile.created_at)}</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void handleOpen(projectFile)}
-                  >
-                    Open
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(projectFile.id)}
-                  >
-                    Download
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    disabled={deleteMutation.isPending}
-                    onClick={() => setDeleteFileId(projectFile.id)}
-                  >
-                    Delete
-                  </Button>
-                </div>
+                <span>{formatBytes(projectFile.size)}</span>
+                <span>{formatDate(projectFile.created_at)}</span>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      <Dialog
+        open={Boolean(renameFile)}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeRenameDialog();
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename file</DialogTitle>
+            <DialogDescription>
+              Update the display name for this project file.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Input
+            value={renameValue}
+            onChange={(event) => setRenameValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void handleRename();
+              }
+            }}
+          />
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeRenameDialog}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={renameMutation.isPending}
+              onClick={() => void handleRename()}
+            >
+              {renameMutation.isPending ? "Renaming..." : "Rename"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={Boolean(deleteFileId)}

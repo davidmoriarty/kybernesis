@@ -96,6 +96,7 @@ export const eventTypes = [
   "file.uploaded",
   "file.deleted",
   "file.updated",
+  "file.renamed",
 ] as const;
 
 export type EventType = (typeof eventTypes)[number];
@@ -192,6 +193,7 @@ const PROJECT_TIMELINE_EVENT_TYPES: EventType[] = [
   "file.uploaded",
   "file.deleted",
   "file.updated",
+  "file.renamed",
   "member.added",
   "member.removed",
   "member.role_updated",

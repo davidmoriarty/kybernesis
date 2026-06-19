@@ -62,6 +62,51 @@ export function useUploadProjectFile(projectId: string) {
   });
 }
 
+type RenameProjectFileBody = {
+  fileId: string;
+  name: string;
+};
+
+export function useRenameProjectFile(projectId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<{ file: ProjectFile }, RpcError, RenameProjectFileBody>({
+    mutationFn: async ({ fileId, name }) => {
+      const res = await rpc.$put(
+        `/projects/${projectId}/files/${fileId}/name`,
+        {
+          body: { name },
+          credentials: "include",
+        },
+      );
+
+      return parseOrThrow(res);
+    },
+
+    onSuccess: async (_data, { fileId }) => {
+      await Promise.all([
+        qc.invalidateQueries({
+          queryKey: ["projectFiles", projectId],
+        }),
+
+        qc.invalidateQueries({
+          queryKey: ["projectFileContent", projectId, fileId],
+        }),
+
+        qc.invalidateQueries({
+          queryKey: ["project-events", projectId],
+        }),
+      ]);
+
+      appToast.files.renameSuccess();
+    },
+
+    onError: () => {
+      appToast.files.renameError();
+    },
+  });
+}
+
 type DeleteProjectFileBody = {
   fileId: string;
 };
