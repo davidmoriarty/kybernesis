@@ -8,5 +8,5 @@ export interface StorageAdapter {
 
   deleteStoredFile(storageKey: string): Promise<boolean>;
 
-  getStoredFilePath?(storageKey: string): string;
+  getStoredFilePath(storageKey: string): string;
 }

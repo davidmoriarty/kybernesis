@@ -1,6 +1,7 @@
 // server/src/lib/localStorageAdapter.ts
 import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import type { StorageAdapter } from "./types";
 
 const UPLOAD_ROOT = path.resolve(process.cwd(), "data", "uploads");
 
@@ -80,3 +81,11 @@ export async function deleteStoredFile(storageKey: string) {
     throw err;
   }
 }
+
+export const localStorageAdapter: StorageAdapter = {
+  saveProjectFile,
+  storedFileExists,
+  writeStoredTextFile,
+  deleteStoredFile,
+  getStoredFilePath,
+};
