@@ -1,4 +1,4 @@
-// server/src/lib/storage.ts
+// server/src/lib/localStorageAdapter.ts
 import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
