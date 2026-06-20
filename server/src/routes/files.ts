@@ -130,7 +130,7 @@ export const fileRoutes = new Hono()
       return new Response(new Uint8Array(buffer), {
         headers: {
           "Content-Type": file.mimeType || "application/octet-stream",
-          "Content-Disposition": `attachment; filename="${file.name.replaceAll('"', "")}"`,
+          "Content-Disposition": `inline; filename="${file.name.replaceAll('"', "")}"`,
         },
       });
     },
