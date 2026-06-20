@@ -1,12 +1,12 @@
 // server/src/routes/files.ts
-import { readFile } from "node:fs/promises";
 import { Events, Files, Projects } from "@db";
 import { Hono } from "hono";
 import "@shared/hono";
 import { getFileViewerKind } from "@shared";
 import {
   deleteStoredFile,
-  getStoredFilePath,
+  readStoredFile,
+  readStoredTextFile,
   saveProjectFile,
   storedFileExists,
   writeStoredTextFile,
@@ -78,16 +78,14 @@ export const fileRoutes = new Hono()
         return ctx.json({ error: "Stored file not found" }, 404);
       }
 
-      const filePath = getStoredFilePath(file.storageKey);
-      const buffer = await readFile(filePath);
+      const buffer = await readStoredFile(file.storageKey);
 
-      ctx.header("Content-Type", file.mimeType || "application/octet-stream");
-      ctx.header(
-        "Content-Disposition",
-        `attachment; filename="${file.name.replaceAll('"', "")}"`,
-      );
-
-      return ctx.body(buffer);
+      return new Response(new Uint8Array(buffer), {
+        headers: {
+          "Content-Type": file.mimeType || "application/octet-stream",
+          "Content-Disposition": `attachment; filename="${file.name.replaceAll('"', "")}"`,
+        },
+      });
     },
   )
 
@@ -127,16 +125,14 @@ export const fileRoutes = new Hono()
         return ctx.json({ error: "Stored file not found" }, 404);
       }
 
-      const filePath = getStoredFilePath(file.storageKey);
-      const buffer = await readFile(filePath);
+      const buffer = await readStoredFile(file.storageKey);
 
-      ctx.header("Content-Type", file.mimeType || "application/octet-stream");
-      ctx.header(
-        "Content-Disposition",
-        `inline; filename="${file.name.replaceAll('"', "")}"`,
-      );
-
-      return ctx.body(buffer);
+      return new Response(new Uint8Array(buffer), {
+        headers: {
+          "Content-Type": file.mimeType || "application/octet-stream",
+          "Content-Disposition": `attachment; filename="${file.name.replaceAll('"', "")}"`,
+        },
+      });
     },
   )
 
@@ -180,8 +176,7 @@ export const fileRoutes = new Hono()
         return ctx.json({ error: "Stored file not found" }, 404);
       }
 
-      const filePath = getStoredFilePath(file.storageKey);
-      const content = await readFile(filePath, "utf8");
+      const content = await readStoredTextFile(file.storageKey);
 
       return ctx.json(
         {

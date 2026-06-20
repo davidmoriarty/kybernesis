@@ -10,7 +10,8 @@ export const storage =
 export const {
   saveProjectFile,
   storedFileExists,
+  readStoredFile,
+  readStoredTextFile,
   writeStoredTextFile,
   deleteStoredFile,
-  getStoredFilePath,
 } = storage;

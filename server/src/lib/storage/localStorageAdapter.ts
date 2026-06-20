@@ -1,5 +1,5 @@
 // server/src/lib/localStorageAdapter.ts
-import { mkdir, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { StorageAdapter } from "./types";
 
@@ -58,6 +58,16 @@ export async function storedFileExists(storageKey: string) {
   }
 }
 
+export async function readStoredFile(storageKey: string) {
+  const filePath = getStoredFilePath(storageKey);
+  return readFile(filePath);
+}
+
+export async function readStoredTextFile(storageKey: string) {
+  const buffer = await readStoredFile(storageKey);
+  return buffer.toString("utf8");
+}
+
 export async function writeStoredTextFile(storageKey: string, content: string) {
   const filePath = getStoredFilePath(storageKey);
   await writeFile(filePath, content, "utf8");
@@ -85,7 +95,8 @@ export async function deleteStoredFile(storageKey: string) {
 export const localStorageAdapter: StorageAdapter = {
   saveProjectFile,
   storedFileExists,
+  readStoredFile,
+  readStoredTextFile,
   writeStoredTextFile,
   deleteStoredFile,
-  getStoredFilePath,
 };
