@@ -29,6 +29,17 @@ async function streamToBuffer(stream: unknown) {
   return Buffer.concat(chunks);
 }
 
+async function readStoredFileFromR2(storageKey: string) {
+  const response = await r2Client.send(
+    new GetObjectCommand({
+      Bucket: process.env.R2_BUCKET,
+      Key: storageKey,
+    }),
+  );
+
+  return streamToBuffer(response.Body);
+}
+
 export const r2StorageAdapter: StorageAdapter = {
   async saveProjectFile({ projectId, file }) {
     const safeFilename = sanitizeFilename(file.name || "upload");
@@ -79,19 +90,10 @@ export const r2StorageAdapter: StorageAdapter = {
     }
   },
 
-  async readStoredFile(storageKey) {
-    const response = await r2Client.send(
-      new GetObjectCommand({
-        Bucket: process.env.R2_BUCKET,
-        Key: storageKey,
-      }),
-    );
-
-    return streamToBuffer(response.Body);
-  },
+  readStoredFile: readStoredFileFromR2,
 
   async readStoredTextFile(storageKey) {
-    const buffer = await this.readStoredFile(storageKey);
+    const buffer = await readStoredFileFromR2(storageKey);
     return buffer.toString("utf8");
   },
 
