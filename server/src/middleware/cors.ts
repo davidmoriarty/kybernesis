@@ -2,6 +2,7 @@
 import { cors } from "hono/cors";
 
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
+const BASE_DOMAIN = process.env.BASE_DOMAIN;
 const DEV_CLIENT_PORT = Number(process.env.DEV_CLIENT_PORT ?? 5173);
 
 function isAllowedOrigin(origin: string): boolean {
@@ -13,6 +14,15 @@ function isAllowedOrigin(origin: string): boolean {
     const u = new URL(origin);
     const host = u.hostname.toLowerCase();
     const port = Number(u.port || (u.protocol === "https:" ? 443 : 80));
+
+    if (BASE_DOMAIN) {
+      const baseDomain = BASE_DOMAIN.toLowerCase();
+
+      if (u.protocol === "https:" && host === baseDomain) return true;
+      if (u.protocol === "https:" && host.endsWith(`.${baseDomain}`)) {
+        return true;
+      }
+    }
 
     if (host === "localhost" && port === DEV_CLIENT_PORT) return true;
     if (host.endsWith(".localhost") && port === DEV_CLIENT_PORT) return true;
