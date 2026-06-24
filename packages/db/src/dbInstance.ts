@@ -6,7 +6,7 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");
 }
 
-console.log("DATABASE_URL (db):", process.env.DATABASE_URL);
+console.log("Database connection configured");
 
 // Create a connection pool
 const pool = new Pool({
