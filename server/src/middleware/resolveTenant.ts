@@ -26,7 +26,12 @@ export function extractTenantSlug(hostname: string): string | null {
 }
 
 export async function resolveTenant(ctx: Context, next: Next) {
-  const hostname = getHostname(ctx.req.header("host") ?? null);
+  const hostname = getHostname(
+    ctx.req.header("x-tenant-host") ??
+      ctx.req.header("x-forwarded-host") ??
+      ctx.req.header("host") ??
+      null,
+  );
   const tenantSlug = extractTenantSlug(hostname);
 
   ctx.set("tenantSlug", tenantSlug);
@@ -42,6 +47,8 @@ export async function resolveTenant(ctx: Context, next: Next) {
   if (process.env.NODE_ENV !== "production") {
     console.log("[resolveTenant]", {
       host: ctx.req.header("host"),
+      xTenantHost: ctx.req.header("x-tenant-host"),
+      xForwardedHost: ctx.req.header("x-forwarded-host"),
       hostname,
       tenantSlug,
       tenantId: tenant?.id ?? null,
