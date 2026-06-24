@@ -1,16 +1,16 @@
 // server/src/routes/projects.ts
 import { Hono } from "hono";
-import "@shared/hono";
+import type {} from "shared/hono";
 import { fileRoutes } from "./files";
-import { Projects, Users } from "@db";
+import { Projects, Users } from "db";
 import {
   addProjectMember,
   removeProjectMember,
   createProjectMembership,
   listProjectIdsForUserInWorkspace,
   getMembersForProject,
-} from "@db/projectMembers";
-import { getProjectTimelineEvents } from "@db/events";
+} from "db/projectMembers";
+import { getProjectTimelineEvents } from "db/events";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 import {
   requireProjectMember,

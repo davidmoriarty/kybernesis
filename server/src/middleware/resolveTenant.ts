@@ -1,7 +1,7 @@
 // server/src/middleware/resolveTenant.ts
-import "@shared/hono";
+import type {} from "shared/hono";
 import type { Context, Next } from "hono";
-import { Tenants } from "@db";
+import { Tenants } from "db";
 
 function getHostname(hostHeader: string | null): string {
   const host = (hostHeader ?? "").trim();

@@ -7,7 +7,7 @@ import {
   updateProfileHandler,
   tenantSignupHandler,
   userSignupHandler,
-} from "@auth";
+} from "auth";
 import { requireSession } from "../middleware/requireSession";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 import { requireTenant } from "../middleware/requireTenant";

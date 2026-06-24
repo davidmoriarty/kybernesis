@@ -1,5 +1,5 @@
 // packages/auth/src/validators/updateProfile.ts
-import type { UpdateUserProfileInput } from "@shared";
+import type { UpdateUserProfileInput } from "shared";
 
 export function isUpdateUserProfileInput(
   value: unknown,

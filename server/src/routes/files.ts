@@ -1,8 +1,8 @@
 // server/src/routes/files.ts
-import { Events, Files, Projects } from "@db";
+import { Events, Files, Projects } from "db";
 import { Hono } from "hono";
-import "@shared/hono";
-import { getFileViewerKind } from "@shared";
+import type {} from "shared/hono";
+import { getFileViewerKind } from "shared";
 import {
   deleteStoredFile,
   readStoredFile,

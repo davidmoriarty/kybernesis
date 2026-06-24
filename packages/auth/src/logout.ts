@@ -1,5 +1,5 @@
 // packages/auth/src/logout.ts
-import { Sessions } from "@db";
+import { Sessions } from "db";
 import type { Context } from "hono";
 import { deleteCookie, getCookie } from "hono/cookie";
 import { SESSION_COOKIE_NAME } from "./constants";

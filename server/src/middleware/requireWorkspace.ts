@@ -1,6 +1,6 @@
 // server/src/middleware/requireWorkspace.ts
-import { WorkspaceMembers, Workspaces } from "@db";
-import "@shared/hono";
+import { WorkspaceMembers, Workspaces } from "db";
+import type {} from "shared/hono";
 import type { Context, Next } from "hono";
 
 export async function requireWorkspace(ctx: Context, next: Next) {

@@ -1,9 +1,9 @@
 // packages/auth/src/me.ts
-import { Users } from "@db";
-import { mapUserRowToUser } from "@db/mappers";
+import { Users } from "db";
+import { mapUserRowToUser } from "db/mappers";
 import { isUpdateUserProfileInput } from "./validators/updateProfile";
-import type { MeResponse, UpdateProfileResponse } from "@shared";
-import "@shared/hono";
+import type { MeResponse, UpdateProfileResponse } from "shared";
+import type {} from "shared/hono";
 import type { Context } from "hono";
 
 export async function meHandler(ctx: Context): Promise<Response> {

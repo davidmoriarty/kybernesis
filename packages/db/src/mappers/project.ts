@@ -1,5 +1,5 @@
 // packages/db/src/mappers/project.ts
-import type { Project } from "@shared";
+import type { Project } from "shared";
 import type { ProjectRow } from "../types";
 
 export function mapProjectRowToProject(row: ProjectRow): Project {

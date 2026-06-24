@@ -4,7 +4,7 @@ import type {
   WorkspaceRowSummary,
   WorkspaceRowSummaryWithRole,
 } from "./types";
-import type { Workspace } from "@shared";
+import type { Workspace } from "shared";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { index, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { db } from "./dbInstance";

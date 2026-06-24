@@ -1,6 +1,6 @@
 // server/src/middleware/requireTenantAdmin.ts
-import { TenantMembers } from "@db";
-import "@shared/hono";
+import { TenantMembers } from "db";
+import type {} from "shared/hono";
 import type { Context, Next } from "hono";
 
 type AllowedTenantRole = "owner" | "admin";

@@ -4,10 +4,10 @@ import {
   SESSION_TTL_MS,
   sessionCookieOptions,
   TOUCH_EVERY_MS,
-} from "@auth";
-import { Sessions, Users, Workspaces, TenantMembers } from "@db";
-import { mapUserRowToUser } from "@db/mappers";
-import "@shared/hono";
+} from "auth";
+import { Sessions, Users, Workspaces, TenantMembers } from "db";
+import { mapUserRowToUser } from "db/mappers";
+import type {} from "shared/hono";
 import type { Context, Next } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 

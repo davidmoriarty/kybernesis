@@ -1,6 +1,6 @@
 // server/src/routes/workspaces/events.ts
 import { Hono } from "hono";
-import { Events } from "@db";
+import { Events } from "db";
 
 export const workspaceEventsRoute = new Hono();
 

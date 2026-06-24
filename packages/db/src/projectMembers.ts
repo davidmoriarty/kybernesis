@@ -8,7 +8,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { and, eq } from "drizzle-orm";
-import { db } from "@db";
+import { db } from "./index";
 import { events } from "./events";
 import { projects } from "./projects";
 import { users } from "./users";

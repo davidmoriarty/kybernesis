@@ -1,9 +1,9 @@
 // server/src/routes/tasks.ts
 import { Hono } from "hono";
-import "@shared/hono";
-import { Projects, Tasks } from "@db";
-import { emitEvent } from "@db/events";
-import { getProjectMembership } from "@db/projectMembers";
+import type {} from "shared/hono";
+import { Projects, Tasks } from "db";
+import { emitEvent } from "db/events";
+import { getProjectMembership } from "db/projectMembers";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 import { requireProjectMember } from "../middleware/rbac";
 

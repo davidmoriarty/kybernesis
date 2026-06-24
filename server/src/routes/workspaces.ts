@@ -1,7 +1,7 @@
 // server/src/routes/workspaces.ts
 import { Hono } from "hono";
-import "@shared/hono";
-import { Events, Projects, Sessions, Workspaces, WorkspaceMembers } from "@db";
+import type {} from "shared/hono";
+import { Events, Projects, Sessions, Workspaces, WorkspaceMembers } from "db";
 import { requireSession } from "../middleware/requireSession";
 import { requireWorkspace } from "../middleware/requireWorkspace";
 

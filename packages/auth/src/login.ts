@@ -1,6 +1,6 @@
 // packages/auth/src/login.ts
-import { Sessions, Tenants, Users, Workspaces } from "@db";
-import "@shared/hono";
+import { Sessions, Tenants, Users, Workspaces } from "db";
+import type {} from "shared/hono";
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
 import {

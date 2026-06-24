@@ -1,12 +1,12 @@
 // server/src/middleware/rbac.ts
 import type { MiddlewareHandler, Context } from "hono";
 import { forbidden, unauthorized, badRequest, notFound } from "../errors";
-import "@shared/hono";
-import { getWorkspaceRoleForUser } from "@db/workspaceMembers";
+import type {} from "shared/hono";
+import { getWorkspaceRoleForUser } from "db/workspaceMembers";
 import {
   getProjectRoleForUser,
   getProjectWorkspaceId,
-} from "@db/projectMembers";
+} from "db/projectMembers";
 
 function getTenantId(c: Context): string {
   const tenantId = c.get("tenantId");

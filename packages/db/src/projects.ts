@@ -12,7 +12,7 @@ import { db } from "./dbInstance";
 import { mapProjectRowToProject } from "./mappers";
 import { events } from "./events";
 import { workspaces } from "./workspaces";
-import type { ProjectStatus, Project } from "@shared";
+import type { ProjectStatus, Project } from "shared";
 
 // Table definition (source of truth)
 export const projects = pgTable(

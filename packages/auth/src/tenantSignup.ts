@@ -1,5 +1,5 @@
 // packages/auth/src/tenantSignup.ts
-import { Flows, Tenants, DEFAULT_WORKSPACE_NAME } from "@db";
+import { Flows, Tenants, DEFAULT_WORKSPACE_NAME } from "db";
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
 import {

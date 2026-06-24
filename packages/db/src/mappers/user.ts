@@ -1,5 +1,5 @@
 // packages/db/src/mappers/user.ts
-import type { User } from "@shared";
+import type { User } from "shared";
 import type { UserRow } from "../types";
 
 export function mapUserRowToUser(row: UserRow): User {

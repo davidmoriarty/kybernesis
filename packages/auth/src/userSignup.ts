@@ -1,5 +1,5 @@
 // packages/auth/src/userSignup.ts
-import { Flows, Users, Workspaces } from "@db";
+import { Flows, Users, Workspaces } from "db";
 import type { Context } from "hono";
 import { setCookie } from "hono/cookie";
 import { hashPassword } from "./crypto/password";
