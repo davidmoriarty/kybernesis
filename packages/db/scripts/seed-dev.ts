@@ -7,10 +7,10 @@ import * as WorkspaceMembers from "../src/workspaceMembers";
 import { tenantMembers } from "../src/tenantMembers";
 import { DEFAULT_WORKSPACE_NAME } from "../src/constants";
 
-const TENANT_NAME = "Acme";
-const ADMIN_EMAIL = "admin@example.com";
-const ADMIN_NAME = "Admin";
-const ADMIN_PASSWORD = "password123";
+const TENANT_NAME = process.env.SEED_TENANT_NAME ?? "Acme";
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? "admin@example.com";
+const ADMIN_NAME = process.env.SEED_ADMIN_NAME ?? "Admin";
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "password123";
 
 async function seedHashPassword(password: string): Promise<string> {
   return Bun.password.hash(password, { algorithm: "argon2id" });
