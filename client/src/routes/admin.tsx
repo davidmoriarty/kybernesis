@@ -12,9 +12,9 @@ export const Route = createFileRoute("/admin")({
 
 function AdminDashboard() {
   return (
-    <Section>
+    <Section padding="py-12 md:py-20 lg:py-30">
       <Container>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
       </Container>
     </Section>
   );
