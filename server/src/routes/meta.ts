@@ -30,11 +30,4 @@ export const metaRoutes = new Hono()
       tenantId: ctx.get("tenantId"),
       path: ctx.req.path,
     });
-  })
-  .get("/tenant-context", (ctx) => {
-    return ctx.json({
-      surface: ctx.get("surface"),
-      tenantSlug: ctx.get("tenantSlug"),
-      tenantId: ctx.get("tenantId"),
-    });
   });

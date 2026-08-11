@@ -9,6 +9,14 @@ import { taskRoutes } from "./tasks";
 import { workspaceRoutes } from "./workspaces";
 
 export const tenantApi = new Hono()
+  .get("/tenant-context", (ctx) => {
+    return ctx.json({
+      surface: ctx.get("surface"),
+      tenantSlug: ctx.get("tenantSlug"),
+      tenantId: ctx.get("tenantId"),
+    });
+  })
+
   // auth endpoints (login/logout/signup) must NOT require session
   .route("/auth", authRoutes)
 
