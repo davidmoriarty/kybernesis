@@ -3,7 +3,6 @@
   "compilerOptions": {
     "composite": false,
 
-    // Environment setup & latest features
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "target": "ESNext",
     "module": "ESNext",
@@ -13,7 +12,6 @@
     "noEmit": false,
     "allowJs": false,
 
-    // Path resolution
     "baseUrl": "./",
     "paths": {
       "@/*": ["./client/src/*"],
@@ -36,33 +34,29 @@
       "@schemas/*": ["./packages/schemas/src/*"]
     },
 
-    // Module resolution
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
 
-    // Strictness and best practices
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "experimentalDecorators": true,
 
-    // Output control
     "skipLibCheck": true,
 
-    // Optional strict flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
 
-  "include": ["server/src/**/*", "client/src/**/*", "shared/src/**/*"],
-  "exclude": ["node_modules", "dist"],
-
   "references": [
-    { "path": "./packages" },
+    { "path": "./packages/shared" },
+    { "path": "./packages/db" },
+    { "path": "./packages/auth" },
+    { "path": "./packages/schemas" },
     { "path": "./server" },
     { "path": "./client" }
   ]

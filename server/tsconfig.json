@@ -6,7 +6,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "allowJs": false,
-    "types": ["bun-types"],
+    "types": ["bun"],
     "noEmit": false,
     "emitDecoratorMetadata": true
   },

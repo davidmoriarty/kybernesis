@@ -20,9 +20,6 @@
     "type-check": "tsc --noEmit",
     "test": "echo \"no tests yet\""
   },
-  "devDependencies": {
-    "typescript": "5.9.3"
-  },
   "dependencies": {
     "hono": "^4.12.3"
   }

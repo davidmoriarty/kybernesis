@@ -19,8 +19,5 @@
     "hono": "^4.12.3",
     "schemas": "workspace:*",
     "shared": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.3.14"
   }
 }

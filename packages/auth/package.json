@@ -21,8 +21,5 @@
     "hono": "^4.12.3",
     "shared": "workspace:*",
     "db": "workspace:*"
-  },
-  "devDependencies": {
-    "typescript": "5.9.3"
   }
 }
