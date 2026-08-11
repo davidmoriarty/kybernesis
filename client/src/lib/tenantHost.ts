@@ -1,14 +1,6 @@
-// server/src/middleware/resolveTenant.ts
+// client/src/lib/tenantHost.ts
 
-import { Tenants } from "db";
-import type { Context, Next } from "hono";
 import type { HostContext } from "shared";
-import type {} from "shared/hono";
-
-function getHostname(hostHeader: string | null): string {
-  const host = (hostHeader ?? "").trim();
-  return (host.split(":")[0] ?? "").toLowerCase();
-}
 
 export function parseHostContext(hostname: string): HostContext {
   const normalizedHostname = hostname.trim().toLowerCase();
@@ -32,7 +24,7 @@ export function parseHostContext(hostname: string): HostContext {
     return { surface: "tenant", tenantSlug: prefix || null };
   }
 
-  const baseDomain = process.env.BASE_DOMAIN?.trim().toLowerCase();
+  const baseDomain = import.meta.env.VITE_BASE_DOMAIN?.trim().toLowerCase();
 
   if (!baseDomain || normalizedHostname === baseDomain) {
     return { surface: "public", tenantSlug: null };
@@ -56,39 +48,6 @@ export function parseHostContext(hostname: string): HostContext {
   return { surface: "tenant", tenantSlug: prefix || null };
 }
 
-export async function resolveTenant(ctx: Context, next: Next) {
-  const hostname = getHostname(
-    ctx.req.header("x-tenant-host") ??
-      ctx.req.header("x-forwarded-host") ??
-      ctx.req.header("host") ??
-      null,
-  );
-
-  const { surface, tenantSlug } = parseHostContext(hostname);
-
-  ctx.set("surface", surface);
-  ctx.set("tenantSlug", tenantSlug);
-
-  if (!tenantSlug) {
-    ctx.set("tenantId", null);
-    return next();
-  }
-
-  const tenant = await Tenants.getTenantBySlug(tenantSlug);
-
-  ctx.set("tenantId", tenant?.id ?? null);
-
-  if (process.env.NODE_ENV !== "production") {
-    console.log("[resolveTenant]", {
-      host: ctx.req.header("host"),
-      xTenantHost: ctx.req.header("x-tenant-host"),
-      xForwardedHost: ctx.req.header("x-forwarded-host"),
-      hostname,
-      surface,
-      tenantSlug,
-      tenantId: tenant?.id ?? null,
-    });
-  }
-
-  return next();
+export function getCurrentHostContext(): HostContext {
+  return parseHostContext(window.location.hostname);
 }

@@ -28,21 +28,15 @@ declare module "@tanstack/react-router" {
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {
-  throw new Error(
-    "Root element not found. Check if it's in your index.html or if the id is correct.",
-  );
+  throw new Error('Root element with id "root" was not found.');
 }
 
-// Render the app
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <RouterProvider router={router} />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </StrictMode>,
-  );
-}
+ReactDOM.createRoot(rootElement).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </QueryClientProvider>
+  </StrictMode>,
+);

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -12,6 +12,9 @@
       "!client/src/routeTree.gen.ts",
       "!client/src/components/ui/*",
       "!**/generated",
+      "!client/public/hljs/*",
+      "!client/public/favicon.svg",
+      "!client/public/favicon-32x32.png",
       "!!**/dist",
       "!packages/db/drizzle/meta/**/*",
       "!packages/db/drizzle/migrations/**/*"
@@ -24,7 +27,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "preset": "recommended"
     }
   },
   "javascript": {

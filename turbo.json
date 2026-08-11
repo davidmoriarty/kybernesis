@@ -51,17 +51,16 @@
         "src/**/*.tsx",
         "src/**/*.js",
         "src/**/*.jsx",
-        "eslint.config.js",
-        ".eslintrc*",
+        "drizzle.config.ts",
         "package.json",
         "tsconfig.json",
         "tsconfig.*.json"
       ],
       "outputs": [],
-      "env": ["NODE_ENV"]
+      "env": ["NODE_ENV", "DATABASE_URL"]
     },
     "type-check": {
-      "dependsOn": [],
+      "dependsOn": ["^build"],
       "inputs": [
         "src/**/*.ts",
         "src/**/*.tsx",

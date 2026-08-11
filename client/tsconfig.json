@@ -1,8 +1,15 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@shared": ["../packages/shared/src/index.ts"],
+      "@shared/*": ["../packages/shared/src/*"]
+    },
+    "allowJs": true,
     "noEmit": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test"],
   "references": [{ "path": "../packages/shared" }]
 }

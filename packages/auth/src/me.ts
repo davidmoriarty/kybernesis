@@ -1,4 +1,5 @@
 // packages/auth/src/me.ts
+
 import { Users } from "db";
 import { mapUserRowToUser } from "db/mappers";
 import { isUpdateUserProfileInput } from "./validators/updateProfile";
@@ -10,8 +11,9 @@ export async function meHandler(ctx: Context): Promise<Response> {
   const user = ctx.get("user");
   const tenantId = ctx.get("tenantId");
   const tenantSlug = ctx.get("tenantSlug");
+  const tenantRole = ctx.get("tenantRole");
 
-  if (!tenantId || !user?.id) {
+  if (!tenantId || !tenantRole || !user?.id) {
     return ctx.json({ error: "Unauthorized" }, 401);
   }
 
@@ -21,6 +23,7 @@ export async function meHandler(ctx: Context): Promise<Response> {
   return ctx.json<MeResponse>(
     {
       tenant: { id: tenantId, slug: tenantSlug ?? null },
+      tenantRole,
       user: mapUserRowToUser(userRow),
       workspace: ctx.get("workspace") ?? null,
     },

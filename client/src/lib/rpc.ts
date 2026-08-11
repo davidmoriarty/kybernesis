@@ -1,4 +1,5 @@
 // client/src/lib/rpc.ts
+
 import { createRpcClient } from "@shared/rpc";
 
 function getDevApiBaseUrl(): string {

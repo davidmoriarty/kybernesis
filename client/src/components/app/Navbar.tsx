@@ -1,20 +1,12 @@
 // client/src/components/app/Navbar.tsx
+
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import { Cog, Menu } from "lucide-react";
 import { useState } from "react";
-import { useLogout } from "@/hooks/auth";
-import { useConditionalMe } from "@/hooks/useContidionalMe";
-import { cn } from "@/lib/utils";
-import {
-  Brain,
-  Building,
-  CircleUser,
-  Cog,
-  Folder,
-  ListCheck,
-  LogIn,
-  LogOut,
-  Menu,
-} from "lucide-react";
+import { adminNav } from "@/components/app/nav/adminNav";
+import { publicNav } from "@/components/app/nav/publicNav";
+import { tenantNav } from "@/components/app/nav/tenantNav";
+import type { NavConfig, NavItem } from "@/components/app/nav/types";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,151 +14,104 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLogout } from "@/hooks/auth";
+import { useConditionalMe } from "@/hooks/useContidionalMe";
+import { getCurrentHostContext } from "@/lib/tenantHost";
+import { cn } from "@/lib/utils";
+
+const navConfigs = {
+  public: publicNav,
+  tenant: tenantNav,
+  admin: adminNav,
+} satisfies Record<string, NavConfig>;
 
 export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: me } = useConditionalMe();
   const logout = useLogout();
+
   const [accountOpen, setAccountOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  interface NavLink {
-    to: string;
-    label: string;
-    icon?: React.ComponentType<{ className?: string }>;
-    protected?: boolean;
-    showWhen?: "loggedIn" | "loggedOut";
-    ariaLabel?: string;
-    active?: boolean;
-  }
+  const { surface } = getCurrentHostContext();
+  const config = navConfigs[surface];
+  const isAuthenticated = !!me?.user;
 
-  // Unified links array
-  const links: NavLink[] = [
-    {
-      to: "/",
-      label: "Kybernesis",
-      icon: Brain,
-      ariaLabel: "Home",
-    },
-    {
-      to: "/me",
-      label: "Me",
-      icon: CircleUser,
-      protected: true,
-      ariaLabel: "My account",
-    },
-    {
-      to: "/projects",
-      label: "Projects",
-      icon: Folder,
-      protected: true,
-      ariaLabel: "Projects",
-    },
-    {
-      to: "/workspaces",
-      label: "Workspaces",
-      icon: Building,
-      protected: true,
-      ariaLabel: "Workspaces",
-    },
-    {
-      to: "/login",
-      label: "Login",
-      icon: LogIn,
-      showWhen: "loggedOut",
-      ariaLabel: "Login",
-    },
-    {
-      to: "/logout",
-      label: "Logout",
-      icon: LogOut,
-      showWhen: "loggedIn",
-      ariaLabel: "Logout",
-    },
-    {
-      to: "/signup",
-      label: "Signup",
-      icon: ListCheck,
-      showWhen: "loggedOut",
-      ariaLabel: "Sign up",
-    },
-  ];
+  const brandTo = isAuthenticated
+    ? config.brand.authenticatedTo
+    : config.brand.unauthenticatedTo;
 
-  function filterLinks(labels: string[]): NavLink[] {
-    return links
-      .filter((link) => labels.includes(link.label))
-      .filter((link) => {
-        if (!link.showWhen) return true;
-        if (link.showWhen === "loggedIn") return !!me?.user;
-        if (link.showWhen !== "loggedOut") return !me?.user;
-        return true;
-      })
-      .map((link) => ({
-        ...link,
-        active: location.pathname.startsWith(link.to),
-      }));
-  }
+  const primaryLinks = isAuthenticated
+    ? config.authenticatedLinks
+    : config.unauthenticatedLinks;
 
-  const desktopNavLinks = me?.user
-    ? filterLinks(["Kybernesis", "Projects", "Workspaces"])
-    : filterLinks(["Kybernesis", "Signup"]);
+  const accountLinks = isAuthenticated
+    ? config.authenticatedAccountLinks
+    : config.unauthenticatedAccountLinks;
 
-  const accountNavLinks = me?.user
-    ? filterLinks(["Me", "Logout"])
-    : filterLinks(["Signup", "Login"]);
+  const mobileLinks = [...primaryLinks, ...accountLinks];
 
-  const mobileNavLinks = me?.user
-    ? filterLinks(["Me", "Projects", "Workspaces", "Logout"])
-    : filterLinks(["Signup", "Login"]);
+  const BrandIcon = config.brand.icon;
+
+  const isActive = (to: string) =>
+    location.pathname === to || location.pathname.startsWith(`${to}/`);
+
+  const handleNavItem = (item: NavItem) => {
+    if (item.to === "/logout") {
+      logout.mutate();
+      return;
+    }
+
+    navigate({ to: item.to });
+  };
 
   const navItemClass =
-    "flex items-center gap-2 px-4 py-2 font-medium rounded-md hover:bg-slate-300/80 cursor-pointer";
+    "flex cursor-pointer items-center gap-2 rounded-md px-4 py-2 font-medium hover:bg-slate-300/80";
 
   return (
     <header
       className={cn(
-        "sticky top-0 inset-x-0 z-40",
-        "supports-backdrop-filter:backdrop-blur",
-        "border-b border-gray-300 dark:border-gray-500",
+        "sticky inset-x-0 top-0 z-40",
+        "border-b border-border",
+        "bg-background/95 backdrop-blur shadow-xs",
+        "supports-backdrop-filter:bg-background/80",
       )}
     >
-      <nav className="container mx-auto px-5 py-3 flex items-center justify-between">
-        {/* Brand / App name */}
+      <nav className="container mx-auto flex items-center justify-between px-5 py-3">
         <Button
           variant="link"
           className={cn(
+            "flex items-center gap-2 border-0 p-0",
             "text-xl font-bold text-gray-900 dark:text-gray-200",
-            "border-0 p-0 flex items-center gap-2",
           )}
-          onClick={() => navigate({ to: desktopNavLinks[0]?.to })}
-          aria-label={desktopNavLinks[0]?.ariaLabel}
+          onClick={() => navigate({ to: brandTo })}
+          aria-label={`${config.brand.label} home`}
         >
-          <Brain size={24} />
-          {desktopNavLinks[0]?.label}
+          {BrandIcon && <BrandIcon className="size-6" />}
+          {config.brand.label}
         </Button>
 
-        {/* Desktop links */}
-        <div className="hidden sm:flex items-center gap-4">
-          {desktopNavLinks
-            .slice(1)
-            .map(({ to, label, icon: Icon, ariaLabel, active }) => (
-              <Button
-                key={to}
-                variant={active ? "link" : "outline"}
-                className={`${navItemClass} ${
-                  active ? "bg-secondary font-bold" : ""
-                }`}
-                aria-label={ariaLabel}
-                onClick={() => navigate({ to })}
-              >
-                {Icon && <Icon className="w-4 h-4" />}
-                {label}
-              </Button>
-            ))}
+        <div className="hidden items-center gap-4 sm:flex">
+          {primaryLinks.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.to);
 
-          {/* Account dropdown */}
-          {me?.user && (
+            return (
+              <Button
+                key={item.to}
+                variant={active ? "link" : "outline"}
+                className={cn(navItemClass, active && "bg-secondary font-bold")}
+                aria-label={item.ariaLabel}
+                onClick={() => handleNavItem(item)}
+              >
+                {Icon && <Icon className="size-4" />}
+                {item.label}
+              </Button>
+            );
+          })}
+
+          {accountLinks.length > 0 && (
             <DropdownMenu open={accountOpen} onOpenChange={setAccountOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -174,72 +119,69 @@ export function Navbar() {
                   className={navItemClass}
                   aria-label="Account"
                 >
-                  <Cog />
+                  <Cog className="size-4" />
                   Account
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent align="end">
-                {accountNavLinks.map(
-                  ({ to, label, icon: Icon, ariaLabel, active }) => (
+                {accountLinks.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.to);
+
+                  return (
                     <DropdownMenuItem
-                      key={to}
-                      aria-label={ariaLabel}
+                      key={item.to}
+                      aria-label={item.ariaLabel}
                       className={active ? "bg-slate-300/80 font-bold" : ""}
                       onClick={() => {
                         setAccountOpen(false);
-
-                        if (to === "/logout") {
-                          logout.mutate();
-                          return;
-                        }
-
-                        navigate({ to });
+                        handleNavItem(item);
                       }}
                     >
-                      {Icon && <Icon className="w-4 h-4" />}
-                      {label}
+                      {Icon && <Icon className="size-4" />}
+                      {item.label}
                     </DropdownMenuItem>
-                  ),
-                )}
+                  );
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
 
-        {/* Mobile menu button */}
-        <div className="sm:hidden">
-          <DropdownMenu open={mobileOpen} onOpenChange={setMobileOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-lg" aria-label="Menu">
-                <Menu />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {mobileNavLinks.map(
-                ({ to, label, icon: Icon, ariaLabel, active }) => (
-                  <DropdownMenuItem
-                    key={to}
-                    aria-label={ariaLabel}
-                    className={active ? "bg-slate-300/80 font-bold" : ""}
-                    onClick={() => {
-                      setMobileOpen(false);
+        {mobileLinks.length > 0 && (
+          <div className="sm:hidden">
+            <DropdownMenu open={mobileOpen} onOpenChange={setMobileOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-lg" aria-label="Menu">
+                  <Menu />
+                </Button>
+              </DropdownMenuTrigger>
 
-                      if (to === "/logout") {
-                        logout.mutate();
-                        return;
-                      }
+              <DropdownMenuContent align="end">
+                {mobileLinks.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.to);
 
-                      navigate({ to });
-                    }}
-                  >
-                    {Icon && <Icon className="w-4 h-4" />}
-                    {label}
-                  </DropdownMenuItem>
-                ),
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                  return (
+                    <DropdownMenuItem
+                      key={item.to}
+                      aria-label={item.ariaLabel}
+                      className={active ? "bg-slate-300/80 font-bold" : ""}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        handleNavItem(item);
+                      }}
+                    >
+                      {Icon && <Icon className="size-4" />}
+                      {item.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </nav>
     </header>
   );

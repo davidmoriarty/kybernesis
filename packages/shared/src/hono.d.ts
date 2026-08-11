@@ -1,10 +1,12 @@
 // packages/shared/src/hono.d.ts
+
 import "hono";
-import type { User, Workspace } from "./index";
+import type { Surface, User, Workspace } from "./index";
 
 declare module "hono" {
   interface ContextVariableMap {
     // --- tenancy ---
+    surface: Surface;
     tenantSlug: string | null;
     tenantId: string | null;
 

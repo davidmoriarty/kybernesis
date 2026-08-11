@@ -1,4 +1,5 @@
 // server/src/app.ts
+
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { httpErrorHandler } from "./errors";

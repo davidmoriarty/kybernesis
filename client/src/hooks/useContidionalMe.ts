@@ -1,4 +1,5 @@
 // client/src/hooks/useConditionalMe.ts
+
 import { useLocation } from "@tanstack/react-router";
 import { useMe } from "./auth";
 

@@ -1,45 +1,79 @@
 // client/src/routes/index.tsx
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+
+import type { MeResponse } from "shared";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { rpc } from "@/lib/rpc";
+import { getTenantContext } from "@/lib/tenantContext";
+import { getCurrentHostContext } from "@/lib/tenantHost";
 import { Section } from "@/components/app/Section";
 import { Container } from "@/components/app/Container";
 import { Footer } from "@/components/app/Footer";
-import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: async () => {
+    const { surface } = getCurrentHostContext();
+
+    if (surface === "public") {
+      return;
+    }
+
+    const { tenantId } = await getTenantContext();
+
+    if (!tenantId) {
+      throw notFound();
+    }
+
+    const res = await rpc.$get("/auth/me", { credentials: "include" });
+
+    if (res.status === 401) {
+      throw redirect({ to: "/login" });
+    }
+
+    if (!res.ok) {
+      throw redirect({ to: "/500" });
+    }
+
+    const me = (await res.json()) as MeResponse;
+
+    if (surface === "admin") {
+      if (me.tenantRole !== "owner" && me.tenantRole !== "admin") {
+        throw redirect({ to: "/403" });
+      }
+
+      throw redirect({ to: "/admin" });
+    }
+
+    throw redirect({ to: "/projects" });
+  },
   component: Index,
 });
 
 function Index() {
-  const navigate = useNavigate();
-
   return (
     <>
       {/* Hero section */}
-      <Section padding="py-50" className="bg-gray-300 dark:bg-gray-600">
+      <Section padding="py-16 md:py-24">
         <Container>
           <div className="flex flex-col items-center justify-center gap-8 text-center">
-            <h1 className="font-extrabold text-5xl md:text-6xl">Kybernesis</h1>
-            <p className="max-w-[30ch] md:max-w-[40ch] lg:max-w-full font-medium text-xl">
+            <h1 className="text-5xl font-extrabold md:text-6xl">Kybernesis</h1>
+
+            <p className="max-w-3xl text-xl font-medium">
               Kybernesis provides the developer tools and infrastructure for
               teams to collaborate on projects.
             </p>
-
-            <Button
-              onClick={() => navigate({ to: "/projects" })}
-              className="w-80 h-12"
-            >
-              Get Started
-            </Button>
           </div>
         </Container>
       </Section>
 
       {/* Content section */}
-      <Section padding="py-40">
+      <Section
+        padding="py-12 md:py-20"
+        className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-4 text-center"
+      >
         <Container className="max-w-5xl">
           <article>
-            <header className="pb-8 text-center">
-              <h2 className="font-bold text-4xl tracking-tight">
+            <header className="pb-6 text-center md:pb-8">
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
                 Manage Your Projects and Workspaces Seamlessly
               </h2>
             </header>

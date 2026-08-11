@@ -1,4 +1,5 @@
 // client/src/hooks/auth.ts
+
 import type {
   User,
   Workspace,

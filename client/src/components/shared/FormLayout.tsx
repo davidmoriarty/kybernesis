@@ -1,12 +1,13 @@
 // client/src/components/shared/FormLayout.tsx
-import type { FormEvent, ReactNode } from "react";
+
+import type { ComponentProps, ReactNode } from "react";
 
 interface FormLayoutProps {
   children: ReactNode;
   title?: string;
   description?: string;
   className?: string;
-  onSubmit?: (e: FormEvent<HTMLFormElement>) => void;
+  onSubmit?: ComponentProps<"form">["onSubmit"];
 }
 
 export function FormLayout({

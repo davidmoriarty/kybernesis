@@ -1,4 +1,5 @@
 // packages/shared/src/rpc.ts
+
 import type { Hono, Schema } from "hono";
 
 // Type for any Hono app

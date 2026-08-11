@@ -1,4 +1,5 @@
 // packages/shared/src/types/api.ts
+
 import type { User, Workspace } from "./auth";
 
 export type ApiResponse = {
@@ -26,6 +27,7 @@ export type ProjectValidation = {
 
 export type MeResponse = {
   tenant: { id: string; slug: string | null };
+  tenantRole: "owner" | "admin" | "member";
   user: User;
   workspace: Workspace | null;
 };

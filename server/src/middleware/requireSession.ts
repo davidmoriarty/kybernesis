@@ -1,4 +1,5 @@
 // server/src/middleware/requireSession.ts
+
 import {
   SESSION_COOKIE_NAME,
   SESSION_TTL_MS,
@@ -12,8 +13,16 @@ import type { Context, Next } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 
 export async function requireSession(ctx: Context, next: Next) {
+  const tenantSlug = ctx.get("tenantSlug");
   const tenantId = ctx.get("tenantId");
-  if (!tenantId) return ctx.json({ error: "Tenant required" }, 400);
+
+  if (!tenantSlug) {
+    return ctx.json({ error: "Tenant required" }, 400);
+  }
+
+  if (!tenantId) {
+    return ctx.json({ error: "Tenant not found" }, 404);
+  }
 
   const sessionId = getCookie(ctx, SESSION_COOKIE_NAME);
   if (!sessionId) return ctx.json({ error: "Unauthorized" }, 401);

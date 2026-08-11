@@ -1,4 +1,5 @@
 {
+  "files": [],
   "compilerOptions": {
     "composite": false,
 
@@ -55,5 +56,14 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
-  }
+  },
+
+  "include": ["server/src/**/*", "client/src/**/*", "shared/src/**/*"],
+  "exclude": ["node_modules", "dist"],
+
+  "references": [
+    { "path": "./packages" },
+    { "path": "./server" },
+    { "path": "./client" }
+  ]
 }

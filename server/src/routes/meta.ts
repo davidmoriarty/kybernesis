@@ -1,4 +1,5 @@
 // server/src/routes/meta.ts
+
 import { Hono } from "hono";
 
 const startedAtMs = Date.now();
@@ -24,8 +25,16 @@ export const metaRoutes = new Hono()
   .get("/debug/tenant", (ctx) => {
     return ctx.json({
       host: ctx.req.header("host") ?? null,
+      surface: ctx.get("surface"),
       tenantSlug: ctx.get("tenantSlug"),
       tenantId: ctx.get("tenantId"),
       path: ctx.req.path,
+    });
+  })
+  .get("/tenant-context", (ctx) => {
+    return ctx.json({
+      surface: ctx.get("surface"),
+      tenantSlug: ctx.get("tenantSlug"),
+      tenantId: ctx.get("tenantId"),
     });
   });

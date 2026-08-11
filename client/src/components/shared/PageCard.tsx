@@ -1,9 +1,10 @@
 // client/src/components/shared/PageCard.tsx
+
 import { Container, Section } from "@/components/app";
 
 export function PageCard({ children }: { children: React.ReactNode }) {
   return (
-    <Section className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center">
+    <Section className="flex min-h-[calc(100svh-var(--navbar-height))] flex-col items-center justify-center">
       <Container>{children}</Container>
     </Section>
   );

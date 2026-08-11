@@ -1,4 +1,5 @@
 // server/src/middleware/requireTenant.ts
+
 import { Tenants } from "db";
 import type {} from "shared/hono";
 import type { Context, Next } from "hono";

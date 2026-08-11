@@ -1,8 +1,8 @@
 {
   "name": "shared",
   "private": true,
-  "type": "module",
   "version": "0.1.0",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -21,7 +21,7 @@
     "test": "echo \"no tests yet\""
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "5.9.3"
   },
   "dependencies": {
     "hono": "^4.12.3"
