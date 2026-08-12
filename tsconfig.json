@@ -12,7 +12,6 @@
     "noEmit": false,
     "allowJs": false,
 
-    "baseUrl": "./",
     "paths": {
       "@/*": ["./client/src/*"],
       "@client/*": ["./client/src/*"],
