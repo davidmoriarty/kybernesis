@@ -1,17 +1,36 @@
 // client/src/components/activity/ActivityFeedItem.tsx
+
 import type { WorkspaceEvent } from "@/hooks/useWorkspaceEvents";
 
 export function ActivityFeedItem({ event }: { event: WorkspaceEvent }) {
   return (
-    <div className="grid grid-cols-[140px_minmax(0,1fr)_88px] items-center gap-4 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted/30">
-      <div className="truncate font-medium">{event.actorName ?? "System"}</div>
+    <div className="rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted/30">
+      <div className="flex items-center justify-between gap-4 md:hidden">
+        <div className="truncate font-medium">
+          {event.actorName ?? "System"}
+        </div>
 
-      <div className="min-w-0 text-muted-foreground">
+        <div className="shrink-0 text-xs text-muted-foreground">
+          {formatTime(event.created_at)}
+        </div>
+      </div>
+
+      <div className="mt-1 text-left text-muted-foreground md:hidden">
         {formatEventLabel(event)}
       </div>
 
-      <div className="text-right text-muted-foreground">
-        {formatTime(event.created_at)}
+      <div className="hidden md:grid md:grid-cols-[140px_minmax(0,1fr)_88px] md:items-center md:gap-4">
+        <div className="truncate font-medium">
+          {event.actorName ?? "System"}
+        </div>
+
+        <div className="min-w-0 text-muted-foreground">
+          {formatEventLabel(event)}
+        </div>
+
+        <div className="text-right text-muted-foreground">
+          {formatTime(event.created_at)}
+        </div>
       </div>
     </div>
   );

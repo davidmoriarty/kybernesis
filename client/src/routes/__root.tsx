@@ -1,3 +1,5 @@
+// client/src/routes/__root.tsx
+
 import { createRootRoute, isNotFound, Outlet } from "@tanstack/react-router";
 import { ErrorPage } from "@/components/errors/ErrorPage";
 import { isRpcError } from "@/lib/rpcError";
@@ -16,9 +18,9 @@ export const Route = createRootRoute({
 
   component: () => {
     return (
-      <div className="flex min-h-svh flex-col">
+      <div className="flex h-svh flex-col overflow-hidden">
         <Navbar />
-        <main className="relative flex flex-1 flex-col">
+        <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">
           <Outlet />
         </main>
         <Toaster />

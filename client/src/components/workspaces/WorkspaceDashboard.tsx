@@ -1,8 +1,10 @@
 // client/src/components/workspaces/WorkspaceDashboard.tsx
+
 import type { WorkspaceSummary } from "@/hooks/workspaces";
 import { DashboardRowLink } from "../shared/DashboardRowLink";
 import { Badge } from "@/components/ui/badge";
 import { WorkspaceDashboardCard } from "./index";
+import { WorkspaceDashboardColumns } from "./index";
 import { ActivityFeed } from "@/components/activity";
 
 export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
@@ -11,16 +13,15 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
       <WorkspaceDashboardCard
         title="Members Overview"
         description="Workspace members and their current activity status."
-        colHeaders={["Name", "Status", "Last Seen"]}
       >
         {summary.members.length === 0 ? (
           <div className="text-sm text-muted-foreground">No members found.</div>
         ) : (
           summary.members.map((m) => (
-            <div key={m.id} className="grid grid-cols-3 gap-6 px-2 py-1">
-              <div>{m.name}</div>
+            <WorkspaceDashboardColumns key={m.id}>
+              <div className="text-start">{m.name}</div>
 
-              <div className="space-x-2">
+              <div className="space-x-2 text-center">
                 <span
                   className={[
                     "inline-block h-2.5 w-2.5 rounded-full",
@@ -38,14 +39,14 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
                 </span>
               </div>
 
-              <div className="text-sm text-muted-foreground">
+              <div className="text-end text-sm text-muted-foreground">
                 {m.status === "online"
                   ? "Now"
                   : m.lastSeenAt
                     ? formatLastSeen(m.lastSeenAt)
                     : "—"}
               </div>
-            </div>
+            </WorkspaceDashboardColumns>
           ))
         )}
       </WorkspaceDashboardCard>
@@ -53,7 +54,6 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
       <WorkspaceDashboardCard
         title="Projects Overview"
         description="Workspace projects and their development status."
-        colHeaders={["Name", "Status", "Updated"]}
       >
         {summary.recentProjects.length === 0 ? (
           <div className="col-span-3 text-sm text-muted-foreground">
@@ -68,18 +68,18 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
               search={{ section: "Overview" }}
               columns={3}
             >
-              <div className="hover:underline">{p.name}</div>
+              <div className="text-start hover:underline">{p.name}</div>
 
-              <div>
+              <div className="text-center">
                 <Badge
                   variant={p.status === "live" ? "success" : "secondary"}
-                  className="w-[80%] mx-auto"
+                  className="mx-auto w-[80%]"
                 >
                   {p.status === "live" ? "Live" : "Building"}
                 </Badge>
               </div>
 
-              <div className="text-sm text-muted-foreground">
+              <div className="text-end text-sm text-muted-foreground">
                 {formatLastSeen(p.updatedAt)}
               </div>
             </DashboardRowLink>
@@ -90,36 +90,31 @@ export function WorkspaceDashboard({ summary }: { summary: WorkspaceSummary }) {
       <WorkspaceDashboardCard
         title="Workspace Overview"
         description="Key totals and information for this workspace."
-        colHeaders={["Workspace", "Total Members", "Total Projects"]}
+        //colHeaders={["Workspace", "Total Members", "Total Projects"]}
         footer={<span className="text-sm"></span>}
       >
-        <div className="grid grid-cols-3 items-center gap-4 px-2 py-1">
-          <div className="truncate"> {summary.workspace.name}</div>
+        <WorkspaceDashboardColumns>
+          <div className="text-start"> {summary.workspace.name}</div>
 
-          <div>
-            <Badge
-              variant="outline"
-              className="inline-flex w-24 md:w-16 justify-center"
-            >
+          <div className="flex items-center justify-center gap-2">
+            <Badge variant="outline" className="inline-flex justify-center">
               {summary.counts.members}
             </Badge>
+            <span className="text-sm text-muted-foreground">Members</span>
           </div>
 
-          <div>
-            <Badge
-              variant="outline"
-              className="inline-flex w-24 md:w-16 justify-center"
-            >
+          <div className="flex items-center justify-end gap-2">
+            <Badge variant="outline" className="inline-flex justify-center">
               {summary.counts.activeProjects}
             </Badge>
+            <span className="text-sm text-muted-foreground">Projects</span>
           </div>
-        </div>
+        </WorkspaceDashboardColumns>
       </WorkspaceDashboardCard>
 
       <WorkspaceDashboardCard
         title="Activity Feed"
         description="Recent workspace activity and events."
-        colHeaders={["Actor", "Event", "When"]}
       >
         <ActivityFeed workspaceId={summary.workspace.id} />
       </WorkspaceDashboardCard>

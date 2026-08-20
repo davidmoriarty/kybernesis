@@ -1,4 +1,5 @@
 // client/src/components/projects/overview/FormDialog.tsx
+
 import type { Project } from "@shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -20,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { appToast } from "@/lib/toast";
 
 interface FormDialogProps {
   cta?: string;
@@ -55,7 +56,7 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
     setDescriptionError("");
 
     if (!me?.workspace) {
-      toast.error("No active workspace selected.");
+      appToast.projects.noActiveWorkspace();
       return;
     }
 
@@ -136,11 +137,8 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
         params: { projectId: String(result.project.id) },
         search: { section: "Overview" },
       });
-
-      toast.success("Project created!");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to create project.");
 
       // Remove temporary project if mutation fails
       qc.setQueryData<ProjectsData>(["projects"], (oldData) => {
@@ -157,13 +155,13 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <div className="flex items-center justify-center">
-          <Button variant="default" size="sm">
+          <Button variant="solid" color="primary" size="sm">
             {cta}
           </Button>
         </div>
       </DialogTrigger>
 
-      <DialogContent className="bg-gray-50 dark:bg-gray-800 sm:max-w-md">
+      <DialogContent className="bg-card text-card-foreground sm:max-w-md">
         <form onSubmit={handleCreate}>
           <DialogHeader>
             <DialogTitle className="text-foreground">{heading}</DialogTitle>
@@ -173,7 +171,9 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
           </DialogHeader>
 
           <div className="grid gap-4 my-8">
-            <Label htmlFor="name">Project name</Label>
+            <Label htmlFor="name" className="sr-only">
+              Project name
+            </Label>
             <Input
               id="name"
               className="text-foreground border p-2 rounded w-full"
@@ -190,7 +190,9 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
               <p className="text-sm text-destructive">{nameError}</p>
             ) : null}
 
-            <Label htmlFor="description">Project Description</Label>
+            <Label htmlFor="description" className="sr-only">
+              Project Description
+            </Label>
             <Textarea
               id="description"
               className="text-foreground border p-2 rounded w-full resize-none"
@@ -209,7 +211,7 @@ export function FormDialog({ cta, heading, subheading }: FormDialogProps) {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="secondary" size="default">
+              <Button variant="solid" color="secondary" size="md">
                 Cancel
               </Button>
             </DialogClose>

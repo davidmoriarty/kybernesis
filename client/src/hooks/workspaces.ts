@@ -1,9 +1,11 @@
 // client/src/hooks/workspaces.ts
+
 import type { UseQueryOptions } from "@tanstack/react-query";
 import type { RpcError } from "@/lib/rpcError";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import { rpc } from "@/lib/rpc";
+import { appToast } from "@/lib/toast";
 
 export type WorkspaceSummary = {
   workspace: { id: string; name: string; role: "admin" | "member" };
@@ -68,12 +70,20 @@ export function useSelectWorkspace() {
         body,
         credentials: "include",
       });
+
       return parseOrThrow<{ message: string; success: boolean }>(res);
     },
+
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workspaces"] });
       qc.invalidateQueries({ queryKey: ["projects"] });
       qc.invalidateQueries({ queryKey: ["me"] });
+
+      appToast.workspaces.selectSuccess();
+    },
+
+    onError: () => {
+      appToast.workspaces.selectError();
     },
   });
 }
@@ -86,8 +96,10 @@ export function useWorkspaceSummary(enabled = true) {
       const res = await rpc.$get("/workspaces/summary", {
         credentials: "include",
       });
+
       return parseOrThrow<WorkspaceSummary>(res);
     },
+
     retry: false,
   });
 }

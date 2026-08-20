@@ -1,21 +1,52 @@
 // client/src/routes/me.tsx
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { PageHero, Container, Section } from "@/components/app";
+import { Container, Section } from "@/components/app";
 import { PageCard } from "@/components/shared";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLogout, useMe, useUpdateProfile } from "@/hooks/auth";
+import { useMe, useUpdateProfile } from "@/hooks/auth";
 import { requireAuth } from "@/utils/requireAuth";
 
-const PROFILE_FIELDS = [
-  "name",
-  "email",
-  "nickname",
-  "location",
-  "timezone",
+type EditableProfileKey =
+  | "name"
+  | "email"
+  | "nickname"
+  | "location"
+  | "timezone";
+
+type ProfileItem =
+  | {
+      key: EditableProfileKey;
+      label: string;
+      editable: true;
+    }
+  | {
+      key: "workspace" | "role";
+      label: string;
+      editable: false;
+    };
+
+const PROFILE_ITEMS: ProfileItem[] = [
+  { key: "name", label: "Name", editable: true },
+  { key: "nickname", label: "Nickname", editable: true },
+  { key: "email", label: "Email", editable: true },
+  { key: "workspace", label: "Workspace", editable: false },
+  { key: "role", label: "Role", editable: false },
+  { key: "location", label: "Location", editable: true },
+  { key: "timezone", label: "Timezone", editable: true },
 ] as const;
 
 export const Route = createFileRoute("/me")({
@@ -23,40 +54,10 @@ export const Route = createFileRoute("/me")({
   component: MePage,
 });
 
-function AvatarFallback({ size = 96 }: { size?: number }) {
-  return (
-    <div
-      className="flex items-center justify-center rounded-full bg-muted text-muted-foreground"
-      style={{ width: size, height: size }}
-    >
-      <svg
-        width={size * 0.5}
-        height={size * 0.5}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <path d="M20 21c0-4-4-7-8-7s-8 3-8 7" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    </div>
-  );
-}
-
-function formatLabel(field: string) {
-  // Capitalize first letter and replace underscores with spaces
-  return field.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
-}
-
 export default function MePage() {
   const { data: me, isLoading, isError } = useMe();
   const updateProfile = useUpdateProfile();
-  const logout = useLogout();
   const [editing, setEditing] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -122,8 +123,7 @@ export default function MePage() {
     form.location === (me.user.location ?? "") &&
     form.avatar === (me.user.avatar ?? "");
 
-  // Loading state
-  if (isLoading)
+  if (isLoading) {
     return (
       <PageCard>
         <p className="text-center text-lg">
@@ -132,9 +132,9 @@ export default function MePage() {
         </p>
       </PageCard>
     );
+  }
 
-  // Error state
-  if (isError)
+  if (isError) {
     return (
       <PageCard>
         <p className="text-center text-lg text-destructive">
@@ -142,82 +142,109 @@ export default function MePage() {
         </p>
       </PageCard>
     );
+  }
 
   return (
-    <>
-      <PageHero
-        title="Your Profile"
-        subtitle="View and manage your account information and preferences."
-      />
-
-      <Section padding="py-4">
-        <Container className="space-y-8">
+    <div className="min-h-0 flex flex-1 overflow-y-auto">
+      <Section className="flex min-h-full flex-1 items-center lg:items-start lg:pt-8">
+        <Container className="w-full">
           <Card>
-            <div className="grid md:grid-cols-[220px_1fr] gap-3 p-4">
-              {/* Left column: avatar */}
-              <figure className="flex flex-col items-center justify-center gap-3">
-                {form.avatar && !avatarError ? (
-                  <img
-                    src={form.avatar}
-                    alt="Avatar"
-                    className="h-24 w-24 mx-auto rounded-full object-cover"
-                    onError={() => setAvatarError(true)}
-                  />
-                ) : (
-                  <AvatarFallback size={96} />
-                )}
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Your Profile</CardTitle>
+              <CardDescription>
+                View and manage your account information &amp; preferences.
+              </CardDescription>
+            </CardHeader>
 
-                {editing && (
-                  <Input
-                    placeholder="Avatar URL"
-                    value={form.avatar}
-                    onChange={(e) => handleChange("avatar", e.target.value)}
-                  />
-                )}
+            <CardContent className="w-full mx-auto lg:mt-4">
+              <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[180px_minmax(0,1fr)] lg:items-start lg:gap-12">
+                <figure className="flex w-full flex-col items-start gap-3 lg:items-center">
+                  <Avatar className="size-32 lg:size-36">
+                    <AvatarImage
+                      src={form.avatar}
+                      alt={
+                        form.name ? `${form.name}'s avatar` : "Profile avatar"
+                      }
+                    />
 
-                {me?.user?.createdAt && !editing && (
-                  <figcaption className="py-2 text-sm text-center">
-                    Member since{" "}
-                    {new Intl.DateTimeFormat("en-CA", {
-                      year: "numeric",
-                      month: "long",
-                    }).format(new Date(me.user.createdAt))}
-                  </figcaption>
-                )}
-              </figure>
+                    <AvatarFallback>
+                      {form.name?.charAt(0).toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
 
-              {/* Right column: fields + buttons */}
-              <div className="grid gap-6 ml-0 md:grid-cols-2 md:ml-20">
-                {PROFILE_FIELDS.map((field) => (
-                  <div key={field} className="flex flex-col gap-1">
-                    <Label className="font-bold text-base">
-                      {formatLabel(field)}
-                    </Label>
-                    {editing ? (
-                      <Input
-                        value={form[field]}
-                        onChange={(e) => handleChange(field, e.target.value)}
-                      />
-                    ) : (
-                      <p className="text-base">{form[field] || "-"}</p>
-                    )}
-                  </div>
-                ))}
+                  {editing && (
+                    <Input
+                      placeholder="Avatar URL"
+                      value={form.avatar}
+                      onChange={(e) => handleChange("avatar", e.target.value)}
+                    />
+                  )}
 
-                <div className="col-span-full flex flex-wrap gap-4 pt-4">
+                  {me?.user?.createdAt && !editing && (
+                    <figcaption className="py-2 text-center text-sm">
+                      Member since{" "}
+                      {new Intl.DateTimeFormat("en-CA", {
+                        year: "numeric",
+                        month: "long",
+                      }).format(new Date(me.user.createdAt))}
+                    </figcaption>
+                  )}
+                </figure>
+
+                <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+                  {PROFILE_ITEMS.map((item) => {
+                    const value = item.editable
+                      ? form[item.key]
+                      : item.key === "workspace"
+                        ? me?.workspace?.name
+                        : me?.workspace?.role;
+
+                    return (
+                      <div key={item.key} className="flex flex-col gap-1">
+                        {editing && item.editable ? (
+                          <>
+                            <Label className="text-base font-bold">
+                              {item.label}
+                            </Label>
+                            <Input
+                              value={value ?? ""}
+                              onChange={(e) =>
+                                handleChange(item.key, e.target.value)
+                              }
+                            />
+                          </>
+                        ) : (
+                          <p className="text-base">
+                            <span className="font-bold">{item.label}</span>{" "}
+                            {value || "-"}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+
+            <CardFooter className="py-2">
+              <div className="mx-auto w-full max-w-5xl">
+                <ButtonGroup className="w-full lg:w-auto">
                   {editing ? (
                     <>
                       <Button
-                        variant="default"
-                        size="default"
+                        variant="solid"
+                        color="primary"
+                        size="md"
                         onClick={handleSave}
                         disabled={updateProfile.isPending || isUnchanged()}
                       >
                         Save
                       </Button>
+
                       <Button
                         variant="outline"
-                        size="default"
+                        color="secondary"
+                        size="md"
                         onClick={handleCancel}
                       >
                         Cancel
@@ -225,45 +252,21 @@ export default function MePage() {
                     </>
                   ) : (
                     <Button
-                      variant="secondary"
-                      size="default"
+                      variant="solid"
+                      color="primary"
+                      size="md"
+                      className="w-full lg:w-auto"
                       onClick={() => setEditing(true)}
                     >
                       Edit Profile
                     </Button>
                   )}
-                  <Button
-                    variant="destructive"
-                    size="default"
-                    onClick={() => logout.mutate()}
-                  >
-                    Log Out
-                  </Button>
-                </div>
+                </ButtonGroup>
               </div>
-            </div>
+            </CardFooter>
           </Card>
-
-          {me?.workspace && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-black text-2xl text-center">
-                  Workspace
-                </CardTitle>
-
-                <CardContent>
-                  <p>
-                    <strong>Name:</strong> {me.workspace.name}
-                  </p>
-                  <p>
-                    <strong>Role:</strong> {me.workspace.role}
-                  </p>
-                </CardContent>
-              </CardHeader>
-            </Card>
-          )}
         </Container>
       </Section>
-    </>
+    </div>
   );
 }

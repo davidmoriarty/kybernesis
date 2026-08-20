@@ -1,4 +1,5 @@
 // client/src/hooks/projects.ts
+
 import type { Project, ProjectValidation } from "@shared";
 import { isProjectValidation } from "@/lib/validation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ export function useProject(projectId: string) {
       const res = await rpc.$get(`/projects/${projectId}`, {
         credentials: "include",
       });
+
       return parseOrThrow(res);
     },
   });
@@ -55,12 +57,14 @@ export function useCreateProject() {
       // 201 -> { project }, 422 -> { errors }
       return parseOrThrow<{ project: Project } | ProjectValidation>(res);
     },
+
     onSuccess: (data) => {
       if (isProjectValidation(data)) return;
-
       qc.invalidateQueries({ queryKey: ["projects"] });
+
       appToast.projects.createSuccess();
     },
+
     onError: () => {
       appToast.projects.createError();
     },
@@ -88,8 +92,10 @@ export function useUpdateProject() {
         body,
         credentials: "include",
       });
+
       return parseOrThrow(res);
     },
+
     onSuccess: async (_, variables) => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["projects"] }),
@@ -101,6 +107,7 @@ export function useUpdateProject() {
         }),
       ]);
     },
+
     onError: () => {
       appToast.projects.updateError();
     },
@@ -140,8 +147,10 @@ export function useDeleteProject() {
       const res = await rpc.$delete(`/projects/${projectId}`, {
         credentials: "include",
       });
+
       return parseOrThrow(res);
     },
+
     onSuccess: async (_, variables) => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["projects"] }),
@@ -149,8 +158,10 @@ export function useDeleteProject() {
           queryKey: ["project-events", variables.projectId],
         }),
       ]);
+
       appToast.projects.deleteSuccess();
     },
+
     onError: () => {
       appToast.projects.deleteError();
     },

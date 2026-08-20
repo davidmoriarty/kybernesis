@@ -39,6 +39,26 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-state-info: var(--state-info);
+  --color-state-info-foreground: var(--state-info-foreground);
+  --color-state-info-muted: var(--state-info-muted);
+  --color-state-info-border: var(--state-info-border);
+
+  --color-state-success: var(--state-success);
+  --color-state-success-foreground: var(--state-success-foreground);
+  --color-state-success-muted: var(--state-success-muted);
+  --color-state-success-border: var(--state-success-border);
+
+  --color-state-warning: var(--state-warning);
+  --color-state-warning-foreground: var(--state-warning-foreground);
+  --color-state-warning-muted: var(--state-warning-muted);
+  --color-state-warning-border: var(--state-warning-border);
+
+  --color-state-danger: var(--state-danger);
+  --color-state-danger-foreground: var(--state-danger-foreground);
+  --color-state-danger-muted: var(--state-danger-muted);
+  --color-state-danger-border: var(--state-danger-border);
 }
 
 :root {
@@ -46,11 +66,11 @@
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  --card: oklch(0.98 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.55 0.2 255);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -75,17 +95,37 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  --state-info: var(--color-blue-600);
+  --state-info-foreground: var(--color-white);
+  --state-info-muted: var(--color-blue-50);
+  --state-info-border: var(--color-blue-200);
+
+  --state-success: var(--color-emerald-600);
+  --state-success-foreground: var(--color-white);
+  --state-success-muted: var(--color-emerald-50);
+  --state-success-border: var(--color-emerald-200);
+
+  --state-warning: var(--color-amber-600);
+  --state-warning-foreground: var(--color-amber-950);
+  --state-warning-muted: var(--color-amber-50);
+  --state-warning-border: var(--color-amber-200);
+
+  --state-danger: var(--color-rose-600);
+  --state-danger-foreground: var(--color-white);
+  --state-danger-muted: var(--color-rose-50);
+  --state-danger-border: var(--color-rose-200);
 }
 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.22 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.65 0.18 255);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -109,6 +149,26 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --state-info: var(--color-blue-400);
+  --state-info-foreground: var(--color-blue-950);
+  --state-info-muted: var(--color-blue-950);
+  --state-info-border: var(--color-blue-800);
+
+  --state-success: var(--color-emerald-400);
+  --state-success-foreground: var(--color-emerald-950);
+  --state-success-muted: var(--color-emerald-950);
+  --state-success-border: var(--color-emerald-800);
+
+  --state-warning: var(--color-amber-400);
+  --state-warning-foreground: var(--color-amber-950);
+  --state-warning-muted: var(--color-amber-950);
+  --state-warning-border: var(--color-amber-800);
+
+  --state-danger: var(--color-rose-400);
+  --state-danger-foreground: var(--color-rose-950);
+  --state-danger-muted: var(--color-rose-950);
+  --state-danger-border: var(--color-rose-800);
 }
 
 @layer base {

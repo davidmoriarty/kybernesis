@@ -44,7 +44,7 @@ export function ErrorPage({ status, title, message }: ErrorPageProps) {
 
       {status === 401 && (
         <div className="flex justify-center">
-          <Button asChild variant="default">
+          <Button asChild variant="solid">
             <a href="/login">Go to Login</a>
           </Button>
         </div>

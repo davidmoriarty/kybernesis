@@ -1,4 +1,5 @@
 // client/src/hooks/useProjectFiles.ts
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";

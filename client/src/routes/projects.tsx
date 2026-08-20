@@ -1,4 +1,5 @@
 // client/src/routes/projects.tsx
+
 import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Section } from "@/components/app/Section";
@@ -53,7 +54,7 @@ function ProjectsPage() {
         canCreate={workspace?.role === "admin"}
       />
 
-      <Section>
+      <Section className="mt-6">
         <Container>
           <ProjectList
             projects={projects?.projects}

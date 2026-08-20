@@ -1,4 +1,5 @@
 // client/src/hooks/useTitle.ts
+
 import { useEffect } from "react";
 
 export function useTitle(left: string, right?: string) {

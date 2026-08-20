@@ -1,4 +1,5 @@
 // client/src/components/ProjectList.tsx
+
 import type { Project } from "@shared";
 import { ErrorState, LoadingState } from "@/components/shared/PageCard";
 import { type ProjectView, ProjectCard } from "./index";
@@ -47,7 +48,7 @@ export function ProjectList({
   return (
     <>
       {view === "list" && (
-        <div className="grid grid-cols-[2fr_3fr_auto] gap-4 px-4 py-3 text-lg font-bold border-b">
+        <div className="hidden border-b px-4 py-3 text-lg font-bold md:grid md:grid-cols-[2fr_3fr_auto] md:gap-4">
           <div>Name</div>
           <div>Description</div>
           <div>Actions</div>

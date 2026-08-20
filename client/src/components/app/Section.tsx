@@ -2,7 +2,7 @@
 
 export function Section({
   children,
-  padding = "py-8",
+  padding = "py-6 md:py-8 lg:py-10",
   className = "",
 }: {
   children: React.ReactNode;

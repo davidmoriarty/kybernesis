@@ -1,4 +1,5 @@
 // client/src/components/ProjectCard.tsx
+
 import { useNavigate } from "@tanstack/react-router";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { ProjectView } from "./index";
@@ -11,6 +12,7 @@ import {
   useUpdateProject,
 } from "@/hooks/projects";
 import { cn } from "@/lib/utils";
+import { appToast } from "@/lib/toast";
 
 interface ProjectCardProps {
   id: string;
@@ -50,7 +52,9 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
       name: editName,
       description: editDescription,
     });
+
     setEditing(false);
+    appToast.projects.updateSuccess();
   };
 
   const handleDelete = async () => {
@@ -69,8 +73,13 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
           highlight && "bg-slate-200",
         )}
       >
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg uppercase font-bold tracking-tight">
+        <div
+          className={cn(
+            "flex flex-col gap-4",
+            "sm:flex-row sm:items-center sm:justify-between",
+          )}
+        >
+          <h2 className="text-base font-bold tracking-tight uppercase md:text-lg">
             {expanded
               ? editing
                 ? "Project Edit View"
@@ -80,8 +89,9 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
 
           <ButtonGroup>
             <Button
+              variant="solid"
+              color="primary"
               size="sm"
-              variant="default"
               onClick={() => {
                 setExpanded((v) => !v);
                 setEditing(false);
@@ -91,8 +101,9 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
             </Button>
 
             <Button
+              variant="solid"
+              color="success"
               size="sm"
-              variant="secondary"
               onClick={() =>
                 navigate({
                   to: "/projects/$projectId",
@@ -158,6 +169,8 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
 
               <ButtonGroup>
                 <Button
+                  variant="solid"
+                  color="primary"
                   size="sm"
                   onClick={handleSave}
                   disabled={updateProject.isPending}
@@ -166,6 +179,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
                 </Button>
                 <Button
                   variant="outline"
+                  color="secondary"
                   size="sm"
                   onClick={() => setEditing(false)}
                 >
@@ -187,7 +201,7 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
 
   if (view === "grid") {
     return (
-      <div className="bg-card hover:bg-card/90 h-40 rounded-md p-4 shadow-md shadow-secondary">
+      <div className="bg-card hover:bg-card/80 h-40 rounded-md p-4 shadow-sm transition-all">
         <div className="flex h-full flex-col justify-between">
           <div>
             <h3 className="truncate text-lg font-black">{name}</h3>
@@ -198,6 +212,8 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
 
           <ButtonGroup>
             <Button
+              variant="solid"
+              color="primary"
               size="sm"
               onClick={() =>
                 navigate({
@@ -222,28 +238,38 @@ export function ProjectCard({ id, name, description, view }: ProjectCardProps) {
   /* ───────────────────────── LIST VIEW ───────────────────────── */
 
   return (
-    <div className="grid grid-cols-[2fr_3fr_auto] items-center gap-4 px-4 py-5 border-b hover:bg-muted/80">
-      <div className="truncate font-black text-base">{name}</div>
-      <div className="max-w-[40ch] truncate text-sm">{description ?? "—"}</div>
-      <ButtonGroup>
-        <Button
-          size="sm"
-          variant="default"
-          onClick={() =>
-            navigate({
-              to: "/projects/$projectId",
-              params: { projectId: id },
-              search: { section: "Overview" },
-            })
-          }
-        >
-          Open
-        </Button>
-        <DeleteProjectDialog
-          onConfirm={handleDelete}
-          disabled={deleteProject.isPending}
-        />
-      </ButtonGroup>
+    <div className="border-b px-4 py-4 hover:bg-muted/80 md:grid md:grid-cols-[2fr_3fr_auto] md:items-center md:gap-4 md:py-5">
+      <div className="flex items-center justify-between gap-4 md:contents">
+        <div className="min-w-0 font-black text-base md:col-start-1 md:row-start-1 md:truncate">
+          {name}
+        </div>
+
+        <ButtonGroup className="shrink-0 md:col-start-3 md:row-start-1">
+          <Button
+            variant="solid"
+            color="primary"
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: "/projects/$projectId",
+                params: { projectId: id },
+                search: { section: "Overview" },
+              })
+            }
+          >
+            Open
+          </Button>
+
+          <DeleteProjectDialog
+            onConfirm={handleDelete}
+            disabled={deleteProject.isPending}
+          />
+        </ButtonGroup>
+      </div>
+
+      <div className="mt-1 text-sm text-muted-foreground md:col-start-2 md:row-start-1 md:mt-0 md:max-w-[40ch] md:truncate">
+        {description ?? "—"}
+      </div>
     </div>
   );
 }

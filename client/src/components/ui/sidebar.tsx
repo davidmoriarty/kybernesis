@@ -39,6 +39,7 @@ type SidebarContextProps = {
   openMobile: boolean
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
+  sidebarTop: string
   toggleSidebar: () => void
 }
 
@@ -57,6 +58,7 @@ function SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
+  sidebarTop = "4rem",
   className,
   style,
   children,
@@ -65,6 +67,7 @@ function SidebarProvider({
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  sidebarTop?: string
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
@@ -121,9 +124,10 @@ function SidebarProvider({
       isMobile,
       openMobile,
       setOpenMobile,
+      sidebarTop,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, sidebarTop, toggleSidebar]
   )
 
   return (
@@ -135,6 +139,7 @@ function SidebarProvider({
             {
               "--sidebar-width": SIDEBAR_WIDTH,
               "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+              "--sidebar-top": sidebarTop,
               ...style,
             } as React.CSSProperties
           }
@@ -163,7 +168,7 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, openMobile, setOpenMobile, sidebarTop, } = useSidebar()
 
   if (collapsible === "none") {
     return (
@@ -187,10 +192,15 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="top-16 bottom-0 h-[calc(100svh-4rem)] bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className="top-(--sidebar-top) bottom-0 h-[calc(100svh-var(--sidebar-top))] bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          overlayClassName="top-[var(--sidebar-overlay-top)]"
+          overlayStyle={{ top: sidebarTop }}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+              "--sidebar-overlay-top": sidebarTop,
+              top: sidebarTop,
+              height: `calc(100svh - ${sidebarTop})`,
             } as React.CSSProperties
           }
           side={side}
@@ -226,13 +236,14 @@ function Sidebar({
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
         )}
       />
+      {/* Desktop container */}
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed top-16 bottom-0 z-10 hidden h-[calc(100svh-4rem)] w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed top-(--sidebar-top) bottom-0 z-10 hidden h-[calc(100svh-var(--sidebar-top))] w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+          ? "left-0 group-data-[collapsible=offcanvas]:-left-(--sidebar-width)"
+          : "right-0 group-data-[collapsible=offcanvas]:-right-(--sidebar-width)",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
@@ -265,7 +276,8 @@ function SidebarTrigger({
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
-      size="icon"
+      color="primary"
+      size="icon-md"
       className={cn("size-7", className)}
       onClick={(event) => {
         onClick?.(event)

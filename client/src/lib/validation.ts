@@ -1,4 +1,5 @@
 // client/src/lib/validation.ts
+
 import type { ProjectValidation } from "@shared";
 
 export function isProjectValidation(

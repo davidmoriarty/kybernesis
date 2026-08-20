@@ -1,6 +1,9 @@
+// client/src/hooks/tasks.ts
+
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";
+import { appToast } from "@/lib/toast";
 
 export type TaskStatus = "todo" | "in_progress" | "done";
 
@@ -34,6 +37,7 @@ export function useProjectTasks(projectId: string) {
 
       return parseOrThrow<{ tasks: ProjectTask[] }>(res);
     },
+
     enabled: Boolean(projectId),
   });
 }
@@ -58,6 +62,7 @@ export function useCreateTask(projectId: string) {
 
       return parseOrThrow<{ task: ProjectTask }>(res);
     },
+
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
@@ -67,6 +72,12 @@ export function useCreateTask(projectId: string) {
           queryKey: ["project-events", projectId],
         }),
       ]);
+
+      appToast.tasks.createSuccess();
+    },
+
+    onError: () => {
+      appToast.tasks.createError();
     },
   });
 }
@@ -86,6 +97,7 @@ export function useUpdateTaskStatus(projectId: string) {
 
       return parseOrThrow(res);
     },
+
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
@@ -95,6 +107,12 @@ export function useUpdateTaskStatus(projectId: string) {
           queryKey: ["project-events", projectId],
         }),
       ]);
+
+      appToast.tasks.statusUpdateSuccess();
+    },
+
+    onError: () => {
+      appToast.tasks.statusUpdateError();
     },
   });
 }

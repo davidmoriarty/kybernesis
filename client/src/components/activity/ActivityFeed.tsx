@@ -1,4 +1,5 @@
 // client/src/components/activity/ActivityFeed.tsx
+
 import { useWorkspaceEvents } from "@/hooks/useWorkspaceEvents";
 import { ActivityFeedItem } from "./ActivityFeedItem";
 

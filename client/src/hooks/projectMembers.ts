@@ -1,7 +1,10 @@
+// client/src/hooks/projectMembers.ts
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { rpc } from "@/lib/rpc";
 import { parseOrThrow } from "@/lib/parseOrThrow";
 import type { RpcError } from "@/lib/rpcError";
+import { appToast } from "@/lib/toast";
 
 export interface ProjectMember {
   userId: string;
@@ -52,6 +55,12 @@ export function useAddProjectMember(projectId: string) {
           queryKey: ["project-events", projectId],
         }),
       ]);
+
+      appToast.projectMembers.addSuccess();
+    },
+
+    onError: () => {
+      appToast.projectMembers.addError();
     },
   });
 }
@@ -69,6 +78,7 @@ export function useRemoveProjectMember(projectId: string) {
       );
       return parseOrThrow(res);
     },
+
     onSuccess: async () => {
       await Promise.all([
         qc.invalidateQueries({
@@ -78,6 +88,12 @@ export function useRemoveProjectMember(projectId: string) {
           queryKey: ["project-events", projectId],
         }),
       ]);
+
+      appToast.projectMembers.removeSuccess();
+    },
+
+    onError: () => {
+      appToast.projectMembers.removeError();
     },
   });
 }

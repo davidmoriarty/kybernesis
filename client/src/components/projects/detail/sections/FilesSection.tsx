@@ -235,7 +235,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
+                      size="icon-md"
                       className="shrink-0"
                     >
                       <EllipsisVertical className="size-4" />

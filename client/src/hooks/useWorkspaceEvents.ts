@@ -1,4 +1,5 @@
 // client/src/hooks/useWorkspaceEvents.ts
+
 import { useQuery } from "@tanstack/react-query";
 import type { RpcError } from "@/lib/rpcError";
 import { parseOrThrow } from "@/lib/parseOrThrow";
@@ -26,6 +27,7 @@ export function useWorkspaceEvents(workspaceId: string, enabled = true) {
       });
       return parseOrThrow<WorkspaceEvent[]>(res, []);
     },
+
     retry: false,
   });
 }

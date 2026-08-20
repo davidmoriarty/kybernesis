@@ -27,7 +27,7 @@ export function RemoveProjectMemberDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={disabled}>
+        <Button variant="solid" color="danger" size="sm" disabled={disabled}>
           Remove
         </Button>
       </DialogTrigger>
@@ -42,11 +42,16 @@ export function RemoveProjectMemberDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={() => setOpen(false)}>
+          <Button
+            variant="solid"
+            color="secondary"
+            onClick={() => setOpen(false)}
+          >
             Cancel
           </Button>
           <Button
-            variant="destructive"
+            variant="solid"
+            color="danger"
             onClick={async () => {
               try {
                 await onConfirm();

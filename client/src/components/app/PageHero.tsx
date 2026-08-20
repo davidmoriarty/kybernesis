@@ -9,11 +9,12 @@ export function PageHero({
   subtitle?: string;
 }) {
   return (
-    <Section padding="py-8">
+    <Section padding="py-6 md:py-8">
       <Container>
         <div className="space-y-2">
-          <h1 className="font-black text-4xl">{title}</h1>
-          <p className="font-medium text-base">{subtitle}</p>
+          <h1 className="text-3xl font-black md:text-4xl">{title}</h1>
+
+          {subtitle && <p className="text-base font-medium">{subtitle}</p>}
         </div>
       </Container>
     </Section>

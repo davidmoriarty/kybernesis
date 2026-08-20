@@ -1,4 +1,5 @@
 // client/src/components/shared/DashboardRowLink.tsx
+
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
@@ -8,6 +9,7 @@ interface DashboardRowLinkProps {
   search?: Record<string, unknown>;
   children: ReactNode;
   columns: number;
+  className?: string;
 }
 
 export function DashboardRowLink({

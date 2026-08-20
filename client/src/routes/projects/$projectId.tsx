@@ -1,4 +1,5 @@
 // client/src/routes/projects/$projectId.tsx
+
 import type { Project } from "@shared";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -28,6 +29,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { FileViewerPanel } from "@/components/projects/detail/sections/FileViewerPanel";
 import { rpc } from "@/lib/rpc";
@@ -108,69 +110,76 @@ function ProjectPage() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-full min-h-0 w-full relative overflow-hidden">
-        <ProjectSidebar
-          projectName={project.name}
-          selected={section}
-          sections={availableSections}
-          onSelect={(nextSection) => {
-            navigate({
-              to: "/projects/$projectId",
-              params: { projectId },
-              search: { section: nextSection, fileId: undefined },
-              replace: true,
-            });
-          }}
-        />
+    <SidebarProvider sidebarTop="7.5rem" className="h-full min-h-0">
+      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+        {/* Project Detail subnav */}
+        <div className="flex shrink-0 items-center justify-between border-b bg-background px-4 py-3 md:px-8">
+          <SidebarTrigger className="text-foreground" />
 
-        <SidebarInset>
-          {/* Top bar */}
-          <div className="flex items-center justify-between py-3 px-8">
-            <SidebarTrigger className="text-foreground" />
-            <h1 className="font-bold text-2xl tracking-tight text-foreground">
-              {section}
-            </h1>
-            <div className="min-w-30 flex justify-end" />
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {section}
+          </h1>
 
-          {/* Content */}
-          <div className="min-h-0 bg-secondary text-foreground p-4 flex-1 overflow-auto">
-            {section === "Overview" && (
-              <OverviewSection
-                projectName={project.name}
-                description={project.description ?? "No description provided."}
-                createdAt={project?.createdAt}
-              />
-            )}
-            {section === "Files" &&
-              (fileId ? (
-                <FileViewerPanel projectId={projectId} fileId={fileId} />
-              ) : (
-                <FilesSection projectId={projectId} />
-              ))}
-            {section === "Tasks" && (
-              <TasksSection
-                projectId={projectId}
-                tasks={tasksLoading ? undefined : tasksData?.tasks}
-              />
-            )}
-            {section === "Timeline" && (
-              <TimelineSection
-                events={timelineLoading ? undefined : timelineData?.events}
-              />
-            )}
-            {section === "Settings" && (
-              <SettingsSection
-                projectId={project.id}
-                projectName={project.name}
-                status={project.status}
-                notificationsEnabled={project.notificationsEnabled}
-                isPublic={project.isPublic}
-              />
-            )}
-          </div>
-        </SidebarInset>
+          <div className="min-w-8 md:min-w-30" />
+        </div>
+
+        {/* Project Detail layout */}
+        <div className="relative flex min-h-0 flex-1 overflow-hidden">
+          <ProjectSidebar
+            projectName={project.name}
+            selected={section}
+            sections={availableSections}
+            onSelect={(nextSection) => {
+              navigate({
+                to: "/projects/$projectId",
+                params: { projectId },
+                search: { section: nextSection, fileId: undefined },
+                replace: true,
+              });
+            }}
+          />
+
+          <SidebarInset className="min-h-0">
+            {/* Content */}
+            <div className="min-h-0 flex-1 overflow-auto p-4 text-foreground">
+              {section === "Overview" && (
+                <OverviewSection
+                  projectName={project.name}
+                  description={
+                    project.description ?? "No description provided."
+                  }
+                  createdAt={project?.createdAt}
+                />
+              )}
+              {section === "Files" &&
+                (fileId ? (
+                  <FileViewerPanel projectId={projectId} fileId={fileId} />
+                ) : (
+                  <FilesSection projectId={projectId} />
+                ))}
+              {section === "Tasks" && (
+                <TasksSection
+                  projectId={projectId}
+                  tasks={tasksLoading ? undefined : tasksData?.tasks}
+                />
+              )}
+              {section === "Timeline" && (
+                <TimelineSection
+                  events={timelineLoading ? undefined : timelineData?.events}
+                />
+              )}
+              {section === "Settings" && (
+                <SettingsSection
+                  projectId={project.id}
+                  projectName={project.name}
+                  status={project.status}
+                  notificationsEnabled={project.notificationsEnabled}
+                  isPublic={project.isPublic}
+                />
+              )}
+            </div>
+          </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   );
@@ -187,6 +196,8 @@ function ProjectSidebar({
   sections: { label: ProjectSection; icon: LucideIcon }[];
   onSelect: (s: ProjectSection) => void;
 }) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -207,7 +218,13 @@ function ProjectSidebar({
               <SidebarMenuItem key={label}>
                 <SidebarMenuButton
                   isActive={selected === label}
-                  onClick={() => onSelect(label)}
+                  onClick={() => {
+                    onSelect(label);
+
+                    if (isMobile) {
+                      setOpenMobile(false);
+                    }
+                  }}
                   className="text-foreground"
                 >
                   <Icon className="size-4 text-foreground" />

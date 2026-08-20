@@ -38,7 +38,7 @@ export function DeleteProjectDangerDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="destructive" disabled={disabled}>
+        <Button variant="solid" color="danger" disabled={disabled}>
           Delete Project
         </Button>
       </DialogTrigger>
@@ -75,11 +75,16 @@ export function DeleteProjectDangerDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={() => setOpen(false)}>
+          <Button
+            variant="solid"
+            color="secondary"
+            onClick={() => setOpen(false)}
+          >
             Cancel
           </Button>
           <Button
-            variant="destructive"
+            variant="solid"
+            color="danger"
             disabled={!isMatch || disabled}
             onClick={async () => {
               try {

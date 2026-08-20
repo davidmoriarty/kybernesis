@@ -26,7 +26,8 @@ export function DeleteProjectDialog({
       <AlertDialogTrigger asChild>
         <Button
           size="sm"
-          variant="destructive"
+          variant="solid"
+          color="danger"
           disabled={disabled}
           onClick={(e) => {
             e.stopPropagation();
