@@ -11,9 +11,9 @@
     "url": "https://github.com/davidmoriarty/kybernesis.git"
   },
   "description": "A multi-tenant SaaS platform for software teams and individual developers, built with Bun, Hono, React, and TypeScript.",
-  "packageManager": "bun@1.3.14",
+  "packageManager": "bun@1.4.0",
   "engines": {
-    "bun": ">=1.3.14"
+    "bun": ">=1.4.0"
   },
   "keywords": [
     "bun",
