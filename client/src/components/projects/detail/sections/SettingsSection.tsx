@@ -16,12 +16,12 @@ import { Input } from "@/components/ui/input";
 import { appToast } from "@/lib/toast";
 import { ProjectSettingRow } from "@/components/projects/detail/sections/settings/ProjectSettingRow";
 import {
+  AddProjectMemberDialog,
   DeleteProjectDangerDialog,
   RemoveProjectMemberDialog,
 } from "@/components/projects/detail/dialogs";
 import { useUpdateProject, useDeleteProject } from "@/hooks/projects";
 import {
-  useAddProjectMember,
   useProjectMembers,
   useRemoveProjectMember,
 } from "@/hooks/projectMembers";
@@ -42,7 +42,6 @@ export function SettingsSection({
   status = "development",
 }: SettingsSectionProps) {
   const navigate = useNavigate();
-  const addProjectMember = useAddProjectMember(projectId);
   const removeProjectMember = useRemoveProjectMember(projectId);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
@@ -50,8 +49,6 @@ export function SettingsSection({
   const { data, isLoading } = useProjectMembers(projectId);
   const adminCount =
     data?.members?.filter((m) => m.role === "admin").length ?? 0;
-
-  const [email, setEmail] = useState("");
   const [isRenaming, setIsRenaming] = useState(false);
   const [projectNameValue, setProjectNameValue] = useState(projectName);
   const [notificationsValue, setNotificationsValue] = useState(
@@ -62,6 +59,80 @@ export function SettingsSection({
     status,
   );
 
+  async function handleStatusChange(checked: boolean) {
+    const previous = statusValue;
+    const next = checked ? "live" : "development";
+
+    setStatusValue(next);
+
+    try {
+      await updateProject.mutateAsync({
+        projectId,
+        status: next,
+      });
+
+      appToast.projects.statusUpdateSuccess(next);
+    } catch {
+      setStatusValue(previous);
+    }
+  }
+
+  async function handleNotificationsChange(checked: boolean) {
+    const previous = notificationsValue;
+
+    setNotificationsValue(checked);
+
+    try {
+      await updateProject.mutateAsync({
+        projectId,
+        notificationsEnabled: checked,
+      });
+
+      appToast.projects.notificationUpdateSuccess(checked);
+    } catch {
+      setNotificationsValue(previous);
+    }
+  }
+
+  async function handleVisibilityChange(checked: boolean) {
+    const previous = publicValue;
+
+    setPublicValue(checked);
+
+    try {
+      await updateProject.mutateAsync({
+        projectId,
+        isPublic: checked,
+      });
+
+      appToast.projects.visibilityUpdateSuccess(checked);
+    } catch {
+      setPublicValue(previous);
+    }
+  }
+
+  async function handleRenameProject() {
+    const name = projectNameValue.trim();
+    if (!name) return;
+
+    try {
+      await updateProject.mutateAsync({
+        projectId,
+        name,
+      });
+
+      setIsRenaming(false);
+      appToast.projects.nameUpdateSuccess();
+    } catch {
+      // useUpdateProject handles error toast
+    }
+  }
+
+  function handleCancelRename() {
+    setProjectNameValue(projectName);
+    setIsRenaming(false);
+  }
+
   const settings = [
     {
       label: "Project Status",
@@ -70,23 +141,7 @@ export function SettingsSection({
       leftTone: "info" as const,
       rightTone: "success" as const,
       checked: statusValue === "live",
-      onCheckedChange: async (checked: boolean) => {
-        const prev = statusValue;
-        const next = checked ? "live" : "development";
-
-        setStatusValue(next);
-
-        try {
-          await updateProject.mutateAsync({
-            projectId,
-            status: next,
-          });
-
-          appToast.projects.statusUpdateSuccess(next);
-        } catch {
-          setStatusValue(prev);
-        }
-      },
+      onCheckedChange: handleStatusChange,
     },
     {
       label: "Notifications",
@@ -95,21 +150,7 @@ export function SettingsSection({
       leftTone: "danger" as const,
       rightTone: "success" as const,
       checked: notificationsValue,
-      onCheckedChange: async (checked: boolean) => {
-        const prev = notificationsValue;
-        setNotificationsValue(checked);
-
-        try {
-          await updateProject.mutateAsync({
-            projectId,
-            notificationsEnabled: checked,
-          });
-
-          appToast.projects.notificationUpdateSuccess(checked);
-        } catch {
-          setNotificationsValue(prev);
-        }
-      },
+      onCheckedChange: handleNotificationsChange,
     },
     {
       label: "Project Visibility",
@@ -118,21 +159,7 @@ export function SettingsSection({
       leftTone: "info" as const,
       rightTone: "success" as const,
       checked: publicValue,
-      onCheckedChange: async (checked: boolean) => {
-        const prev = publicValue;
-        setPublicValue(checked);
-
-        try {
-          await updateProject.mutateAsync({
-            projectId,
-            isPublic: checked,
-          });
-
-          appToast.projects.visibilityUpdateSuccess(checked);
-        } catch {
-          setPublicValue(prev);
-        }
-      },
+      onCheckedChange: handleVisibilityChange,
     },
   ];
 
@@ -144,10 +171,18 @@ export function SettingsSection({
     setStatusValue(status);
   }, [status]);
 
+  useEffect(() => {
+    setNotificationsValue(notificationsEnabled ?? false);
+  }, [notificationsEnabled]);
+
+  useEffect(() => {
+    setPublicValue(isPublic ?? false);
+  }, [isPublic]);
+
   return (
     <div className="flex flex-col gap-4">
       {/* Project Name */}
-      <Card className="flex flex-col gap-4 p-4">
+      <Card>
         <CardHeader>
           <CardTitle>Project Name</CardTitle>
           <CardDescription>Change the project name.</CardDescription>
@@ -155,59 +190,59 @@ export function SettingsSection({
 
         <CardContent>
           {!isRenaming ? (
-            <div className="flex items-center justify-between gap-4">
-              <h4 className="text-base font-semibold">{projectNameValue}</h4>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="grid gap-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Current Name
+                </p>
+                <p className="text-base font-semibold">{projectNameValue}</p>
+              </div>
+
               <Button
                 variant="solid"
                 color="primary"
                 size="md"
-                className="px-6"
+                className="w-full sm:w-auto sm:justify-self-end"
                 onClick={() => setIsRenaming(true)}
               >
-                Rename
+                Rename Project
               </Button>
             </div>
           ) : (
-            <div className="flex gap-2">
-              <Input
-                value={projectNameValue}
-                onChange={(e) => setProjectNameValue(e.target.value)}
-              />
+            <div className="grid gap-4">
+              <div className="grid gap-1">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  New Name
+                </p>
+                <Input
+                  autoFocus
+                  value={projectNameValue}
+                  onChange={(e) => setProjectNameValue(e.target.value)}
+                />
+              </div>
 
-              <Button
-                variant="solid"
-                color="primary"
-                size="md"
-                className="px-6"
-                disabled={updateProject.isPending || !projectNameValue.trim()}
-                onClick={async () => {
-                  try {
-                    await updateProject.mutateAsync({
-                      projectId,
-                      name: projectNameValue.trim(),
-                    });
-                    setIsRenaming(false);
-                    appToast.projects.nameUpdateSuccess();
-                  } catch {
-                    // useUpdateProject handles error toast
-                  }
-                }}
-              >
-                Save
-              </Button>
+              <div className="grid gap-2 sm:flex sm:justify-end">
+                <Button
+                  variant="solid"
+                  color="primary"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  disabled={updateProject.isPending || !projectNameValue.trim()}
+                  onClick={handleRenameProject}
+                >
+                  Save
+                </Button>
 
-              <Button
-                variant="outline"
-                color="secondary"
-                size="md"
-                className="px-6"
-                onClick={() => {
-                  setProjectNameValue(projectName);
-                  setIsRenaming(false);
-                }}
-              >
-                Cancel
-              </Button>
+                <Button
+                  variant="outline"
+                  color="secondary"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  onClick={handleCancelRename}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -245,29 +280,8 @@ export function SettingsSection({
         </CardHeader>
 
         <CardContent>
-          <div className="grid grid-cols-[1fr_auto] gap-4">
-            <Input
-              placeholder="Add member by email…"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <Button
-              variant="solid"
-              color="primary"
-              size="md"
-              className="px-6"
-              disabled={addProjectMember.isPending || !email.trim()}
-              onClick={async () => {
-                try {
-                  await addProjectMember.mutateAsync({ email: email.trim() });
-                  setEmail("");
-                } catch {
-                  // Toast is handled by useAddProjectMember.
-                }
-              }}
-            >
-              Add
-            </Button>
+          <div className="mb-4">
+            <AddProjectMemberDialog projectId={projectId} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -280,35 +294,30 @@ export function SettingsSection({
                 return (
                   <div
                     key={m.userId}
-                    className="flex items-center justify-between border rounded py-2 px-4"
+                    className="flex flex-col gap-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                   >
-                    <div className="grid gap-2">
-                      <div className="grid grid-cols-2 gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
                         <p className="font-bold">{m.name}</p>
                         <Badge>{m.role}</Badge>
                       </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          {m.email}
-                        </p>
-                      </div>
+
+                      <p className="text-sm text-muted-foreground">{m.email}</p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <RemoveProjectMemberDialog
-                        memberName={m.name}
-                        disabled={removeProjectMember.isPending || isLastAdmin}
-                        onConfirm={async () => {
-                          try {
-                            await removeProjectMember.mutateAsync({
-                              userId: m.userId,
-                            });
-                          } catch {
-                            throw new Error("Remove member failed");
-                          }
-                        }}
-                      />
-                    </div>
+                    <RemoveProjectMemberDialog
+                      memberName={m.name}
+                      disabled={removeProjectMember.isPending || isLastAdmin}
+                      onConfirm={async () => {
+                        try {
+                          await removeProjectMember.mutateAsync({
+                            userId: m.userId,
+                          });
+                        } catch {
+                          throw new Error("Remove member failed");
+                        }
+                      }}
+                    />
                   </div>
                 );
               })
@@ -318,16 +327,14 @@ export function SettingsSection({
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-destructive/40 p-4 flex flex-col gap-4">
+      <Card className="border-destructive/40">
         <CardHeader>
-          <CardTitle className="text-lg font-bold text-destructive">
-            Danger Zone
-          </CardTitle>
+          <CardTitle className="text-destructive">Danger Zone</CardTitle>
           <CardDescription>Manage destructive project actions.</CardDescription>
         </CardHeader>
 
         <CardContent>
-          <div className="flex items-center justify-between gap-4 rounded-md border border-destructive/30 p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="grid gap-1">
               <p className="font-semibold">Delete Project</p>
               <p className="text-sm text-muted-foreground">

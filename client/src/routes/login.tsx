@@ -2,7 +2,7 @@
 
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { PageCard } from "@/components/shared/PageCard";
+import { PageState } from "@/components/shared/PageState";
 import { getCurrentHostContext } from "@/lib/tenantHost";
 
 export const Route = createFileRoute("/login")({
@@ -23,7 +23,7 @@ function LoginPage() {
   const isAdmin = surface === "admin";
 
   return (
-    <PageCard>
+    <PageState>
       <LoginForm
         title={isAdmin ? "Admin Login" : "Log in"}
         description={
@@ -37,6 +37,6 @@ function LoginPage() {
           })
         }
       />
-    </PageCard>
+    </PageState>
   );
 }

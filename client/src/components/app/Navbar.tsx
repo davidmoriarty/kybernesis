@@ -78,7 +78,7 @@ export function Navbar() {
         "supports-backdrop-filter:bg-background/80",
       )}
     >
-      <nav className="container mx-auto flex items-center justify-between px-5 py-3">
+      <nav className="container mx-auto flex h-(--navbar-height) items-center justify-between px-5">
         <Button
           variant="link"
           className={cn(

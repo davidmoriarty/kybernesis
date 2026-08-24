@@ -1,10 +1,10 @@
-// client/src/components/shared/PageCard.tsx
+// client/src/components/shared/PageState.tsx
 
 import { Container, Section } from "@/components/app";
 
-export function PageCard({ children }: { children: React.ReactNode }) {
+export function PageState({ children }: { children: React.ReactNode }) {
   return (
-    <Section className="flex min-h-[calc(100svh-var(--navbar-height))] flex-col items-center justify-center">
+    <Section>
       <Container>{children}</Container>
     </Section>
   );
@@ -25,4 +25,14 @@ export function ErrorState({
   message?: string;
 }) {
   return <p className="text-center text-lg text-destructive py-6">{message}</p>;
+}
+
+export function EmptyState({
+  message = "Nothing here yet.",
+}: {
+  message?: string;
+}) {
+  return (
+    <p className="py-6 text-center text-lg text-muted-foreground">{message}</p>
+  );
 }

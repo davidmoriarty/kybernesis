@@ -1,4 +1,5 @@
 // client/src/components/projects/detail/sections/FilesSection.tsx
+
 import { EllipsisVertical, File, FolderOpen, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -130,7 +131,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <header className="space-y-1">
         <h2 className="text-2xl font-semibold tracking-tight">Project Files</h2>
         <p className="max-w-2xl text-sm text-muted-foreground">

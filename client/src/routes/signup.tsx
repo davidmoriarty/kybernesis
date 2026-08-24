@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LogIn } from "lucide-react";
 import { useState } from "react";
 import { FormLayout } from "@/components/shared/FormLayout";
-import { PageCard } from "@/components/shared/PageCard";
+import { PageState } from "@/components/shared/PageState";
 import { Button } from "../components/ui/button";
 import { useSignup } from "@/hooks/auth";
 
@@ -25,7 +25,7 @@ function SignupPage() {
   };
 
   return (
-    <PageCard>
+    <PageState>
       <FormLayout
         title="Sign up"
         description="Create a new account"
@@ -83,6 +83,6 @@ function SignupPage() {
           Login
         </Button>
       </div>
-    </PageCard>
+    </PageState>
   );
 }

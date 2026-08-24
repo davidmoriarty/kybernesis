@@ -1,7 +1,7 @@
 // client/src/components/ProjectList.tsx
 
 import type { Project } from "@shared";
-import { ErrorState, LoadingState } from "@/components/shared/PageCard";
+import { ErrorState, LoadingState } from "@/components/shared/PageState";
 import { type ProjectView, ProjectCard } from "./index";
 import { cn } from "@/lib/utils";
 

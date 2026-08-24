@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         solid:
-          "bg-[var(--ui-color)] text-[var(--ui-foreground)] hover:opacity-90",
+          "bg-[var(--ui-surface)] text-[var(--ui-foreground)] hover:opacity-90",
         outline:
           "border border-[var(--ui-border)] bg-transparent text-[var(--ui-color)] shadow-xs hover:bg-[var(--ui-muted)]",
         ghost:

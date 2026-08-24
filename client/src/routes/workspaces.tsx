@@ -1,6 +1,6 @@
 // client/src/routes/workspaces.tsx
 import { createFileRoute } from "@tanstack/react-router";
-import { LoadingState, ErrorState } from "@/components/shared/PageCard";
+import { LoadingState, ErrorState } from "@/components/shared/PageState";
 import { Container, PageHero, Section } from "@/components/app";
 import { WorkspaceDashboard } from "@/components/workspaces/WorkspaceDashboard";
 import { useWorkspaceSummary } from "@/hooks/workspaces";

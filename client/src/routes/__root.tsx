@@ -18,12 +18,15 @@ export const Route = createRootRoute({
 
   component: () => {
     return (
-      <div className="flex h-svh flex-col overflow-hidden">
+      <div>
         <Navbar />
-        <main className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">
+
+        <main>
           <Outlet />
         </main>
+
         <Toaster />
+
         {import.meta.env.DEV && <TanStackRouterDevtools />}
       </div>
     );

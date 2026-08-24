@@ -3,7 +3,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Container, Section } from "@/components/app";
-import { PageCard } from "@/components/shared";
+import { PageState, LoadingState, ErrorState } from "@/components/shared";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -125,148 +125,139 @@ export default function MePage() {
 
   if (isLoading) {
     return (
-      <PageCard>
-        <p className="text-center text-lg">
-          <span className="animate-spin inline-block mr-2">⏳</span>
-          Loading profile...
-        </p>
-      </PageCard>
+      <PageState>
+        <LoadingState message="Loading profile..." />
+      </PageState>
     );
   }
 
   if (isError) {
     return (
-      <PageCard>
-        <p className="text-center text-lg text-destructive">
-          Failed to load profile.
-        </p>
-      </PageCard>
+      <PageState>
+        <ErrorState message="Failed to load profile." />
+      </PageState>
     );
   }
 
   return (
-    <div className="min-h-0 flex flex-1 overflow-y-auto">
-      <Section className="flex min-h-full flex-1 items-center lg:items-start lg:pt-8">
-        <Container className="w-full">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">Your Profile</CardTitle>
-              <CardDescription>
-                View and manage your account information &amp; preferences.
-              </CardDescription>
-            </CardHeader>
+    <Section className="pt-6 lg:pt-8">
+      <Container>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">Your Profile</CardTitle>
+            <CardDescription>
+              View and manage your account information &amp; preferences.
+            </CardDescription>
+          </CardHeader>
 
-            <CardContent className="w-full mx-auto lg:mt-4">
-              <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[180px_minmax(0,1fr)] lg:items-start lg:gap-12">
-                <figure className="flex w-full flex-col items-start gap-3 lg:items-center">
-                  <Avatar className="size-32 lg:size-36">
-                    <AvatarImage
-                      src={form.avatar}
-                      alt={
-                        form.name ? `${form.name}'s avatar` : "Profile avatar"
-                      }
-                    />
+          <CardContent className="w-full mx-auto lg:mt-4">
+            <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[180px_minmax(0,1fr)] lg:items-start lg:gap-12">
+              <figure className="flex w-full flex-col items-start gap-3 lg:items-center">
+                <Avatar className="size-32 lg:size-36">
+                  <AvatarImage
+                    src={form.avatar}
+                    alt={form.name ? `${form.name}'s avatar` : "Profile avatar"}
+                  />
 
-                    <AvatarFallback>
-                      {form.name?.charAt(0).toUpperCase() || "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <AvatarFallback>
+                    {form.name?.charAt(0).toUpperCase() || "?"}
+                  </AvatarFallback>
+                </Avatar>
 
-                  {editing && (
-                    <Input
-                      placeholder="Avatar URL"
-                      value={form.avatar}
-                      onChange={(e) => handleChange("avatar", e.target.value)}
-                    />
-                  )}
+                {editing && (
+                  <Input
+                    placeholder="Avatar URL"
+                    value={form.avatar}
+                    onChange={(e) => handleChange("avatar", e.target.value)}
+                  />
+                )}
 
-                  {me?.user?.createdAt && !editing && (
-                    <figcaption className="py-2 text-center text-sm">
-                      Member since{" "}
-                      {new Intl.DateTimeFormat("en-CA", {
-                        year: "numeric",
-                        month: "long",
-                      }).format(new Date(me.user.createdAt))}
-                    </figcaption>
-                  )}
-                </figure>
+                {me?.user?.createdAt && !editing && (
+                  <figcaption className="py-2 text-center text-sm">
+                    Member since{" "}
+                    {new Intl.DateTimeFormat("en-CA", {
+                      year: "numeric",
+                      month: "long",
+                    }).format(new Date(me.user.createdAt))}
+                  </figcaption>
+                )}
+              </figure>
 
-                <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
-                  {PROFILE_ITEMS.map((item) => {
-                    const value = item.editable
-                      ? form[item.key]
-                      : item.key === "workspace"
-                        ? me?.workspace?.name
-                        : me?.workspace?.role;
+              <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+                {PROFILE_ITEMS.map((item) => {
+                  const value = item.editable
+                    ? form[item.key]
+                    : item.key === "workspace"
+                      ? me?.workspace?.name
+                      : me?.workspace?.role;
 
-                    return (
-                      <div key={item.key} className="flex flex-col gap-1">
-                        {editing && item.editable ? (
-                          <>
-                            <Label className="text-base font-bold">
-                              {item.label}
-                            </Label>
-                            <Input
-                              value={value ?? ""}
-                              onChange={(e) =>
-                                handleChange(item.key, e.target.value)
-                              }
-                            />
-                          </>
-                        ) : (
-                          <p className="text-base">
-                            <span className="font-bold">{item.label}</span>{" "}
-                            {value || "-"}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div key={item.key} className="flex flex-col gap-1">
+                      {editing && item.editable ? (
+                        <>
+                          <Label className="text-base font-bold">
+                            {item.label}
+                          </Label>
+                          <Input
+                            value={value ?? ""}
+                            onChange={(e) =>
+                              handleChange(item.key, e.target.value)
+                            }
+                          />
+                        </>
+                      ) : (
+                        <p className="text-base">
+                          <span className="font-bold">{item.label}</span>{" "}
+                          {value || "-"}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            </CardContent>
+            </div>
+          </CardContent>
 
-            <CardFooter className="py-2">
-              <div className="mx-auto w-full max-w-5xl">
-                <ButtonGroup className="w-full lg:w-auto">
-                  {editing ? (
-                    <>
-                      <Button
-                        variant="solid"
-                        color="primary"
-                        size="md"
-                        onClick={handleSave}
-                        disabled={updateProfile.isPending || isUnchanged()}
-                      >
-                        Save
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        color="secondary"
-                        size="md"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
+          <CardFooter className="py-2">
+            <div className="mx-auto w-full max-w-5xl">
+              <ButtonGroup className="w-full lg:w-auto">
+                {editing ? (
+                  <>
                     <Button
                       variant="solid"
                       color="primary"
                       size="md"
-                      className="w-full lg:w-auto"
-                      onClick={() => setEditing(true)}
+                      onClick={handleSave}
+                      disabled={updateProfile.isPending || isUnchanged()}
                     >
-                      Edit Profile
+                      Save
                     </Button>
-                  )}
-                </ButtonGroup>
-              </div>
-            </CardFooter>
-          </Card>
-        </Container>
-      </Section>
-    </div>
+
+                    <Button
+                      variant="outline"
+                      color="secondary"
+                      size="md"
+                      onClick={handleCancel}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="solid"
+                    color="primary"
+                    size="md"
+                    className="w-full lg:w-auto"
+                    onClick={() => setEditing(true)}
+                  >
+                    Edit Profile
+                  </Button>
+                )}
+              </ButtonGroup>
+            </div>
+          </CardFooter>
+        </Card>
+      </Container>
+    </Section>
   );
 }

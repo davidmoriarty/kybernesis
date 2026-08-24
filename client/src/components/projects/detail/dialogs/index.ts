@@ -2,3 +2,4 @@
 export * from "./RemoveProjectMemberDialog";
 export * from "./DeleteProjectDialog";
 export * from "./DeleteProjectDangerDialog";
+export * from "./AddProjectMemberDialog";

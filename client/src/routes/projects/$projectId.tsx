@@ -11,6 +11,7 @@ import {
   type LucideIcon,
   Settings,
 } from "lucide-react";
+import { ProjectDetailPanel } from "@/components/projects/detail/ProjectDetailPanel";
 import {
   FilesSection,
   OverviewSection,
@@ -110,10 +111,13 @@ function ProjectPage() {
   }
 
   return (
-    <SidebarProvider sidebarTop="7.5rem" className="h-full min-h-0">
-      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+    <SidebarProvider sidebarTop="7.5rem">
+      <div className="flex min-h-[calc(100dvh-var(--navbar-height))] w-full flex-col">
         {/* Project Detail subnav */}
-        <div className="flex shrink-0 items-center justify-between border-b bg-background px-4 py-3 md:px-8">
+        <div
+          data-project-subnav
+          className="sticky top-(--navbar-height) z-30 flex shrink-0 items-center justify-between border-b bg-background px-4 py-3 md:px-8"
+        >
           <SidebarTrigger className="text-foreground" />
 
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -141,7 +145,7 @@ function ProjectPage() {
 
           <SidebarInset className="min-h-0">
             {/* Content */}
-            <div className="min-h-0 flex-1 overflow-auto p-4 text-foreground">
+            <ProjectDetailPanel>
               {section === "Overview" && (
                 <OverviewSection
                   projectName={project.name}
@@ -177,7 +181,7 @@ function ProjectPage() {
                   isPublic={project.isPublic}
                 />
               )}
-            </div>
+            </ProjectDetailPanel>
           </SidebarInset>
         </div>
       </div>

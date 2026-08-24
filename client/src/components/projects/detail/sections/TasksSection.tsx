@@ -1,5 +1,18 @@
 // client/src/components/projects/detail/sections/TasksSection.tsx
+
 import { useMemo, useState } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,18 +33,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useDraggable,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import { useCreateTask, useUpdateTaskStatus } from "@/hooks/tasks";
 
 type TaskStatus = "todo" | "in_progress" | "done";
@@ -254,7 +255,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
 
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <Card key={`${column.key}-${i}`} className="p-4 space-y-3">
+                <Card key={`${column.key}-${i}`} className="space-y-3 p-4">
                   <Skeleton className="h-5 w-3/4" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-2/3" />
@@ -276,7 +277,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
   const hasTasks = tasks.length > 0;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 pb-8 lg:h-full lg:overflow-hidden lg:pb-0">
+    <div className="flex flex-col gap-4">
       <Card className="px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -308,13 +309,8 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
                   onChange={(e) => setNewTaskTitle(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      const title = newTaskTitle.trim();
-                      if (!title) return;
-
-                      createTask.mutate(
-                        { title },
-                        { onSuccess: () => setNewTaskTitle("") },
-                      );
+                      e.preventDefault();
+                      handleCreateTask();
                     }
                   }}
                   placeholder="Task title"
@@ -329,6 +325,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
                 >
                   Cancel
                 </Button>
+
                 <Button
                   disabled={createTask.isPending || !newTaskTitle.trim()}
                   onClick={handleCreateTask}
@@ -356,7 +353,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid min-h-0 flex-1 gap-4 pb-3 mb-6 md:pb-8 lg:grid-cols-3">
+          <div className="grid gap-4 lg:grid-cols-3">
             {COLUMNS.map((column) => {
               const columnTasks = tasksByStatus[column.key];
 
@@ -364,7 +361,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
                 <TaskColumn
                   key={column.key}
                   id={column.key}
-                  className="flex min-h-0 flex-col rounded-lg border bg-card pb-0 md:pb-8"
+                  className="flex flex-col rounded-lg border bg-card"
                 >
                   <div className="flex items-center justify-between border-b px-4 py-3">
                     <h2 className="text-base font-bold">{column.label}</h2>
@@ -373,7 +370,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
                     </span>
                   </div>
 
-                  <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3">
+                  <div className="space-y-3 p-3">
                     {columnTasks.length === 0 ? (
                       <Card className="p-4">
                         <p className="text-sm text-muted-foreground">

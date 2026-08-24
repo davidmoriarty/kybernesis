@@ -22,7 +22,7 @@ export function ProjectsToolbar({
   canCreate = false,
 }: ProjectsToolbarProps) {
   return (
-    <div className="sticky top-0 z-30 border-b border-gray-300 dark:border-gray-500 supports-backdrop-filter:backdrop-blur">
+    <div className="sticky top-(--navbar-height) z-30 border-b border-gray-300 bg-background/90 supports-backdrop-filter:backdrop-blur dark:border-gray-500">
       <Container className="py-3 sm:py-5">
         <div
           className="

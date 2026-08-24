@@ -1,5 +1,5 @@
 // client/src/components/errors/ErrorPage.tsx
-import { PageCard } from "@/components/shared/PageCard";
+import { PageState } from "@/components/shared/PageState";
 import { Button } from "@/components/ui/button";
 
 interface ErrorPageProps {
@@ -35,7 +35,7 @@ export function ErrorPage({ status, title, message }: ErrorPageProps) {
   };
 
   return (
-    <PageCard>
+    <PageState>
       <h1 className="text-5xl font-extrabold mb-4 text-center">{status}</h1>
       <h2 className="text-2xl font-bold mb-2 text-center">
         {title ?? defaults.title}
@@ -49,6 +49,6 @@ export function ErrorPage({ status, title, message }: ErrorPageProps) {
           </Button>
         </div>
       )}
-    </PageCard>
+    </PageState>
   );
 }
