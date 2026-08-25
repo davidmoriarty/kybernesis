@@ -18,7 +18,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -134,53 +133,47 @@ function TaskCardBody({
   updateStatus: ReturnType<typeof useUpdateTaskStatus>;
 }) {
   return (
-    <Card className="space-y-2 p-4">
-      <CardHeader>
+    <div className="flex flex-col gap-4 p-4">
+      <div>
         <span className="text-xs font-medium uppercase text-muted-foreground">
           {columnLabel}
         </span>
 
-        <CardTitle className="text-sm font-semibold">{task.title}</CardTitle>
+        <p className="font-semibold">{task.title}</p>
 
         {task.description ? (
-          <CardDescription className="line-clamp-3">
+          <p className="line-clamp-3 text-sm text-muted-foreground">
             {task.description}
-          </CardDescription>
+          </p>
         ) : null}
-      </CardHeader>
+      </div>
 
-      <CardContent>
-        <select
-          value={task.status}
-          disabled={updateStatus.isPending}
-          onChange={(e) =>
-            updateStatus.mutate({
-              taskId: task.id,
-              status: e.target.value as TaskStatus,
-            })
-          }
-          className="w-full rounded-md border bg-background px-2 py-1 text-sm"
-        >
-          <option value="todo">Todo</option>
-          <option value="in_progress">In Progress</option>
-          <option value="done">Done</option>
-        </select>
-      </CardContent>
+      <select
+        value={task.status}
+        disabled={updateStatus.isPending}
+        onChange={(e) =>
+          updateStatus.mutate({
+            taskId: task.id,
+            status: e.target.value as TaskStatus,
+          })
+        }
+        className="w-full rounded-md border bg-background px-2 py-1 text-sm"
+      >
+        <option value="todo">Todo</option>
+        <option value="in_progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
 
-      <CardFooter>
-        <div className="space-y-1 text-xs font-normal text-muted-foreground">
-          <p>
-            Assigned to:{" "}
-            {task.assignedToUser?.name ||
-              task.assignedToUser?.email ||
-              "Unassigned"}
-          </p>
-          <p>
-            Created by: {task.createdByUser.name || task.createdByUser.email}
-          </p>
-        </div>
-      </CardFooter>
-    </Card>
+      <div className="space-y-1 text-xs text-muted-foreground">
+        <p>
+          Assigned to:{" "}
+          {task.assignedToUser?.name ||
+            task.assignedToUser?.email ||
+            "Unassigned"}
+        </p>
+        <p>Created by: {task.createdByUser.name || task.createdByUser.email}</p>
+      </div>
+    </div>
   );
 }
 
@@ -278,21 +271,21 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium">Tasks</p>
-            <p className="text-sm text-muted-foreground">
-              Track work across todo, in progress, and done.
-            </p>
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Tasks</CardTitle>
+          <CardDescription>
+            Track work across todo, in progress, and done.
+          </CardDescription>
+        </CardHeader>
 
+        <CardContent>
           <Dialog
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button>New Task</Button>
+              <Button className="w-full sm:w-auto">New Task</Button>
             </DialogTrigger>
 
             <DialogContent>
@@ -335,7 +328,7 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
+        </CardContent>
       </Card>
 
       {!hasTasks ? (
@@ -370,13 +363,13 @@ export function TasksSection({ projectId, tasks }: TasksSectionProps) {
                     </span>
                   </div>
 
-                  <div className="space-y-3 p-3">
+                  <div className="divide-y">
                     {columnTasks.length === 0 ? (
-                      <Card className="p-4">
+                      <div className="p-4">
                         <p className="text-sm text-muted-foreground">
                           No tasks in {column.label.toLowerCase()}.
                         </p>
-                      </Card>
+                      </div>
                     ) : (
                       columnTasks.map((task) => (
                         <DraggableTaskCard

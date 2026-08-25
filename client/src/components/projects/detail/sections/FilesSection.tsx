@@ -1,10 +1,16 @@
 // client/src/components/projects/detail/sections/FilesSection.tsx
 
-import { EllipsisVertical, File, FolderOpen, Upload } from "lucide-react";
+import { EllipsisVertical, FolderOpen, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import {
   Dialog,
@@ -23,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getFileIcon } from "@/components/projects/detail/sections/files/getFileIcon";
 import {
   type ProjectFile,
   useDeleteProjectFile,
@@ -139,21 +146,18 @@ export function FilesSection({ projectId }: FilesSectionProps) {
         </p>
       </header>
 
-      <Card className="flex flex-col items-center justify-center gap-4 p-5 text-center sm:p-6">
-        <div className="flex flex-col items-center gap-3">
-          <div className="rounded-lg border bg-background p-2">
-            <Upload className="size-5 text-muted-foreground" />
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex flex-row items-center justify-start gap-4 mb-2">
+            <Upload />
+            Upload a file
+          </CardTitle>
+          <CardDescription>
+            Add documents, images, exports, or project assets.
+          </CardDescription>
+        </CardHeader>
 
-          <div className="space-y-1">
-            <h3 className="font-medium">Upload a file</h3>
-            <p className="text-sm text-muted-foreground">
-              Add documents, images, exports, or project assets.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-3">
+        <CardContent className="flex flex-col gap-2">
           <input
             ref={inputRef}
             type="file"
@@ -167,6 +171,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
 
           <Button
             type="button"
+            className="w-full sm:w-40"
             disabled={uploadMutation.isPending}
             onClick={() => inputRef.current?.click()}
           >
@@ -180,7 +185,7 @@ export function FilesSection({ projectId }: FilesSectionProps) {
           {uploadMutation.isError ? (
             <span className="text-sm text-destructive">Upload failed.</span>
           ) : null}
-        </div>
+        </CardContent>
       </Card>
 
       {isPending ? (
@@ -210,76 +215,91 @@ export function FilesSection({ projectId }: FilesSectionProps) {
           </div>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data.files.map((projectFile) => (
-            <Card
-              key={projectFile.id}
-              className="flex flex-col gap-3 p-5 sm:p-6"
-            >
-              <div className="flex items-start gap-3">
-                <div className="rounded-lg border bg-background p-2">
-                  <File className="size-5 text-muted-foreground" />
-                </div>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Files</h3>
+            <span className="text-sm text-muted-foreground">
+              {data.files.length} {data.files.length === 1 ? "file" : "files"}
+            </span>
+          </div>
 
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">{projectFile.name}</div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {data.files.map((projectFile) => {
+              const FileIcon = getFileIcon(projectFile.name);
 
-                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <span className="rounded-md border px-2 py-0.5 text-[10px] font-medium">
-                      {getFileExtension(projectFile.name)}
-                    </span>
+              return (
+                <Card
+                  key={projectFile.id}
+                  className="flex flex-col gap-3 p-5 sm:p-6"
+                >
+                  <div className="min-w-0">
+                    <div className="wrap-break-word font-medium">
+                      {projectFile.name}
+                    </div>
                   </div>
-                </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-md"
-                      className="shrink-0"
-                    >
-                      <EllipsisVertical className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-lg border bg-background p-2">
+                        <FileIcon className="size-5 text-muted-foreground" />
+                      </div>
 
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => void handleOpen(projectFile)}
-                    >
-                      Open
-                    </DropdownMenuItem>
+                      <span className="rounded-md border px-2 py-0.5 text-[10px] font-medium">
+                        {getFileExtension(projectFile.name)}
+                      </span>
+                    </div>
 
-                    <DropdownMenuItem
-                      onClick={() => handleDownload(projectFile.id)}
-                    >
-                      Download
-                    </DropdownMenuItem>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-md"
+                          className="shrink-0"
+                        >
+                          <EllipsisVertical className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
 
-                    <DropdownMenuItem
-                      onClick={() => openRenameDialog(projectFile)}
-                    >
-                      Rename
-                    </DropdownMenuItem>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => void handleOpen(projectFile)}
+                        >
+                          Open
+                        </DropdownMenuItem>
 
-                    <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDownload(projectFile.id)}
+                        >
+                          Download
+                        </DropdownMenuItem>
 
-                    <DropdownMenuItem
-                      onClick={() => setDeleteFileId(projectFile.id)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                        <DropdownMenuItem
+                          onClick={() => openRenameDialog(projectFile)}
+                        >
+                          Rename
+                        </DropdownMenuItem>
 
-              <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-                <span>{formatBytes(projectFile.size)}</span>
-                <span>{formatDate(projectFile.created_at)}</span>
-              </div>
-            </Card>
-          ))}
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuItem
+                          onClick={() => setDeleteFileId(projectFile.id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
+                    <span>{formatBytes(projectFile.size)}</span>
+                    <span>{formatDate(projectFile.created_at)}</span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
 
