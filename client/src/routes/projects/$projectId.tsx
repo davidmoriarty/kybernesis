@@ -143,7 +143,7 @@ function ProjectPage() {
             }}
           />
 
-          <SidebarInset className="min-h-0">
+          <SidebarInset className="min-h-0 min-w-0">
             {/* Content */}
             <ProjectDetailPanel>
               {section === "Overview" && (
