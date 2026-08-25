@@ -223,17 +223,17 @@ export function FilesSection({ projectId }: FilesSectionProps) {
             </span>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {data.files.map((projectFile) => {
               const FileIcon = getFileIcon(projectFile.name);
 
               return (
                 <Card
                   key={projectFile.id}
-                  className="flex flex-col gap-3 p-5 sm:p-6"
+                  className="min-w-0 w-full flex flex-col gap-3 p-5 sm:p-6"
                 >
                   <div className="min-w-0">
-                    <div className="wrap-break-word font-medium">
+                    <div className="[overflow:wrap-anywhere] font-medium">
                       {projectFile.name}
                     </div>
                   </div>
