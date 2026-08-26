@@ -202,11 +202,13 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
           />
         </div>
       ) : viewerKind === "pdf" ? (
-        <iframe
-          src={openUrl}
-          title={projectFile.name}
-          className="h-[70vh] w-full"
-        />
+        <div className="w-full min-w-0 overflow-hidden bg-background">
+          <iframe
+            src={openUrl}
+            title={projectFile.name}
+            className="block h-[70vh] w-full min-w-0 border-0"
+          />
+        </div>
       ) : viewerKind === "blocked" ? (
         <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
           <p className="font-medium">File type blocked</p>
