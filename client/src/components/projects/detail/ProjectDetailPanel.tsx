@@ -5,11 +5,15 @@ import { Container, Section } from "@/components/app";
 
 interface ProjectDetailPanelProps {
   children: ReactNode;
+  className?: string;
 }
 
-export function ProjectDetailPanel({ children }: ProjectDetailPanelProps) {
+export function ProjectDetailPanel({
+  children,
+  className,
+}: ProjectDetailPanelProps) {
   return (
-    <Section>
+    <Section className={className}>
       <Container className="max-w-5xl">{children}</Container>
     </Section>
   );

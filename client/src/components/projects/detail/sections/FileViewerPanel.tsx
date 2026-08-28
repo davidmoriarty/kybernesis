@@ -1,8 +1,13 @@
 // FileViewerPanel.tsx
+
 import { getFileViewerKind } from "@shared";
 import { useNavigate } from "@tanstack/react-router";
+import { Document, Page, pdfjs } from "react-pdf";
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 import { ArrowLeft } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +24,8 @@ interface FileViewerPanelProps {
   fileId: string;
 }
 
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
+
 function getApiBaseUrl() {
   if (import.meta.env.MODE !== "development") {
     return import.meta.env.VITE_API_URL;
@@ -30,6 +37,7 @@ function getApiBaseUrl() {
 export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
   const navigate = useNavigate();
   const fileQuery = useProjectFile(projectId, fileId);
+  const pdfContainerRef = useRef<HTMLDivElement | null>(null);
   const projectFile = fileQuery.data;
   const viewerKind = projectFile ? getFileViewerKind(projectFile) : null;
   const contentQuery = useProjectFileContent(
@@ -39,6 +47,8 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
   );
   const updateMutation = useUpdateProjectFileContent(projectId);
   const [content, setContent] = useState("");
+  const [pdfNumPages, setPdfNumPages] = useState(0);
+  const [pdfWidth, setPdfWidth] = useState<number>();
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -121,6 +131,23 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
     };
   }, [viewerKind, isDirty, updateMutation.isPending, handleSave]);
 
+  useEffect(() => {
+    if (viewerKind !== "pdf") return;
+
+    const container = pdfContainerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setPdfWidth(entry?.contentRect.width);
+    });
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [viewerKind]);
+
   if (fileQuery.isPending) {
     return (
       <Card className="p-5 sm:p-6">
@@ -144,25 +171,36 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
   const downloadUrl = `${getApiBaseUrl()}/projects/${projectId}/files/${projectFile.id}/download`;
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex items-center gap-3 border-b p-4">
-        <div>
-          <Button type="button" variant="ghost" size="sm" onClick={handleBack}>
-            <ArrowLeft className="mr-2 size-4" />
-            Back to Files
+    <Card className="overflow-hidden rounded-none border-0 bg-background shadow-none sm:rounded-xl sm:border sm:shadow-sm">
+      <div className="grid gap-2 bg-background px-3 py-2 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-3 sm:px-4 sm:py-3">
+        <div className="grid grid-cols-[auto_1fr] items-center gap-3 sm:contents">
+          <Button
+            type="button"
+            variant="outline"
+            color="secondary"
+            size="sm"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="size-4" />
+            Back
           </Button>
+
+          <div className="min-w-0 sm:text-center">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Filename
+            </p>
+            <h3 className="truncate font-medium">{projectFile.name}</h3>
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1 text-center">
-          <h3 className="truncate font-medium">{projectFile.name}</h3>
-        </div>
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge tone={modeTone}>{modeStatus}</StatusBadge>
 
-        <div className="flex shrink-0 items-center gap-3">
-          <StatusBadge tone={modeTone}>{modeStatus}</StatusBadge>
-
-          {saveStatus ? (
-            <StatusBadge tone={saveTone}>{saveStatus}</StatusBadge>
-          ) : null}
+            {saveStatus ? (
+              <StatusBadge tone={saveTone}>{saveStatus}</StatusBadge>
+            ) : null}
+          </div>
 
           {showEditorActions ? (
             <Button
@@ -177,58 +215,78 @@ export function FileViewerPanel({ projectId, fileId }: FileViewerPanelProps) {
         </div>
       </div>
 
-      {viewerKind === "text" ? (
-        contentQuery.isPending ? (
-          <div className="p-4">
-            <Skeleton className="h-80 w-full" />
+      <div className="min-w-0 bg-muted/20">
+        {viewerKind === "text" ? (
+          contentQuery.isPending ? (
+            <div className="p-4">
+              <Skeleton className="h-80 w-full" />
+            </div>
+          ) : contentQuery.isError || !contentQuery.data ? (
+            <div className="p-5 text-sm text-destructive sm:p-6">
+              Failed to load file content.
+            </div>
+          ) : (
+            <textarea
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              className="min-h-[70vh] w-full resize-none border-0 bg-transparent px-4 pb-4 pt-3 font-mono text-sm outline-none"
+            />
+          )
+        ) : viewerKind === "image" ? (
+          <div className="flex max-h-[70vh] items-center justify-center overflow-auto bg-background p-4">
+            <img
+              src={openUrl}
+              alt={projectFile.name}
+              className="max-h-full max-w-full rounded-md object-contain"
+            />
           </div>
-        ) : contentQuery.isError || !contentQuery.data ? (
-          <div className="p-5 text-sm text-destructive sm:p-6">
-            Failed to load file content.
+        ) : viewerKind === "pdf" ? (
+          <div
+            ref={pdfContainerRef}
+            className="w-full min-w-0 overflow-hidden bg-background"
+          >
+            <Document
+              file={openUrl}
+              options={{ withCredentials: true }}
+              onLoadSuccess={({ numPages }) => setPdfNumPages(numPages)}
+              onLoadError={(error) => {
+                console.error("PDF load error:", error);
+              }}
+            >
+              {Array.from({ length: pdfNumPages }, (_, index) => {
+                const pageNumber = index + 1;
+
+                return (
+                  <Page
+                    key={`page-${pageNumber}`}
+                    pageNumber={pageNumber}
+                    width={pdfWidth}
+                  />
+                );
+              })}
+            </Document>
+          </div>
+        ) : viewerKind === "blocked" ? (
+          <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+            <p className="font-medium">File type blocked</p>
+            <p className="max-w-md text-sm text-muted-foreground">
+              This file type cannot be previewed in Kybernesis for security
+              reasons.
+            </p>
           </div>
         ) : (
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            className="min-h-[70vh] w-full resize-none border-0 bg-background p-4 font-mono text-sm outline-none"
-          />
-        )
-      ) : viewerKind === "image" ? (
-        <div className="flex max-h-[70vh] items-center justify-center overflow-auto bg-background p-4">
-          <img
-            src={openUrl}
-            alt={projectFile.name}
-            className="max-h-full max-w-full rounded-md object-contain"
-          />
-        </div>
-      ) : viewerKind === "pdf" ? (
-        <div className="w-full min-w-0 overflow-hidden bg-background">
-          <iframe
-            src={openUrl}
-            title={projectFile.name}
-            className="block h-[70vh] w-full min-w-0 border-0"
-          />
-        </div>
-      ) : viewerKind === "blocked" ? (
-        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
-          <p className="font-medium">File type blocked</p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            This file type cannot be previewed in Kybernesis for security
-            reasons.
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
-          <p className="font-medium">Preview unavailable</p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            This file type cannot be previewed in Kybernesis yet. You can still
-            download it.
-          </p>
-          <Button asChild variant="outline">
-            <a href={downloadUrl}>Download file</a>
-          </Button>
-        </div>
-      )}
+          <div className="flex flex-col items-center justify-center gap-3 p-8 text-center">
+            <p className="font-medium">Preview unavailable</p>
+            <p className="max-w-md text-sm text-muted-foreground">
+              This file type cannot be previewed in Kybernesis yet. You can
+              still download it.
+            </p>
+            <Button asChild variant="outline">
+              <a href={downloadUrl}>Download file</a>
+            </Button>
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog
         open={leaveDialogOpen}

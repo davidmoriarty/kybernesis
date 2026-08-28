@@ -145,7 +145,9 @@ function ProjectPage() {
 
           <SidebarInset className="min-h-0 min-w-0">
             {/* Content */}
-            <ProjectDetailPanel>
+            <ProjectDetailPanel
+              className={section === "Files" && fileId ? "py-2" : undefined}
+            >
               {section === "Overview" && (
                 <OverviewSection
                   projectName={project.name}
