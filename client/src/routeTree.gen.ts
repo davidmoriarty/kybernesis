@@ -19,7 +19,9 @@ import { Route as WorkspacesRouteImport } from './routes/workspaces'
 import { Route as Errors401RouteImport } from './routes/_errors/401'
 import { Route as Errors403RouteImport } from './routes/_errors/403'
 import { Route as Errors500RouteImport } from './routes/_errors/500'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects/$projectId'
+import { Route as AdminProjectsProjectIdRouteImport } from './routes/admin/projects/$projectId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -71,15 +73,25 @@ const Errors500Route = Errors500RouteImport.update({
   path: '/500',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
   id: '/$projectId',
   path: '/$projectId',
   getParentRoute: () => ProjectsRoute,
 } as any)
+const AdminProjectsProjectIdRoute = AdminProjectsProjectIdRouteImport.update({
+  id: '/projects/$projectId',
+  path: '/projects/$projectId',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -89,10 +101,11 @@ export interface FileRoutesByFullPath {
   '/403': typeof Errors403Route
   '/500': typeof Errors500Route
   '/projects/$projectId': typeof ProjectsProjectIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/projects/$projectId': typeof AdminProjectsProjectIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -102,11 +115,13 @@ export interface FileRoutesByTo {
   '/403': typeof Errors403Route
   '/500': typeof Errors500Route
   '/projects/$projectId': typeof ProjectsProjectIdRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/projects/$projectId': typeof AdminProjectsProjectIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/projects': typeof ProjectsRouteWithChildren
@@ -116,6 +131,8 @@ export interface FileRoutesById {
   '/_errors/403': typeof Errors403Route
   '/_errors/500': typeof Errors500Route
   '/projects/$projectId': typeof ProjectsProjectIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/projects/$projectId': typeof AdminProjectsProjectIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,10 +148,11 @@ export interface FileRouteTypes {
     | '/403'
     | '/500'
     | '/projects/$projectId'
+    | '/admin/'
+    | '/admin/projects/$projectId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/login'
     | '/me'
     | '/projects'
@@ -144,6 +162,8 @@ export interface FileRouteTypes {
     | '/403'
     | '/500'
     | '/projects/$projectId'
+    | '/admin'
+    | '/admin/projects/$projectId'
   id:
     | '__root__'
     | '/'
@@ -157,11 +177,13 @@ export interface FileRouteTypes {
     | '/_errors/403'
     | '/_errors/500'
     | '/projects/$projectId'
+    | '/admin/'
+    | '/admin/projects/$projectId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
@@ -244,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Errors500RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/projects/$projectId': {
       id: '/projects/$projectId'
       path: '/$projectId'
@@ -251,8 +280,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdRouteImport
       parentRoute: typeof ProjectsRoute
     }
+    '/admin/projects/$projectId': {
+      id: '/admin/projects/$projectId'
+      path: '/projects/$projectId'
+      fullPath: '/admin/projects/$projectId'
+      preLoaderRoute: typeof AdminProjectsProjectIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminProjectsProjectIdRoute: typeof AdminProjectsProjectIdRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+  AdminProjectsProjectIdRoute: AdminProjectsProjectIdRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ProjectsRouteChildren {
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
@@ -268,7 +316,7 @@ const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
   ProjectsRoute: ProjectsRouteWithChildren,

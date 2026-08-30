@@ -3,7 +3,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { ProjectView } from "./index";
-import { DeleteProjectDialog } from "@/components/projects/detail/dialogs";
+import { DeleteProjectDialog } from "@/components/projects/dialogs/DeleteProjectDialog";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {

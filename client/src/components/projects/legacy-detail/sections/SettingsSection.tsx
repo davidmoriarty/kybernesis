@@ -14,12 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { appToast } from "@/lib/toast";
-import { ProjectSettingRow } from "@/components/projects/detail/sections/settings/ProjectSettingRow";
+import { ProjectSettingRow } from "@/components/projects/legacy-detail/sections/settings/ProjectSettingRow";
 import {
   AddProjectMemberDialog,
   DeleteProjectDangerDialog,
   RemoveProjectMemberDialog,
-} from "@/components/projects/detail/dialogs";
+} from "@/components/projects/legacy-detail/dialogs";
 import { useUpdateProject, useDeleteProject } from "@/hooks/projects";
 import {
   useProjectMembers,

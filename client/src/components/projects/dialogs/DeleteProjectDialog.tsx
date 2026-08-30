@@ -1,4 +1,5 @@
-// client/src/components/projects/detail/DeleteProjectDialog.tsx
+// client/src/components/projects/dialogs/DeleteProjectDialog.tsx
+
 import {
   AlertDialog,
   AlertDialogAction,

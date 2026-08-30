@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFileIcon } from "@/components/projects/detail/sections/files/getFileIcon";
+import { getFileIcon } from "@/components/projects/legacy-detail/sections/files/getFileIcon";
 import {
   type ProjectFile,
   useDeleteProjectFile,

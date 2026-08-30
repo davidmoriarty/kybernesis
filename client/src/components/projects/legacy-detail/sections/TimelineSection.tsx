@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/shared";
 import {
   formatTimelineEvent,
   type TimelineEvent,
-} from "@/components/projects/detail/sections/timeline/formatTimelineEvents";
+} from "@/components/projects/legacy-detail/sections/timeline/formatTimelineEvents";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { timeAgo } from "@/lib/timeAgo";
