@@ -13,10 +13,10 @@
     "dev": "bun --env-file=../.env --watch run src/dev.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1073.0",
+    "@aws-sdk/client-s3": "latest",
     "auth": "workspace:*",
     "db": "workspace:*",
-    "hono": "^4.12.3",
+    "hono": "^4.13.5",
     "schemas": "workspace:*",
     "shared": "workspace:*"
   }

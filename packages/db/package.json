@@ -38,7 +38,7 @@
     "shared": "workspace:*"
   },
   "devDependencies": {
-    "@types/pg": "^8.16.0",
+    "@types/pg": "latest",
     "drizzle-orm": "^0.45.1"
   }
 }
