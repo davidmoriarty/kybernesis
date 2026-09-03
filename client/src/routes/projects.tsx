@@ -4,11 +4,11 @@ import { createFileRoute, Outlet, useMatchRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Section } from "@/components/app/Section";
 import { Container } from "@/components/app/Container";
-import { ProjectList } from "@/components/projects/overview/ProjectList";
 import {
   ProjectsToolbar,
   type ProjectView,
 } from "@/components/projects/overview";
+import { ProjectList } from "@/components/projects/overview/ProjectList";
 import { useProjects } from "@/hooks/projects";
 import { requireAuth } from "@/utils/requireAuth";
 
@@ -20,8 +20,6 @@ export const Route = createFileRoute("/projects")({
 const VIEW_STORAGE_KEY = "projects:view";
 
 function ProjectsPage() {
-  const { workspace } = Route.useRouteContext();
-
   const matchRoute = useMatchRoute();
   const isProjectRoute = Boolean(matchRoute({ to: "/projects/$projectId" }));
 
@@ -48,11 +46,7 @@ function ProjectsPage() {
 
   return (
     <>
-      <ProjectsToolbar
-        view={view}
-        onViewChange={setView}
-        canCreate={workspace?.role === "admin"}
-      />
+      <ProjectsToolbar view={view} onViewChange={setView} />
 
       <Section className="mt-6">
         <Container>
